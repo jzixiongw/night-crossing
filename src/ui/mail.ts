@@ -27,7 +27,7 @@ export function renderMail(sel){
   if (G.mail.box.length) G.mail.box.forEach(id => { const L = letterById(id); h += `<button type="button" data-m="${id}" class="${sel===id?'cur':''}"><span class="new">${tr('新到')}</span>${escapeHtml(tr(L.from))}<small>${tr('{0} 靠舷', hhmm(G.mail.arrived[id] || now()))}</small></button>`; });
   else h += `<p class="sub" style="margin:.2em .4em;color:var(--ui-dim);font-size:.85em;line-height:1.6">${tr('空着。下一班邮船大约 {0} 靠舷。', hhmm(G.mail.nextAt))}</p>`;
   if (G.mail.read.length){ h += `<h3>${tr('读过的')}</h3>`; G.mail.read.slice(0,10).forEach(id => { const L = letterById(id); h += `<button type="button" data-m="r:${id}" class="${sel==='r:'+id?'cur':''}">${escapeHtml(tr(L.from))}<small>${ymd(G.mail.arrived[id] || G.created)}</small></button>`; }); }
-  h += `<h3>${tr('寄出')}</h3><button type="button" data-m="write" class="${sel==='write'?'cur':''}">${tr('写一张明信片')}<small>${tr('写给谁都行，可以不写')}</small></button>`;
+  h += `<h3>${tr('寄出')}</h3><button type="button" data-m="write" class="${sel==='write'?'cur':''}">${tr('写一张明信片')}<small>${tr('下一班邮船带走')}</small></button>`;
   G.mail.out.slice(-4).reverse().forEach((o,i) => { h += `<button type="button" data-m="o:${G.mail.out.length-1-i}" class="${sel==='o:'+(G.mail.out.length-1-i)?'cur':''}">${tr('明信片')}<small>${o.sent ? tr('已随 {0} 的邮船离开', hhmm(o.sent)) : tr('在寄出口，等下一班邮船')}</small></button>`; });
   side.innerHTML = h;
   side.querySelectorAll('button[data-m]').forEach(b => b.onclick = () => { AU.paper(); renderMail((b as HTMLElement).dataset.m); });
@@ -35,7 +35,7 @@ export function renderMail(sel){
   if (sel === 'write'){
     /* Writing is optional all the way down: the card sends blank, and the copy
        says so before the player has typed anything. */
-    main.innerHTML = `<div class="letter"><div class="from">${tr('明信片')}</div><div class="meta">${tr('写给谁都行，也可以写给一颗星、一艘船。真的假的都可以。不写也能寄。')}</div>
+    main.innerHTML = `<div class="letter"><div class="from">${tr('明信片')}</div><div class="meta">${tr('寄出口不看收信人。')}</div>
       <textarea id="pcText" maxlength="160" placeholder="${tr('窗外今天……')}"></textarea>
       <div class="row" style="justify-content:flex-end"><button class="btn primary" id="pcSend" type="button">${tr('投进寄出口')}</button></div></div>`;
     $('#pcSend').onclick = () => { const t = ($('#pcText') as HTMLTextAreaElement).value.trim(); G.mail.out.push({ text:t, at:now(), sent:0 }); if (G.mail.out.length > 20) G.mail.out.shift();

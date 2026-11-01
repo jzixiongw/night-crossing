@@ -3207,3 +3207,21 @@
   src: url(i7dMIFFrTRywPpUVX9_RJyM1UFWaHi6WZ3Q.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
+
+/* ---- one broken glyph, patched ----
+   ZCOOL XiaoWei draws U+56DE (回) as a solid filled box: the counter inside the
+   outer square is filled in the outline, while 国 and 园 next to it are fine.
+   It is the font, not the subsetting, and it hits every 回 the game sets in the
+   display face. A later @font-face for the same family with a one-codepoint
+   unicode-range wins for that codepoint alone, so 回 comes from a system serif
+   where there is one, and from the Noto subset where there is not. If these
+   files are ever regenerated from Google Fonts, this block has to be re-added. */
+@font-face {
+  font-family: 'ZCOOL XiaoWei';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Songti SC'), local('STSong'), local('SimSun'),
+       url(k3kXo84MPvpLmixcA63oeALhLIiP-Q-87KaAaH7rzeAODp22mF0qmF4CSjmPC6A0Rg5g1igg1w.118.woff2) format('woff2');
+  unicode-range: U+56DE;
+}

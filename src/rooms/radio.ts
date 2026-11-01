@@ -35,7 +35,7 @@ export function stationNow(){
 }
 ACT['r:power'] = { tap(){
   G.radioOn = !G.radioOn; AU.click(); markDirty();
-  if (G.radioOn){ say(once('radioOn') ? tr('收音机亮了，先是一阵沙沙声。') : tr('收音机开了。')); if (once('tuneHint')) say(tr('左右拖动右边的大旋钮调频。魔眼合上的时候，就是调准了。'), null, 2600); }
+  if (G.radioOn){ say(once('radioOn') ? tr('收音机亮了，先是一阵沙沙声。') : tr('收音机开了。')); if (once('tuneHint')) say(tr('左右拖动右边的大旋钮调频。那只绿色的小眼睛合上，就是调准了。'), null, 2600); }
   else { say(tr('收音机关了。')); S.stationId = null; }
 }};
 export function tuneTo(f){
@@ -53,7 +53,7 @@ ACT['r:tune'] = {
 ACT['r:dial'] = { tap(a, e, P){ if (!e || !P) return; tuneTo(FMIN + (P.x - 500)/236*(FMAX - FMIN)); AU.tap(); markDirty(); } };
 ACT['r:table'] = { tap(){
   AU.paper(); const n = G.found.length;
-  say(n ? tr('台表上记了 {0} 个台，一共有 {1} 行。有的台只在某些钟点出来。', n, STATIONS.length) : tr('台表还是空的。调到一个台，它会自己记上。'));
+  say(n ? tr('台表上记了 {0} 个台，一共 {1} 行。有的台只在某些钟点出来。', n, STATIONS.length) : tr('台表还是空的。调到一个台，它会自己记上。'));
 }};
 ACT['r:phones'] = { tap(){
   G.phones = !G.phones; AU.soft(); setAmbience();
@@ -74,7 +74,7 @@ ACT['r:strip'] = {
     if (once('stripFirst')) say(mode === 'punch' ? tr('纸带上打了一个孔。上紧发条，它就会响。') : tr('这个孔被你用纸片糊上了。'));
     return { move(ev, Q){ apply(cell(Q)); }, up(){ markDirty(); if (G.ghost && MUSIC_MOTIF.every(([c,r]) => G.strip[c] & (1<<r)) && onceS('ghostDone')){ say(tr('淡淡的格子都打上了。这段曲子现在是你纸带上的了。')); addLog(tr('把「星港夜曲」的一段抄在了八音盒纸带上')); } } };
   },
-  key(){ say(tr('用鼠标点纸带上的格子打孔；再点一次可以糊上。')); }
+  key(){ say(tr('用鼠标点纸带上的格子打孔。再点一次，就把孔糊上。')); }
 };
 ACT['r:crank'] = {
   press(a, e, P){
@@ -107,7 +107,7 @@ export function radioTick(dt){
   if (Math.abs(stat - S.rGains.st) > .004){ S.rGains.st = stat; AU.ready && AU.set(AU.rStatic.gain, stat, .15); }
   if (Math.abs(voice - S.rGains.v) > .01){ S.rGains.v = voice; AU.ready && AU.set(AU.rVoice.gain, voice, .2); }
   if (!inRoom){ S.stationId = null; return { st:null, c:0 }; }
-  if (near && !st && onceS('far-'+near.id)) say(G.found.includes(near.id) ? tr('「{0}」这会儿不播（{1}）。只有很远的沙沙声。', near.name, near.desc) : tr('这个频率上只有很远的沙沙声。也许不是时候。'));
+  if (near && !st && onceS('far-'+near.id)) say(G.found.includes(near.id) ? tr('「{0}」这会儿不播（{1}）。只有很远的沙沙声。', near.name, near.desc) : tr('这个频率上只有很远的沙沙声。也许现在不是时候。'));
   if (st && c > .55){
     if (S.stationId !== st.id){ S.stationId = st.id; S.subT = 1.2; S.subI = 0; S.radioBeat = 0; S.motifI = 0; }
     if (c > .75 && !G.found.includes(st.id)){ G.found.push(st.id); AU.chime(); addLog(tr('在 {0} 收到「{1}」', st.f.toFixed(2), st.name)); say(tr('收到了：「{0}」。台表上多了一行。', st.name)); markDirty(); }
@@ -132,7 +132,7 @@ export function radWallArt(g){
   g.fillStyle = '#4a3446'; g.fillRect(x0, y0, x1-x0, y1-y0);
   for (let x = x0; x < x1; x += 34) flat(g, cc => rr(cc, x, y0, 17, 470, 0), '#553c50', .6);
   for (let y = 70; y < 470; y += 70) for (let x = x0 + 20 + (y/70 % 2)*34; x < x1; x += 68) flat(g, cc => star5(cc, x, y, 4), '#c99aa8', .25);
-  g.save(); g.globalAlpha = .45; g.globalCompositeOperation = 'soft-light'; g.fillStyle = pat(g); g.fillRect(x0, y0, x1-x0, 470); g.restore();
+  g.save(); g.globalAlpha = .45; g.globalCompositeOperation = 'soft-light'; g.fillStyle = pat(g, 2, 1.6, -.11, 20); g.fillRect(x0, y0, x1-x0, 470); g.restore();
   vol(g, cc => rr(cc, x0, 470, x1-x0, y1-470, 0), MAT.woodD, { k:2, s:5, tex:.6 });
   vol(g, cc => rr(cc, x0, 460, x1-x0, 18, 6), MAT.wood, { k:1.5, s:3.5 });
   g.save(); g.globalCompositeOperation = 'destination-out'; g.beginPath(); ell(g, 1360, 200, 78, 78); g.fill(); g.restore();
@@ -177,7 +177,7 @@ ROOMS.radio = {
   zc:[800, 450],
   enter(){
     setCtx([]);
-    if (once('radioFirst')) say(tr('电台室。一台老收音机，一只八音盒，一条还没打孔的纸带。'));
+    if (once('radioFirst')) say(tr('电台室里很安静，只有机器自己的底噪。'));
   },
   exit(){ if (G.phones){ G.phones = false; setAmbience(); } setCtx([]); },
   update(dt){

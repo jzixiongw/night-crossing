@@ -2,10 +2,11 @@ import { tr } from '../i18n';
 import { updateMusic } from '../audio/music';
 import { render } from './render';
 import { QUAL, resize, setQual } from './surface';
-import { $, hhmm } from './util';
+import { $, durText, hhmm } from './util';
 import { galleyTick } from '../rooms/galley';
 import { radioTick } from '../rooms/radio';
 import { ROOMS } from '../rooms/registry';
+import { callPort, docked, etaLeft } from '../rooms/hatch';
 import { advance, liveEvents } from '../state/progress';
 import { PR, S } from '../state/runtime';
 import { SV, persist } from '../state/save';
@@ -35,6 +36,12 @@ export function frame(tnow){
     statusT -= dt; if (statusT <= 0){ statusT = 1;
       $('#stNight').textContent = tr('第 {0} 夜', Math.max(1,G.nights.length));
       $('#stClock').textContent = tr('舱时 ') + hhmm(now()) + (G.speed > 1 ? tr(' · 时间 ×') + G.speed : '');
+      /* The one line that is always on screen says where the ship is headed.
+         Without it the round is only visible to someone who opens the sign. */
+      const P = callPort();
+      $('#stCall').textContent = !P ? tr('没有下一站')
+        : docked() ? tr('靠在 {0}', P.name)
+        : tr('下一站 {0} · 还有 {1}', P.name, durText(etaLeft()));
       $('#stPresence').innerHTML = PR.focused ? '' : tr('<i>你在忙，船在走</i>');
       G.sessionsMin += 1/60;
     }

@@ -7,22 +7,24 @@ import { CAM, mat, tp } from '../core/camera';
 import { hit } from '../core/hits';
 import { holeM, lightBegin } from '../core/light';
 import { MAT } from '../core/materials';
-import { SAMBER, SIND, SPINK, SROSE, STEAL, SWARM, ell, flat, glowAt, pat, polyP, rr, shadow, stemPath, txt, vol } from '../core/paint';
+import { SAMBER, SIND, SPINK, SROSE, STEAL, SWARM, ell, flat, glowAt, pat, polyP, rr, shadow, stemPath, txt, txtFit, vol } from '../core/paint';
 import { CH, CW, RS } from '../core/surface';
 import { $, D2R, hex, hhmm, lerp, mixHex, mod, mulberry32, rand, rgba, ymd } from '../core/util';
-import { ACT, RING, ROOMS, angDiff, setCtx, updateHud } from './registry';
+import { ACT, RING, ROOMS, STEP, angDiff, setCtx, updateHud } from './registry';
 import { PR, S } from '../state/runtime';
 import { markDirty } from '../state/save';
 import { G } from '../state/store';
 import { localHour, now } from '../state/time';
 import { addLog, once, onceS, say } from '../ui/captions';
-import { openLog, wrapCJK } from '../ui/log';
+import { logLines, openLog } from '../ui/log';
+import { callPort, docked } from './hatch';
 import { openMail, updateMailbox } from '../ui/mail';
 
 /* ================= RING CORRIDOR =================
    The ship is a spinning ring whose centre sits far above the frame. Each depth layer rotates about that centre:
    the far wall (stations), the floor band and the near pillars sweep at different screen speeds, so walking reads in depth. */
 export const RC = { x:800, y:-1300 };
+export const WINDOW_ANG = RING.find(s => s.id === 'window').ang;
 export const K_RW = .7, K_RN = 1.5;
 export const R_WB = 2080, R_WT = 1590, R_FN = 2290, R_CN = 1450;
 export function mmul(A, B){ return [A[0]*B[0]+A[2]*B[1], A[1]*B[0]+A[3]*B[1], A[0]*B[2]+A[2]*B[3], A[1]*B[2]+A[3]*B[3], A[0]*B[4]+A[2]*B[5]+A[4], A[1]*B[4]+A[3]*B[5]+A[5]]; }
@@ -72,7 +74,23 @@ export function doorArt(g, st){
     vol(g, cc => rr(cc, 842, 476, 70, 24, 12), MAT.dark, { k:1, s:2.5, tex:0 });
   }
 }
+/* The gangway is hull, not joinery: a pressure door with its dogs showing and a
+   lamp over it that is dark the whole time the ship is under way. */
+export function gangArt(g, st){
+  shadow(g, 800, 782, 190, 16, .6);
+  vol(g, cc => { rr(cc, 648, 330, 304, 452, 40); rr(cc, 690, 372, 220, 368, 26); }, MAT.metalD, { k:5, s:12, r:3, eo:true });
+  vol(g, cc => rr(cc, 690, 372, 220, 368, 26), MAT.metal, { k:4, s:10, r:2.5, tex:.45, hl:[740,430,120,.16] });
+  for (let k=0;k<10;k++){ const a = k/10*Math.PI*2; vol(g, cc => ell(cc, 800 + Math.sin(a)*128, 556 + Math.cos(a)*204, 9, 9), MAT.brass, { k:1, s:2.5, tex:0 }); }
+  flat(g, cc => { rr(cc, 716, 420, 168, 12, 6); rr(cc, 716, 676, 168, 12, 6); }, '#2c3f5e', .6);
+  vol(g, cc => rr(cc, 846, 528, 24, 92, 12), MAT.brass, { k:1.6, s:4 });
+  vol(g, cc => rr(cc, 762, 268, 76, 28, 9), MAT.metalD, { k:2, s:5 });
+  vol(g, cc => rr(cc, 696, 180, 208, 64, 10), MAT.paper, { k:2, s:5, r:1.5 });
+  txt(g, st.name, 800, 216, 25, '#2a3550');
+  txt(g, st.en, 800, 232, 10, '#7d7a72', { mono:true, ls:3 });
+  vol(g, cc => rr(cc, 668, 770, 264, 16, 8), MAT.metalD, { k:1.5, s:3.5 });
+}
 export function stationArt(g, st){
+  if (st.id === 'gang') return gangArt(g, st);
   if (st.go && st.id !== 'dome') return doorArt(g, st);
   if (st.id === 'window'){
     shadow(g, 800, 600, 420, 30, .5);
@@ -105,12 +123,12 @@ export function stationArt(g, st){
     vol(g, cc => rr(cc, -85, -110, 170, 226, 6), MAT.paper, { k:2, s:5, r:1.5 });
     txt(g, tr('本船须知'), 0, -76, 21, '#2a3550');
     flat(g, cc => rr(cc, -68, -64, 136, 2, 1), '#c4b392');
-    [tr('一　东西都可以碰。'),tr('二　没有什么会坏。'),tr('三　等的时候，'),tr('　　可以走开。'),tr('四　困了就睡。')].forEach((l,i) => txt(g, l, -66, -36 + i*27, 15, '#2a3550', { align:'left' }));
+    [tr('一　炉子用完关掉。'),tr('二　夜里走廊扶栏。'),tr('三　邮船每两钟头'),tr('　　靠一次舷。'),tr('四　穹顶熄灯轻声。')].forEach((l,i) => txt(g, l, -66, -36 + i*27, 15, '#2a3550', { align:'left' }));
     vol(g, cc => ell(cc, 0, -100, 6, 6), MAT.rose, { k:.8, s:2, tex:0 });
     g.restore();
     const items = G.log.slice(0,6);
     items.forEach((e,i) => { const col = i % 3, row = Math.floor(i/3), x = 552 + col*160, y = 306 + row*138, rot = [-3,2,-1,3,-2,1][i]*D2R;
-      const lines = wrapCJK(e.text, 8).slice(0,3); if (wrapCJK(e.text, 8).length > 3) lines[2] = lines[2].slice(0,7) + '…';
+      const lines = logLines(e.text);
       g.save(); g.translate(x+70, y+56); g.rotate(rot); g.translate(-x-70, -y-56);
       shadow(g, x+74, y+114, 70, 8, .35);
       vol(g, cc => rr(cc, x, y, 140, 112, 4), MAT.paper, { k:1.4, s:3, r:1 });
@@ -176,7 +194,7 @@ export function buildCorridor(){
   map.addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const g = e.target.closest('.st'); if (g){ e.preventDefault(); walkTo(RING[+g.dataset.i].ang); } });
 }
 export function walkTo(ang){ if (S.room !== 'corridor') return; standUp(); S.phiV = 0; S.phiTarget = S.phi + angDiff(ang, S.phi); }
-export function walkStep(dir){ if (S.room !== 'corridor') return; standUp(); const base = S.phiTarget ?? Math.round(S.phi/45)*45; S.phiV = 0; S.phiTarget = Math.round(base/45)*45 + dir*45; }
+export function walkStep(dir){ if (S.room !== 'corridor') return; standUp(); const base = S.phiTarget ?? Math.round(S.phi/STEP)*STEP; S.phiV = 0; S.phiTarget = Math.round(base/STEP)*STEP + dir*STEP; }
 export function nearestStation(){ let best = RING[0], bd = 999; RING.forEach(st => { const d = Math.abs(angDiff(st.ang, S.phi)); if (d < bd){ bd = d; best = st; } }); return best; }
 export function standUp(){ if (!S.sitting) return; S.sitting = false; setCtx([]); say(tr('你从长椅上站起来。')); updateHud(); }
 
@@ -219,14 +237,14 @@ ROOMS.corridor = {
     g0 = ringPt(K_RW, R_WT, 0); g1 = ringPt(K_RW, R_WB, 0);
     gr = c.createLinearGradient(0, g0[1], 0, g1[1]); gr.addColorStop(0, '#2e3f62'); gr.addColorStop(.12, '#4a6189'); gr.addColorStop(.6, '#3d527a'); gr.addColorStop(.88, '#33476c'); gr.addColorStop(1, '#253553');
     c.beginPath(); polyP(c, wall); c.fillStyle = gr; c.fill();
-    c.save(); c.beginPath(); polyP(c, wall); c.clip(); c.globalAlpha = .35; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c); c.fill(); c.restore();
+    c.save(); c.beginPath(); polyP(c, wall); c.clip(); c.globalAlpha = .35; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c, 2, 1.75, -.24, 90); c.fill(); c.restore();
     // trim rails (painted bands, top and bottom of the wall)
     const band = (k, R0, R1, col, a=1) => { c.setTransform(1,0,0,1,0,0); c.beginPath(); polyP(c, bandPts(k, R0, k, R1, -36, 36)); c.globalAlpha = a; c.fillStyle = col; c.fill(); c.globalAlpha = 1; };
     band(K_RW, R_WT, R_WT + 26, '#2a3a5c'); band(K_RW, R_WT + 26, R_WT + 32, '#6f8fbd', .8);
     band(K_RW, R_WB - 64, R_WB - 58, '#7da0cc', .5); band(K_RW, R_WB - 58, R_WB, '#2b3c5e');
     // ribs + ports + stations (far wall, rotated about the ring centre)
-    for (let k=0;k<16;k++){ const ang = 11.25 + k*22.5, d = angDiff(ang, phi); if (Math.abs(d) > 30) continue; setM(c, ringM(K_RW, d)); blit(c, RIB()); }
-    for (let k=0;k<8;k++){ const ang = 22.5 + k*45, d = angDiff(ang, phi); if (Math.abs(d) > 30) continue; const m = ringM(K_RW, d); setM(c, m);
+    for (let k=0;k<18;k++){ const ang = STEP/4 + k*(STEP/2), d = angDiff(ang, phi); if (Math.abs(d) > 30) continue; setM(c, ringM(K_RW, d)); blit(c, RIB()); }
+    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, phi); if (Math.abs(d) > 30) continue; const m = ringM(K_RW, d); setM(c, m);
       c.save(); c.beginPath(); ell(c, 800, 430, 44, 44); c.clip();
       const sg = c.createLinearGradient(0, 386, 0, 474); sg.addColorStop(0, '#0a1226'); sg.addColorStop(1, '#1a2b4d'); c.fillStyle = sg; c.fillRect(740, 380, 120, 100);
       const sx = -mod(S.T*(S.sitting ? 9 : 14)*.6 + k*31, 120);
@@ -251,36 +269,38 @@ ROOMS.corridor = {
     c.beginPath(); polyP(c, runner); c.fillStyle = '#5a3f4f'; c.fill();
     const runIn = []; for (let a=-42;a<=42;a+=1.5){ const [k,R] = surf(.38,'floor'); runIn.push(ringPt(k, R, a)); } for (let a=42;a>=-42;a-=1.5){ const [k,R] = surf(.64,'floor'); runIn.push(ringPt(k, R, a)); }
     c.beginPath(); polyP(c, runIn); c.fillStyle = '#7a5566'; c.fill();
-    c.save(); c.beginPath(); polyP(c, floor); c.clip(); c.globalAlpha = .4; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c); c.fill(); c.restore();
+    c.save(); c.beginPath(); polyP(c, floor); c.clip(); c.globalAlpha = .4; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c, 2, 1.4, .36, 150); c.fill(); c.restore();
     // seams sweep with the spin
     c.fillStyle = 'rgba(8,12,26,.34)';
-    for (let k=0;k<64;k++){ const ang = k*5.625, d = angDiff(ang, phi); if (Math.abs(d) > 40) continue;
+    for (let k=0;k<72;k++){ const ang = k*5, d = angDiff(ang, phi); if (Math.abs(d) > 40) continue;
       const a0 = ringPt(K_RW, R_WB, d - .05), a1 = ringPt(K_RW, R_WB, d + .05), b0 = ringPt(K_RN, R_FN, d - .18), b1 = ringPt(K_RN, R_FN, d + .18);
       c.beginPath(); polyP(c, [a0, a1, b1, b0]); c.fill(); }
     const ao = []; for (let a=-42;a<=42;a+=2) ao.push(ringPt(K_RW, R_WB, a)); for (let a=42;a>=-42;a-=2){ const [k,R] = surf(.12,'floor'); ao.push(ringPt(k, R, a)); }
     c.beginPath(); polyP(c, ao); c.fillStyle = 'rgba(5,9,20,.45)'; c.fill();
     // bench in front of the big window (play plane)
-    { const d = angDiff(45, phi); if (Math.abs(d) < 34){ const m = mmul(ringM(1, d), [1,0,0,1,0,-34]); setM(c, m); blit(c, BENCH()); if (!S.sitting) hit(c, 'ring:sit', ['r', 490, 730, 620, 140], { label:tr('舷窗长椅') }); } }
+    { const d = angDiff(WINDOW_ANG, phi); if (Math.abs(d) < 34){ const m = mmul(ringM(1, d), [1,0,0,1,0,-34]); setM(c, m); blit(c, BENCH()); if (!S.sitting) hit(c, 'ring:sit', ['r', 490, 730, 620, 140], { label:tr('舷窗长椅') }); } }
     // near pillars, fastest
-    for (let k=0;k<8;k++){ const ang = 22.5 + k*45, d = angDiff(ang, phi); if (Math.abs(d) > 26) continue; setM(c, ringM(K_RN, d)); blit(c, PILLAR()); }
+    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, phi); if (Math.abs(d) > 26) continue; setM(c, ringM(K_RN, d)); blit(c, PILLAR()); }
   },
   light(){
     lightBegin('#050a1a', .5);
-    for (let k=0;k<8;k++){ const ang = 22.5 + k*45, d = angDiff(ang, S.phi); if (Math.abs(d) > 34) continue; const m = ringM(K_RW, d); holeM(m, 800, 360, 340, .85, 300); }
+    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, S.phi); if (Math.abs(d) > 34) continue; const m = ringM(K_RW, d); holeM(m, 800, 360, 340, .85, 300); }
     const where = anWhere();
     RING.forEach(st => { const d = angDiff(st.ang, S.phi); if (Math.abs(d) > 34) return; const m = ringM(K_RW, d);
-      if (st.go && st.id !== 'dome') holeM(m, 800, 440, 120, .55);
+      if (st.id === 'gang') holeM(m, 800, 300, docked() ? 150 : 70, docked() ? .6 : .18);
+      else if (st.go && st.id !== 'dome') holeM(m, 800, 440, 120, .55);
       if (st.id === 'window') holeM(m, 800, 420, 420, .35, 240);
       if (st.id === 'dome') holeM(m, 800, 240, 260, .6, 160);
       if (st.id === 'mail') holeM(m, 800, 300, 160, .2); });
   },
   over(c){
-    for (let k=0;k<8;k++){ const ang = 22.5 + k*45, d = angDiff(ang, S.phi); if (Math.abs(d) > 34) continue; const m = ringM(K_RW, d); setM(c, m);
+    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, S.phi); if (Math.abs(d) > 34) continue; const m = ringM(K_RW, d); setM(c, m);
       c.globalCompositeOperation = 'lighter'; glowAt(c, SWARM, 800, 352, 110, .42); glowAt(c, SWARM, 800, 336, 26, .8); c.globalCompositeOperation = 'source-over'; }
     const where = anWhere();
     RING.forEach(st => { const d = angDiff(st.ang, S.phi); if (Math.abs(d) > 34) return; const m = ringM(K_RW, d); setM(c, m);
       c.globalCompositeOperation = 'lighter';
-      if (st.go && st.id !== 'dome'){ const spr = st.id === 'green' ? (G.growLamp ? SPINK : STEAL) : SWARM; glowAt(c, spr, 800, 440, 70, st.id === 'green' && G.growLamp ? .55 : .35); }
+      if (st.id === 'gang'){ if (docked()) glowAt(c, SWARM, 800, 284, 74, .5 + .12*Math.sin(S.T*1.6)); }
+      else if (st.go && st.id !== 'dome'){ const spr = st.id === 'green' ? (G.growLamp ? SPINK : STEAL) : SWARM; glowAt(c, spr, 800, 440, 70, st.id === 'green' && G.growLamp ? .55 : .35); }
       if (st.id === 'radio' && (G.radioOn || G.wind > 0)) glowAt(c, SROSE, 877, 488, 46, .7);
       if (st.id === 'dome') glowAt(c, SIND, 800, 236, 190, .55 + .15*Math.sin(S.T*.8), 70);
       c.globalCompositeOperation = 'source-over'; });
@@ -306,6 +326,19 @@ export function drawBigWindow(c){
   c.restore();
 }
 export function ringStationLive(c, st, where){
+  if (st.id === 'gang'){
+    /* The plate under the lamp is the one place in the ring that says where the
+       ship is going, so it is painted live rather than cached with the door. */
+    const P = callPort(), on = docked();
+    flat(c, cc => ell(cc, 800, 282, 22, 11), on ? '#ffd9a3' : '#4a5570', on ? 1 : .8);
+    vol(c, cc => rr(cc, 684, 664, 232, 62, 8), MAT.paper, { k:1.5, s:3.5, r:1 });
+    if (P){
+      txtFit(c, on ? tr('已靠上') : tr('下一站'), 800, 688, 200, 14, '#7d7a72');
+      txtFit(c, tr(P.name), 800, 714, 210, 22, '#2a3550');
+    } else txtFit(c, tr('没有下一站'), 800, 702, 210, 19, '#7d7a72');
+    hit(c, 'go:hatch', ['r', 648, 330, 304, 452], { label:st.label });
+    return;
+  }
   if (st.go && st.id !== 'dome'){
     const there = where === st.id || (st.id === 'cabin' && where === 'cabinSleep');
     c.save(); c.beginPath(); ell(c, 800, 440, 31, 31); c.clip();
@@ -350,7 +383,7 @@ export function updateOtherShip(dt){
 }
 ACT['ring:sit'] = { tap(){
   if (S.sitting){ standUp(); return; }
-  S.sitting = true; S.phiTarget = 45; AU.soft(); updateHud();
+  S.sitting = true; S.phiTarget = WINDOW_ANG; AU.soft(); updateHud();
   say(once('sitFirst') ? tr('你在长椅上坐下。星星从窗的一边转到另一边：这艘船在自己转。') : tr('你在长椅上坐下。'));
   if (once('sitHint')) say(tr('坐着别动，窗外有时会经过别的东西。'), null, 5200);
   setCtx([{ label:tr('站起来'), fn:standUp }]);

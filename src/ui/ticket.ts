@@ -2,6 +2,7 @@ import { tr, isEN } from '../i18n';
 import { AU } from '../audio/index';
 import { $, HOUR, durText, escapeHtml, hhmm, ymd } from '../core/util';
 import { COL, ORDER, ROUTES, SEEDS, STATIONS } from '../data/index';
+import { PORTS } from '../data/ports';
 import { endHidden, endPos, wdx } from '../rooms/dome';
 import { bloomReady } from '../rooms/green';
 import { ACT } from '../rooms/registry';
@@ -42,12 +43,20 @@ export function ticketMarkup(stub){
   const chips = ORDER.filter(c => G.answered[c]).map(c => `<span class="chip"><i style="background:${COL[c].hex}"></i>${tr(COL[c].beacon)} \u00d7 ${G.answered[c]}</span>`).join('');
   const names = [...new Set(Object.values(G.names))].slice(0,4);
   const route = G.visited.slice(-4).map(r => tr(ROUTES[r].name)).join(' \u2192 ');
+  /* The round, read back as a list of people rather than a score. One line per
+     call, newest first, each naming the place and the flower that was left. */
+  const calls = G.calls.length
+    ? `<div class="chips">` + G.calls.slice(-6).reverse().map(c => {
+        const P = PORTS[c.id];
+        return P ? `<span class="chip"><i style="background:${SEEDS[c.sp] ? SEEDS[c.sp].color : '#ffd9a3'}"></i>${tr(P.name)}</span>` : '';
+      }).join('') + `</div>`
+    : tr('还没有送到过。');
   const nights = Math.max(1, G.nights.length);
   /* Every row is read off the save, so the stub is a record of this voyage and
      nothing else. The note stays whatever the player left, including nothing. */
   const note = stub
-    ? `<div class="t-note"><label>${tr('票背面')}</label><div>${G.note ? escapeHtml(G.note) : tr('（空着）')}</div></div>`
-    : `<div class="t-note"><label for="ticketNote">${tr('票背面（可以空着）')}</label><textarea id="ticketNote" maxlength="80" placeholder="${tr('可以写窗外看见的东西，也可以写一个想去的地方。真的假的都行。')}">${escapeHtml(G.note)}</textarea></div>`;
+    ? `<div class="t-note"><label>${tr('卡片背面')}</label><div>${G.note ? escapeHtml(G.note) : tr('（空着）')}</div></div>`
+    : `<div class="t-note"><label for="ticketNote">${tr('卡片背面')}</label><textarea id="ticketNote" maxlength="80" placeholder="${tr('写一件窗外看见的东西。')}">${escapeHtml(G.note)}</textarea></div>`;
   return `
   <div class="t-main">
     <div class="t-head"><b>${tr('夜航')}</b><span class="mono">NIGHT CROSSING \u00b7 No.${G.no}</span></div>
@@ -56,6 +65,7 @@ export function ticketMarkup(stub){
       <dt>${tr('这次')}</dt><dd class="mono">${tr('{0} 登船', hhmm(S.sessionStart || now()))}</dd>
       <dt>${tr('航程')}</dt><dd>${tr('第 {0} 夜 · 共航行 {1}', nights, durText(G.mapLen*HOUR))}</dd>
       <dt>${tr('航道')}</dt><dd>${route}</dd>
+      <dt>${tr('到访')}</dt><dd class="wide">${calls}</dd>
       <dt>${tr('灯串')}</dt><dd class="wide">${chips ? `<div class="chips">${chips}</div>` : tr('还没有。窗外的灯会一直经过。')}${G.passedLights ? tr('　你忙的时候，窗外经过了 {0} 盏灯。', G.passedLights) : ''}</dd>
       <dt>${tr('厨房')}</dt><dd>${tr('茶 {0} 杯 · 面包 {1} 个', G.cups, G.baked)}${G.gaveAn ? tr(' · 分给岸 {0} 次', G.gaveAn) : ''}</dd>
       <dt>${tr('信')}</dt><dd>${tr('读过 {0} 封 · 寄出 {1} 张', G.mail.read.length, G.mail.out.length)}</dd>
@@ -71,8 +81,8 @@ export function ticketMarkup(stub){
    set that way and stay legible, so it gets two short stacked words instead. */
 function STUB_V(){
   return isEN
-    ? '<span class="v v-en"><span>LONG</span><span>HAUL</span><span>\u00b7</span><span>OPEN</span><span>ENDED</span></span>'
-    : '<span class="v"><span>\u957f</span><span>\u822a</span><span>\u00b7</span><span>\u4e0d</span><span>\u9650</span><span>\u7a0b</span></span>';
+    ? '<span class="v v-en"><span>LONG</span><span>HAUL</span><span>\u00b7</span><span>LAMP</span><span>RUN</span></span>'
+    : '<span class="v"><span>\u957f</span><span>\u822a</span><span>\u00b7</span><span>\u9001</span><span>\u706f</span></span>';
 }
 export function openTicket(){
   closePanels(); AU.paper();
@@ -84,11 +94,15 @@ export function openEnding(){
   $('#endTicket').innerHTML = ticketMarkup(true); $('#ending').hidden = false; $('#endReply').textContent = '';
   document.querySelectorAll('#endActs button').forEach(b => b.classList.remove('sel'));
   const waits = [];
-  if (G.dough.st === 'proofing' || G.dough.st === 'proofed') waits.push(tr('面团在发酵箱里'));
-  const grow = G.pots.filter(p => p && p.g < 1).length; if (grow) waits.push(tr('{0} 盆植物还在长', grow));
-  if (G.lines.some(l => l.a.s == null || l.b.s == null || endHidden(l.a) || endHidden(l.b))) waits.push(tr('有星线悬着'));
-  if (G.mail.out.some(o => !o.sent)) waits.push(tr('明信片在寄出口'));
-  $('#endNote').textContent = tr('船会继续航行。') + (waits.length ? waits.join('，') + tr('，它们不急。') : '') + tr('关掉这一页就行，航程已经存好；下次打开，船还在原处。');
+  if (G.dough.st === 'proofing' || G.dough.st === 'proofed') waits.push(tr('面团在发酵箱里慢慢发着。'));
+  const grow = G.pots.filter(p => p && p.g < 1).length; if (grow) waits.push(tr('有 {0} 个盆里的植物还在长。', grow));
+  if (G.lines.some(l => l.a.s == null || l.b.s == null || endHidden(l.a) || endHidden(l.b))) waits.push(tr('有一笔星线还悬着。'));
+  if (G.mail.out.some(o => !o.sent)) waits.push(tr('明信片还在寄出口。'));
+  if (G.call && !G.call.docked && PORTS[G.call.to]) waits.unshift(tr('船正往{0}去。', tr(PORTS[G.call.to].name)));
+  if (G.call && G.call.docked && PORTS[G.call.to]) waits.unshift(tr('船还靠在{0}，门外有人在等。', tr(PORTS[G.call.to].name)));
+  /* One wait, not a list of them: naming the dough is a detail, naming all
+     four is an inventory the player just walked away from. */
+  $('#endNote').textContent = tr('船会继续航行。') + (waits[0] || '') + tr('航程已经存好了。下次打开，船还在原处。');
   addLog(tr('今天就到这里')); persist(true);
   setTimeout(() => { const s = $('#stamp'); s && s.classList.add('on'); AU.stamp(); }, 700);
 }

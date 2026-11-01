@@ -32,6 +32,15 @@ finishing with a `soft-light` texture pass. There are no contour lines anywhere
 in the game. Around 250 call sites depend on this, and on Canvas2D blend modes
 that WebGL does not have natively.
 
+The texture pass is what keeps the look from reading as flat vector art with a
+sheet of grain laid over it. There are three brush tiles, not one: `vol()` picks
+between them by the object's own core-shadow offset, so a kettle is not grained
+at the same frequency as a hull plate, and it rotates and offsets the pattern
+per draw call from a hash of that call's own numbers, so two objects side by
+side never line their grain up. The whole-frame pass in
+[core/shell.ts](src/core/shell.ts) is deliberately faint; the texture you see is
+the one each object paints for itself.
+
 **Light as a compositing pass.** A room paints onto its own buffer, then
 [core/light.ts](src/core/light.ts) lays a dark wash over it and punches soft holes
 at each light source with `destination-out`, re-applied with `source-atop`. Lamps
@@ -63,10 +72,16 @@ src/
     loop.ts          rAF loop, adaptive resolution, autosave
     presence.ts      focus/visibility handling
   rooms/
-    registry.ts      ROOMS + ACT contracts, go(), HUD
-    corridor.ts      the ring, stations, big window
+    registry.ts      ROOMS + ACT contracts, go(), HUD, the RING lattice
+    corridor.ts      the ring, nine stations, big window
+    hatch.ts         the gangway: the round, docking, the handover
     cabin.ts  galley.ts  green.ts  radio.ts  dome.ts
-  characters/        岸: pose, drawing, idle lines
+  characters/
+    an.ts an-lines.ts  岸: pose, drawing, idle lines
+    visitor.ts         whoever is waiting at the gangway door
+  data/
+    index.ts         lanes, beacons, tea, seeds, stations, letters
+    ports.ts         the four places the round calls at
   state/
     store.ts         the save shape (G) + migration
     save.ts          localStorage + optional cloud save
@@ -141,6 +156,34 @@ ACT['cab:lamp'] = { tap(args, e, p, hit) { ... } };
 Action ids are colon-paths; `resolveAct` walks them longest-first, so
 `cab:lamp:pull` falls back to `cab:lamp`. Both contracts are typed in
 [rooms/registry.ts](src/rooms/registry.ts).
+
+## The round
+
+The visible main line is a delivery round. [data/ports.ts](src/data/ports.ts) holds
+four places, each sitting at the end of one of the four lanes in
+[data/index.ts](src/data/index.ts), each with somebody at it who asked the ship for
+one lit plant. The cabin's sign opens the run sheet, which picks the next call and
+takes the lane with it; the greenhouse's work bench turns a flowered pot into the
+thing being carried; `ROOMS.hatch` is the one place on the ship that opens onto
+somebody else's.
+
+Three pieces of state carry it, all on the save:
+
+| | |
+|---|---|
+| `G.call` | `{ to, eta, docked, gave }` — where the ship is headed and how far along |
+| `G.calls` | what has been delivered, which the record in the cabin reads back |
+| `G.rig` | the piece on the bench: `{ sp, glass, lit }`, finished when both are true |
+
+Arriving is deliberately not something the player can miss. `advance()` in
+[state/progress.ts](src/state/progress.ts) brings the ship alongside on its own
+schedule, whether or not anyone is aboard to see it, and then it holds there
+until the door is opened. Casting off again runs on a clock in the same place, so
+a tab closed between the handover and the parting still ends the call.
+
+The three beacon colours in `COL` were already named after three of these places,
+so the lights the player answers with the lantern from the cabin window are the
+places the ship is working toward.
 
 ## If you later move to Phaser
 

@@ -1,0 +1,61 @@
+{
+  "_note": "Deliberate exceptions to docs/VOICE.md. Each line here is a judgement someone made on purpose, not a backlog. Adding to this file is a design decision -- say why in the commit.",
+  "keepChinese": [
+    "中文"
+  ],
+  "formal": [
+    "Here is how the lanes are tonight.\nNear-Harbour Lane has plenty of lights. Nebula Shallows has beacons in all three colours. Ringbelt Slow Lane keeps a steady rhythm.\nThe Quiet Stretch is quietest at night. It is a good place for not talking.",
+    "Carry on as we are.",
+    "There you are."
+  ],
+  "fragments": [
+    "1 Mind the stove.",
+    "2 Hold the rail.",
+    "4 Quiet up top.",
+    "All right.",
+    "And yours.",
+    "Another {0}.",
+    "Back aboard.",
+    "Ding.",
+    "Empty.",
+    "Finding your ticket…",
+    "Just the once.",
+    "Morning.",
+    "Night Crossing No.{0} · night {1}.",
+    "Night {1} of the crossing.",
+    "Nine.",
+    "Nothing yet.",
+    "One.",
+    "Out the window today…",
+    "Seven.",
+    "Shoulders first.",
+    "The back of a chair, a pillow, the floor.",
+    "The cabin.",
+    "The galley.",
+    "The greenhouse.",
+    "The observation dome.",
+    "The radio room.",
+    "Three.",
+    "Time speed back to ×1.",
+    "Time speed ×20 (for testing).",
+    "Tomorrow:",
+    "True or not.",
+    "Two.",
+    "Very sour, and very wet.",
+    "Your hand, for one.",
+    "Yours again.",
+    "a pause.",
+    "two hours."
+  ],
+  "lists": [
+    "两勺面粉，加水，揉成一团。",
+    "把小灯关掉，眼睛别动，等一会儿。",
+    "穹顶里，先把小灯关掉，然后眼睛别动，等一会儿。\n暗的星要等眼睛适应才出来。\n还有几颗是一阵一阵亮的。线可以先连过去，悬着，等它亮。",
+    "信箱与船钟",
+    "送了几个星梨过去，酸，配茶正好。\n面团喜欢暖和的地方，刚烧过水的厨房最好。\n发过头的面团，烤出来会胖一点。",
+    "如果你在读这封信，说明邮船又绕回来了。\n这一圈和上一圈差不多。窗外的星换了几颗。",
+    "Two scoops of flour, then some water, and you work it into a lump.",
+    "Turn the lamp off, keep your eyes still, and wait a while."
+  ],
+  "permission": []
+}

@@ -18,8 +18,12 @@ export function shell(c, cfg){
   quad([BL, BR, FR, FL], lg(BL, [BL[0], FL[1]], cfg.floor));
   quad([TL, BL, FL, GL], lg(TL, [GL[0], TL[1]], cfg.side));
   quad([TR, BR, FR, GR], lg(TR, [GR[0], TR[1]], cfg.side));
-  // painterly grain over the shell
-  c.save(); c.globalAlpha = .28; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c); c.beginPath(); polyP(c, [GL, GR, FR, FL]); c.fill(); c.restore();
+  /* A grain pass over the whole near plane, which is the whole frame. It used to
+     carry most of the texture in the picture, and a single tile at a single
+     angle across every room is what made the look read as one sheet laid over
+     the art. It is quiet now: the fine tile, low, so the grain each object
+     paints for itself in vol() is the thing the eye picks up. */
+  c.save(); c.globalAlpha = .17; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c, 0, 1.25, .2, 40); c.beginPath(); polyP(c, [GL, GR, FR, FL]); c.fill(); c.restore();
   // floor boards / seams converge toward the back wall
   if (cfg.seams){ const n = cfg.seams; c.fillStyle = cfg.seamCol || 'rgba(8,12,26,.28)';
     for (let i=1;i<n;i++){ const t = i/n, a = [lerp(BL[0],BR[0],t), lerp(BL[1],BR[1],t)], bb = [lerp(FL[0],FR[0],t), lerp(FL[1],FR[1],t)], w = RS*1.2, w2 = RS*3.2;

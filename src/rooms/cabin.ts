@@ -12,13 +12,16 @@ import { MAT } from '../core/materials';
 import { SAMBER, SCOOL, SIND, SOFT, SPR_OF, SROSE, STEAL, SWARM, blob, ell, flat, glowAt, leafPath, pat, polyP, rr, shadow, sphere, star5, stemPath, txt, vol, txtFit } from '../core/paint';
 import { P, shell } from '../core/shell';
 import { RS } from '../core/surface';
-import { $, D2R, clamp, hex, lerp, mixHex, mk, mulberry32, pick, rand } from '../core/util';
+import { $, D2R, MIN, clamp, hex, lerp, mixHex, mk, mulberry32, pick, rand } from '../core/util';
 import { CN, COL, ORDER, ROUTES } from '../data/index';
+import { PORTS, PORT_ORDER } from '../data/ports';
+import { callPort, docked, visits } from './hatch';
 import { fx } from './radio';
 import { ACT, ROOMS, setCtx } from './registry';
 import { PR, S } from '../state/runtime';
 import { markDirty } from '../state/save';
 import { G } from '../state/store';
+import { now } from '../state/time';
 import { AN, addLog, once, onceS, say } from '../ui/captions';
 import { K_BS, K_LP, K_NR, K_SP, K_WL } from '../core/depth';
 import { anyOpen, closePanels } from '../ui/panels';
@@ -100,7 +103,7 @@ export function answer(b){
   if (onceS('log-ans-'+b.color)) addLog(tr('回应了一盏「{0}」', C.beacon));
   const asleep = anAsleep();
   if (!G.named.includes(b.color)){ G.named.push(b.color); if (anHere() && !asleep) say(C.line, AN, 3200); else S.pendingNames.push(b.color); }
-  else if (anHere() && !asleep && Math.random() < .5) say(tr('又一盏“{0}”。我在图上点了个点。', C.beacon), AN, 3000);
+  else if (anHere() && !asleep && Math.random() < .5) say(tr('又一盏"{0}"。我在图上点了个点。', C.beacon), AN, 3000);
   markDirty();
 }
 export function miss(b){
@@ -175,7 +178,7 @@ export function updateGlass(dt){
 ACT['cab:blanket'] = { tap(){
   G.blanket = !G.blanket; AU.soft();
   say(G.blanket ? tr('你把毯子拿过来，搭在腿上。毯子有点旧，很厚。') : tr('毯子叠好，放回长椅上。'));
-  if (G.blanket && once('blanketTalk') && anHere() && !anAsleep()) say(tr('那条毯子是船上的，随便用。'), AN, 3400);
+  if (G.blanket && once('blanketTalk') && anHere() && !anAsleep()) say(tr('那条毯子是船上的，上一班就在了。'), AN, 3400);
   markDirty();
 }};
 export const PLANT = [tr('叶子晃了晃。'),tr('叶子背面有一层细绒毛。'),tr('盆土是湿的，有人浇过水。'),tr('一片新叶还卷着。')];
@@ -188,25 +191,43 @@ ACT['cab:vase'] = { tap(){
   say({ vine:tr('星藤的花在瓶里亮着，五个尖。'), bell:tr('月铃垂在瓶口。碰一下，它轻轻响了。'), fern:tr('一枝雾蕨，叶尖上挂着水珠。') }[G.vase]);
   if (G.vase === 'bell') AU.bell(86,.04);
 }};
-/* routes */
+/* ================= THE RUN SHEET =================
+   The sign by the window used to pick a backdrop. It now picks where the ship
+   is going, and the lane comes with the place rather than the other way round,
+   so the one choice the cabin offers is the main line of the game. */
 export function renderRoutes(){
   const list = $('#routeList'); list.innerHTML = '';
-  ['nebula','ring','quiet','harbor'].forEach(r => {
-    const R = ROUTES[r], b = document.createElement('button'); b.type='button'; if (r===G.route) b.classList.add('cur');
-    const dots = [...new Set<string>(R.colors)].map(c => `<i style="background:${COL[c].hex}"></i>`).join('') || '<i style="background:transparent;border:1px solid #97a9bf"></i>';
-    b.innerHTML = tr('<span class="rname">{0}{1}</span><span class="rdots">{2}</span><span class="rdesc">{3}</span>', R.name, r===G.route?tr('<span class="rcur">当前</span>'):'', dots, R.desc);
-    b.addEventListener('click', () => setRoute(r));
+  const cur = G.call ? G.call.to : null;
+  PORT_ORDER.forEach(id => {
+    const P = PORTS[id], R = ROUTES[P.lane], b = document.createElement('button'); b.type = 'button';
+    const been = visits(id);
+    if (id === cur) b.classList.add('cur');
+    const dot = P.col ? `<i style="background:${COL[P.col].hex}"></i>` : '<i style="background:transparent;border:1px solid #97a9bf"></i>';
+    const mark = id === cur
+      ? (docked() ? tr('<span class="rcur">已靠上</span>') : tr('<span class="rcur">在路上</span>'))
+      : (been ? tr('<span class="rcur">去过 {0} 次</span>', been) : '');
+    b.innerHTML = tr('<span class="rname">{0}{1}</span><span class="rdots">{2}</span><span class="rdesc">{3}<br>走{4}，大约 {5} 分钟。</span>',
+      P.name, mark, dot, P.ask, R.name, P.mins);
+    b.addEventListener('click', () => takeCall(id));
     list.appendChild(b);
   });
 }
 export function openRoutes(){ closePanels(); renderRoutes(); $('#routePanel').hidden = false; AU.paper(); }
-export function setRoute(r){
+export function takeCall(id){
   closePanels();
-  if (r === G.route){ say(tr('照现在这样走。')); return; }
+  const P = PORTS[id];
+  if (docked()){ say(tr('船正靠着。先把舷门那边的事办完。')); return; }
+  if (G.call && G.call.to === id){ say(tr('照现在这样走。')); return; }
+  G.call = { to:id, eta:now() + P.mins*MIN, docked:0 };
+  setRoute(P.lane);
+  say(tr('船转向{0}。', P.name), null, 900);
+  addLog(tr('接下{0}这一趟', P.name));
+}
+export function setRoute(r){
+  if (r === G.route){ markDirty(); return; }
   G.route = r; if (!G.visited.includes(r)) G.visited.push(r);
   S.turn = { t:0, dur:4.5, to:r, swapped:false };
-  say(tr('船身微微一斜，开始转弯。')); M.next = .5;
-  addLog(tr('航道改为「') + tr(ROUTES[r].name) + tr('」')); markDirty();
+  say(tr('船身微微一斜，开始转弯。')); M.next = .5; markDirty();
 }
 export function finishTurn(r){
   const R = ROUTES[r];
@@ -217,7 +238,7 @@ export function finishTurn(r){
   }
   S.nextSpawn = rand(4,8);
 }
-$('#routeLater').onclick = () => { closePanels(); say(tr('照现在这样走。')); };
+$('#routeLater').onclick = () => { closePanels(); };
 
 /* ---- static art ---- */
 export function cabWallArt(g){
@@ -244,7 +265,7 @@ export function cabWallArt(g){
   shadow(g, 800, 498, 70, 10, .4);
   vol(g, cc => rr(cc, 738, 386, 124, 104, 14), MAT.paper, { k:2, s:5, r:1.5 });
   for (const [x,y] of [[750,398],[850,398],[750,478],[850,478]]) vol(g, cc => ell(cc, x, y, 3.5, 3.5), MAT.brass, { k:.5, s:1.2, tex:0 });
-  txt(g, tr('航 道'), 800, 418, 15, '#7d7a72');
+  txt(g, tr('下 一 站'), 800, 418, 14, '#7d7a72');
   flat(g, cc => rr(cc, 756, 426, 88, 2, 1), '#c4b392');
 }
 export function cabMidArt(g){
@@ -385,7 +406,7 @@ export function drawTicketObj(c, x, y){
   txt(c, tr('夜航'), -50, -6, 21, '#2a3550');
   txt(c, 'NIGHT · No.' + G.no, -50, 12, 8, '#7d7a72', { mono:true, ls:1 });
   ORDER.filter(cl => G.answered[cl] > 0).forEach((cl,i) => flat(c, cc => ell(cc, 66, -22 + i*16, 5.5, 5.5), COL[cl].hex));
-  hit(c, 'ui:ticket', ['r', -90, -40, 180, 66], { label:tr('船票') });
+  hit(c, 'ui:ticket', ['r', -90, -40, 180, 66], { label:tr('航行记录') });
   c.restore();
 }
 export function drawVase(c, x, y){
@@ -434,7 +455,7 @@ ROOMS.cabin = {
   enter(){
     setCtx([]); S.nextSpawn = 3; S.vis = [.1,.55,1][G.lamp];
     const where = anWhere();
-    if (once('cabinFirst')) say(tr('客舱。舱灯开着，窗玻璃上映着舱里的东西。'), null, 300);
+    if (once('cabinFirst')) say(tr('舱灯开着的时候，窗玻璃上只映得出舱里的东西。'), null, 300);
     else if (where === 'cabinSleep') say(tr('客舱里很静。岸已经睡了。'), null, 300);
     if (S.pendingNames.length && anHere() && !anAsleep()) say(tr('刚才你回应的那盏灯，我认得。点我一下，我跟你说。'), AN, 2400);
   },
@@ -476,7 +497,7 @@ ROOMS.cabin = {
     if (S.cabinT > 9 && G.flags.lamp1 === undefined && G.flags.lamp2 === undefined && onceS('lampHint')) say(tr('灯罩下面垂着一根灯绳。'));
     const ready = (S.firstAnswerAt && S.run - S.firstAnswerAt > 7) || S.cabinT > 110;
     if (ready && !G.junction && !S.turn && !anyOpen()){ G.junction = true; markDirty();
-      if (anHere() && !asleep) say(tr('前面要分岔了。往哪边走都行，我都画。'), AN); setTimeout(() => { if (S.room === 'cabin') openRoutes(); }, 1800); }
+      if (anHere() && !asleep) say(tr('前面要分岔了。你选哪边，我画哪边。'), AN); setTimeout(() => { if (S.room === 'cabin') openRoutes(); }, 1800); }
     if (PR.idleT > 150 && here && !asleep && !G.blanket && onceS('anBlanket')){ G.blanket = true; AU.soft(); say(tr('你好一会儿没动。岸把毯子拿过来，搭在你腿上。')); markDirty(); }
     if (S.cabinT > 45 && once('doorHint')) say(tr('左边是舱门。出去是环廊，沿着它能走到别的舱。'));
   },
@@ -493,12 +514,15 @@ ROOMS.cabin = {
     const dw = dp(.4, .72); c.beginPath(); c.ellipse(dw[0], dw[1], 22*RS, 30*RS, 0, 0, Math.PI*2); c.fillStyle = '#16213a'; c.fill();
     c.globalCompositeOperation = 'lighter'; c.globalAlpha = .35; c.drawImage(SCOOL, dw[0]-24*RS, dw[1]-30*RS, 48*RS, 60*RS); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
     const dh = dp(.55, .45); c.beginPath(); c.ellipse(dh[0], dh[1], 6*RS, 14*RS, 0, 0, Math.PI*2); c.fillStyle = '#f0c27a'; c.fill();
-    c.save(); c.globalAlpha = .3; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c); c.beginPath(); polyP(c, [dp(.18,0), dp(.18,.95), dp(.62,.98), dp(.62,0)]); c.fill(); c.restore();
+    c.save(); c.globalAlpha = .3; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c, 1, 1.15, .52, 60); c.beginPath(); polyP(c, [dp(.18,0), dp(.18,.95), dp(.62,.98), dp(.62,0)]); c.fill(); c.restore();
     HITS.push({ act:'go:corridor', m:[1,0,0,1,0,0], shape:['p', [dp(.18,0), dp(.18,.96), dp(.62,.98), dp(.62,0)]], label:tr('舱门（回环廊）'), key:'cabDoor', cur:'pointer' });
     // wall + windows
     layerCache(c, 'cab:wall', K_WL, cabWallArt);
-    txtFit(c, tr(ROUTES[G.route].name), 800, 458, 104, ROUTES[G.route].name.length > 4 ? 18 : 20, '#2a3550');
-    hit(c, 'cab:route', ['r', 738, 386, 124, 104], { label:tr('航道牌') });
+    { /* the sign says the destination now, and the lane under it in small type */
+      const P = callPort();
+      txtFit(c, P ? tr(P.name) : tr('没有下一站'), 800, 452, 104, 19, '#2a3550');
+      txtFit(c, tr(ROUTES[G.route].name), 800, 474, 104, 12, '#7d7a72'); }
+    hit(c, 'cab:route', ['r', 738, 386, 124, 104], { label:tr('航程单') });
     for (const s of ['left','right']){ const [x,y,w,h] = WIN[s]; hit(c, 'cab:glass:' + s, ['r', x, y, w, h], { label:s === 'left' ? tr('舷窗（长按哈气）') : tr('舷窗'), cur:'crosshair' }); }
     drawBulbs(c);
     // mid plane

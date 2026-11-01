@@ -15,7 +15,7 @@ import { anyOpen, closePanels } from './panels';
    judge opening the public link must not meet a dev affordance. */
 export const DEBUG = !import.meta.env.PROD || new URLSearchParams(location.search).has('debug');
 $('#speedRow').hidden = !DEBUG;
-export function saveText(){ return SV.ref ? (SV.cloudOk || !SV.lastCloud ? tr('存在你的账户里（只有你看得见）') : tr('账户存档暂时连不上，先存在本浏览器')) : (SV.local ? tr('存在这个浏览器里') : tr('这次不会保存')); }
+export function saveText(){ return SV.ref ? (SV.cloudOk || !SV.lastCloud ? tr('存在你的账户里（只有你看得见）') : tr('暂时连不上你的账户，先存在这个浏览器里')) : (SV.local ? tr('存在这个浏览器里') : tr('这次不会保存')); }
 export function renderSettings(){
   if (!DEBUG && G.speed !== 1){ G.speed = 1; markDirty(); }
   $('#sSound').textContent = AU.on ? tr('开') : tr('关'); $('#sMotion').textContent = G.reduced ? tr('减少') : tr('完整');

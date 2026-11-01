@@ -11,15 +11,15 @@
 <body>
 <div id="app">
 <div id="stage">
-<canvas id="scene" tabindex="0" aria-label="夜航船：用鼠标或触摸点选船上的东西；Tab 键在可碰的东西之间切换，回车使用"></canvas>
+<canvas id="scene" tabindex="0" aria-label="你在开一艘夜航船。用鼠标或者触摸点船上的东西；按 Tab 在可以碰的东西之间切换，按回车使用。"></canvas>
 
 <div id="fade"></div>
 <div id="brand"><b>夜航</b><span id="where">NIGHT CROSSING</span></div>
-<div id="status" hidden><span id="stNight"></span><span id="stClock"></span><span id="stPresence"></span></div>
+<div id="status" hidden><span id="stNight"></span><span id="stClock"></span><span id="stCall"></span><span id="stPresence"></span></div>
 <div id="hud" hidden>
   <button class="pill" id="bSound" type="button">声音 开</button>
   <button class="pill" id="bHints" type="button">能碰什么</button>
-  <button class="pill" id="bTicket" type="button">船票</button>
+  <button class="pill" id="bTicket" type="button">航行记录</button>
   <button class="pill" id="bSettings" type="button">设置</button>
 </div>
 <div id="hints"></div>
@@ -35,22 +35,22 @@
 <div id="ctx"></div>
 
 <div id="routePanel" class="panel" hidden>
-  <h2>前方岔航道</h2>
-  <p class="sub">往哪边走都行，岸都会画进图里。选了以后，船在下一个弯慢慢转过去；之后点航道牌还能再换。航道会一直保持，下次登船也一样。</p>
+  <h2>航程单</h2>
+  <p class="sub">每一处都托人要过一盏灯。挑一个，船就往那边转。</p>
   <div class="list" id="routeList"></div>
-  <button class="later" id="routeLater" type="button">先照现在这样走</button>
+  <button class="later" id="routeLater" type="button">先不挑</button>
 </div>
 
 <div id="seedPanel" class="panel" hidden>
   <h2>种点什么</h2>
-  <p class="sub" id="seedSub">选一种种子。它们长得慢，长的时候你不必在旁边。</p>
+  <p class="sub" id="seedSub">选一种种子。它们长得慢。</p>
   <div class="list" id="seedList"></div>
   <button class="later" id="seedLater" type="button">先空着</button>
 </div>
 
 <div id="namePanel" class="panel" hidden>
   <h2>给这组星线起个名字</h2>
-  <p class="sub">可以不起。名字只写在这张星图上，过些天它们转回头顶时还在。</p>
+  <p class="sub">名字只写在这张星图上。过些天它们转回头顶的时候，名字还在。</p>
   <input type="text" id="nameInput" maxlength="16" placeholder="比如：没画完的船">
   <div class="row"><button class="btn primary" id="nameOk" type="button">写上</button><button class="btn" id="nameSkip" type="button">就让它没名字</button></div>
 </div>
@@ -59,9 +59,9 @@
   <h2>设置</h2>
   <div class="setrow"><span>声音</span><button class="pill" id="sSound" type="button">开</button></div>
   <div class="setrow"><span>动态</span><button class="pill" id="sMotion" type="button">完整</button>
-    <small>减少后，船身摇晃、视差与转弯幅度变小。</small></div>
+    <small>选"减少"以后，船身的晃动会小很多。</small></div>
   <div class="setrow" id="speedRow" hidden><span>测试用：时间流速</span><button class="pill" id="sSpeed" type="button">×1</button>
-    <small>×20 时面团、植物、信件与星空都会加快，方便走查长流程。正式体验请用 ×1。</small></div>
+    <small>调到 ×20，船上要等的东西都会走得快一些。正常玩请用 ×1。</small></div>
   <div class="setrow"><span>语言</span><button class="pill" id="sLang" type="button">中文</button>
     <small>换语言会重新载入这一页。航程已经存好，不会丢。</small></div>
   <div class="setrow"><span>存档</span><span id="sSave" class="mono" style="color:var(--ui-dim);font-size:.9em">—</span></div>
@@ -114,12 +114,12 @@
   <div class="sheet-inner">
     <div class="ticket" id="endTicket"></div>
     <div class="end-card">
-      <h3>下船以后，如果想的话</h3>
+      <h3>下船以后</h3>
       <div class="acts" id="endActs">
-        <button type="button" data-r="好。不用烧开，温的就行。">倒一杯温水</button>
-        <button type="button" data-r="好。看见什么都行，看不见也行。">把屋里的灯调暗一点，看一会儿窗外</button>
-        <button type="button" data-r="好。肩膀、脖子，哪里紧就动一动哪里。">站起来伸个懒腰</button>
-        <button type="button" data-r="好。椅背、枕头、地板，哪里都行。">换个舒服的姿势</button>
+        <button type="button" data-r="好。慢慢喝。">倒一杯温水</button>
+        <button type="button" data-r="好。灯一暗，窗外就清楚了。">把屋里的灯调暗一点，看一会儿窗外</button>
+        <button type="button" data-r="好。先动肩膀。">站起来伸个懒腰</button>
+        <button type="button" data-r="好。靠着比坐直舒服。">换个舒服的姿势</button>
         <button type="button" data-r="好。今天就到这里。">什么也不做</button>
       </div>
       <p id="endReply" aria-live="polite"></p>
@@ -136,14 +136,14 @@
     <h1 class="intro-title" aria-label="夜航"><span>夜</span><span>航</span></h1>
     <div class="intro-body">
       <div class="intro-en">NIGHT CROSSING · 长航</div>
-      <p id="introLead">末班船刚离港。下一站很远，船会自己开。</p>
-      <p id="introBody">这是一艘环形的船：沿着环廊走，能进客舱、小厨房、温室、电台室和观景穹顶。面团要等，种子要等，信也要等。等的时候，你不必在。</p>
+      <p id="introLead">末班船刚离港。这艘船归你开。</p>
+      <p id="introBody">温室里种出来的东西，一路送给沿途要光的人。沿着环廊走一圈，会走回原处。</p>
       <div class="intro-actions">
-        <button class="btn primary" id="board" type="button">登船</button>
-        <button class="btn" id="boardMute" type="button">静音登船</button>
+        <button class="btn primary" id="board" type="button">开船</button>
+        <button class="btn" id="boardMute" type="button">静音开船</button>
         <button class="btn" id="introLang" type="button">中文</button>
       </div>
-      <p class="fine" id="introFine">没有倒计时，也没有失败。东西不会因为你没来而坏掉。航程会保存在这艘船上，下次打开还在原处。</p>
+      <p class="fine" id="introFine">航程存在这艘船上。下次打开，船还在原处。</p>
     </div>
   </div>
 </div>

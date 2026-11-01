@@ -14,6 +14,7 @@ import { CH, CW, RS, cv } from '../core/surface';
 import { $, D2R, MIN, clamp, lerp, mixHex, mulberry32, pick, rand } from '../core/util';
 import { SEEDS } from '../data/index';
 import { ACT, ROOMS, setCtx } from './registry';
+import { drawRig } from './hatch';
 import { PR, S } from '../state/runtime';
 import { markDirty } from '../state/save';
 import { G } from '../state/store';
@@ -24,6 +25,7 @@ import { closePanels } from '../ui/panels';
 
 /* ================= GREENHOUSE ================= */
 export const POT_X = [300,520,740,960,1180], POT_Y = 598;
+export const BENCH_X = 1290;
 export const WATER_MS = 60*MIN;
 export const GH_SHELL = { kb:.62, kf:1.75, b:[80,40,1520,640], f:[-340,-280,1940,1180],
   ceil:[[0,'rgba(60,96,110,.28)'],[1,'rgba(10,22,30,.85)']], floor:[[0,'#2c3d3c'],[.4,'#3a4d48'],[1,'#1c2828']], side:[[0,'rgba(50,80,92,.4)'],[1,'rgba(12,24,32,.9)']], seams:10, seamCol:'rgba(6,14,16,.3)' };
@@ -110,7 +112,7 @@ export function openSeeds(i?){
   Object.entries(SEEDS).forEach(([k,sd]) => { const b = document.createElement('button'); b.type = 'button';
     b.innerHTML = `<span class="rname">${sd.name}</span><span class="rdots"><i style="background:${sd.color}"></i></span><span class="rdesc">${sd.desc}</span>`;
     b.onclick = () => plantSeed(S.seedPot, k); list.appendChild(b); });
-  $('#seedSub').textContent = tr('种在第 {0} 个盆里。它们长得慢，长的时候你不必在旁边。', i+1);
+  $('#seedSub').textContent = tr('种在第 {0} 个盆里。它们长得慢。', i+1);
   $('#seedPanel').hidden = false; AU.paper();
 }
 export function plantSeed(i, sp){
@@ -121,6 +123,34 @@ export function plantSeed(i, sp){
   addLog(tr('种下一颗{0}', SEEDS[sp].name)); markDirty();
 }
 $('#seedLater').onclick = () => { closePanels(); say(tr('盆先空着。')); };
+/* ================= THE BENCH =================
+   Three taps, one reply each, and the round has something to carry. The pot is
+   emptied the moment the plant comes off it, so the greenhouse is the thing the
+   whole round runs on: every call spends a flower that took a night to open. */
+export function bloomedPot(){ return G.pots.findIndex(p => bloomReady(p)); }
+export function rigStep(){ if (!G.rig) return 0; return G.rig.lit ? 3 : G.rig.glass ? 2 : 1; }
+ACT['gh:bench'] = { tap(){
+  AU.tap();
+  if (!G.rig){
+    const i = bloomedPot();
+    if (i < 0){ say(once('benchEmpty') ? tr('台子上空着。要一株开了花的，才装得起来。') : tr('台子还空着。')); return; }
+    const sp = G.pots[i].sp;
+    G.rig = { sp, glass:false, lit:false }; G.pots[i] = null; G.blooms++;
+    AU.wood(); markDirty();
+    say(tr('你把开着花的{0}连根端上台子。', SEEDS[sp].name));
+    if (once('benchHint')) say(tr('罩子在旁边。还要一盏小灯。'), null, 2400);
+    return;
+  }
+  if (!G.rig.glass){ G.rig.glass = true; AU.soft(); markDirty(); say(tr('玻璃罩扣下来，里面一下子安静了。')); return; }
+  if (!G.rig.lit){
+    G.rig.lit = true; AU.chain(); AU.bell(78, .04); markDirty();
+    say(tr('小灯卡进罩顶。叶子底下亮起来一点。'));
+    addLog(tr('装好一盏灯'));
+    say(tr('装好了。它在舷梯的架子上等着。'), null, 2600);
+    return;
+  }
+  say(tr('装好的那盏已经搬到舷梯去了。'));
+}};
 ACT['gh:seeds'] = { tap(){ AU.paper(); openSeeds(); } };
 ACT['gh:spray'] = { tap(){ setSpray(!S.spray); AU.tap(); if (S.spray && once('sprayHint')) say(tr('拿起喷壶。点哪一盆，就喷哪一盆。')); } };
 ACT['gh:lamp'] = { tap(){
@@ -187,9 +217,9 @@ ROOMS.green = {
   zc:[740, 460],
   enter(){
     setCtx([]);
-    if (once('greenFirst')) say(tr('温室。五个空花盆，一盒种子，一只喷壶。'));
+    if (once('greenFirst')) say(tr('温室比船上别处暖，玻璃内侧挂着一层水汽。'));
     else { const dry = G.pots.filter(p => p && p.water <= 0).length; if (dry) say(dry === 1 ? tr('有一盆土干了。') : tr('有 {0} 盆土干了。', dry)); }
-    if (anWhere() === 'green') say(once('anGreen') ? tr('中午我在这儿看书。别管我，你忙。') : tr('你来了。'), AN, 1800);
+    if (anWhere() === 'green') say(once('anGreen') ? tr('中午我在这儿看书。别管我，你忙你的。') : tr('你来了。'), AN, 1800);
   },
   exit(){ setSpray(false); setCtx([]); },
   update(dt){
@@ -247,6 +277,21 @@ ROOMS.green = {
       hit(c, 'gh:pot:' + i, ['r', -50, -80, 100, 82], { label:i === 0 || i === 4 ? tr('花盆') : null, key:'pot' + i, cur:S.spray ? 'crosshair' : 'pointer' });
       c.restore();
     });
+    /* The work bench shares the potting counter, past the last pot. It stays out
+       of the bottom strip, where the caption sits over anything you could tap. */
+    setL(c, 1); c.save(); c.translate(BENCH_X, POT_Y);
+    shadow(c, 0, 2, 76, 10, .5);
+    vol(c, cc => rr(cc, -72, -22, 144, 22, 6), MAT.woodD, { k:2, s:5, r:1.5 });
+    vol(c, cc => rr(cc, -72, -30, 144, 12, 5), MAT.wood, { k:1.5, s:3.5 });
+    if (G.rig) drawRig(c, 6, -30, G.rig, .78);
+    else { /* the glass cover waits on its side until something earns it */
+      c.save(); c.translate(14, -34); c.rotate(.24);
+      vol(c, cc => { cc.moveTo(-38,0); cc.bezierCurveTo(-38,-92, 38,-92, 38,0); cc.closePath(); }, MAT.glass, { k:1.8, s:4.5, r:1.2, tex:.2, ra:.4 });
+      flat(c, cc => stemPath(cc, -24, -20, -29, -56, -14, -74, 4, 2.4), '#ffffff', .2);
+      c.restore(); }
+    if (!G.rig || !G.rig.lit){ vol(c, cc => rr(cc, -58, -56, 28, 20, 7), MAT.brass, { k:1, s:2.6, tex:0 }); flat(c, cc => ell(cc, -44, -38, 9, 4.5), '#ffe7bd', .85); }
+    hit(c, 'gh:bench', ['r', -78, -180, 156, 182], { label:tr('装配台') });
+    c.restore();
     layerCache(c, 'gh:near', K_NR, ghNearArt);
     setL(c, K_NR);
     // seed box
@@ -274,6 +319,7 @@ ROOMS.green = {
     if (L < .95 && S.ghCursor){ hole(1, S.ghCursor.x, S.ghCursor.y, 220, (1-L)*(.35 + .25*Math.min(1, PR.stillT/3))); }
     POT_X.forEach((x,i) => { const pts = S.bloomPts && S.bloomPts[i]; if (pts) pts.forEach(([bx,by]) => hole(1, x + bx, POT_Y + by, 90, .45)); });
     hole(K_WL, 800, 260, 700, .25, null, 260);
+    if (G.rig && G.rig.lit) hole(1, BENCH_X, POT_Y - 140, 150, .45);
     if (anWhere() === 'green') hole(1, 1430, 520, 200, .25);
   },
   over(c, dt){
@@ -281,6 +327,7 @@ ROOMS.green = {
     if (L > .02){ glowL(c, .85, SPINK, 750, 420, 680, .22*L, null, 300); glowL(c, .85, SPINK, 750, 172, 560, .55*L, null, 40); }
     if (L < .95 && S.ghCursor) glowL(c, 1, SWARM, S.ghCursor.x, S.ghCursor.y, 60, (1-L)*(.25 + .2*Math.min(1, PR.stillT/3)));
     POT_X.forEach((x,i) => { const p = G.pots[i], pts = S.bloomPts && S.bloomPts[i]; if (pts && p) pts.forEach(([bx,by]) => glowL(c, 1, p.sp === 'vine' ? SAMBER : SCOOL, x + bx, POT_Y + by, 30, .5)); });
+    if (G.rig && G.rig.lit) glowL(c, 1, SWARM, BENCH_X + 6, POT_Y - 142, 46, .5);
     if (S.spray && S.ghCursor){ setL(c, 1); c.save(); c.translate(S.ghCursor.x + 30, S.ghCursor.y + 40); c.rotate(-.3);
       vol(c, cc => { cc.moveTo(-24,0); cc.lineTo(-20,-56); cc.quadraticCurveTo(0,-66, 20,-56); cc.lineTo(24,0); cc.closePath(); }, MAT.rose, { k:2, s:5, tex:0 }); c.restore(); }
     drawPuffs(c, dt); drawFX(c, dt);

@@ -35,18 +35,23 @@ export interface Action { tap?(...a: any[]): void; key?(...a: any[]): void; [key
 
 export const ROOMS: Record<string, Room> = {};
 export const ACT: Record<string, Action> = {};
-export const ROOM_NAMES = { corridor:tr('环廊'), cabin:tr('客舱'), galley:tr('小厨房'), green:tr('温室'), radio:tr('电台室'), dome:tr('观景穹顶') };
-export const ROOM_EN = { corridor:'RING', cabin:'CABIN', galley:'GALLEY', green:'GREENHOUSE', radio:'RADIO ROOM', dome:'DOME' };
-export const ROOM_KEY = { corridor:'ring:', cabin:'cab:', galley:'gal:', green:'gh:', radio:'rad:', dome:'dm:' };
+export const ROOM_NAMES = { corridor:tr('环廊'), cabin:tr('客舱'), galley:tr('小厨房'), green:tr('温室'), radio:tr('电台室'), dome:tr('观景穹顶'), hatch:tr('舷梯') };
+export const ROOM_EN = { corridor:'RING', cabin:'CABIN', galley:'GALLEY', green:'GREENHOUSE', radio:'RADIO ROOM', dome:'DOME', hatch:'GANGWAY' };
+export const ROOM_KEY = { corridor:'ring:', cabin:'cab:', galley:'gal:', green:'gh:', radio:'rad:', dome:'dm:', hatch:'hat:' };
+/* Nine stations at 40 degrees, not eight at 45: the gangway is where the round
+   touches the ship, so it needed a wall of its own rather than a share of one.
+   The ribs, hull ports and near pillars in corridor.ts step on the same lattice. */
+export const STEP = 40;
 export const RING = [
   { ang:0,   id:'cabin',  label:tr('客舱门'),   go:'cabin',  color:'#c98a5a', name:tr('客舱'),   en:'CABIN' },
-  { ang:45,  id:'window', label:tr('舷窗长椅') },
-  { ang:90,  id:'galley', label:tr('小厨房门'), go:'galley', color:'#d9a95c', name:tr('小厨房'), en:'GALLEY' },
-  { ang:135, id:'mail',   label:tr('信箱与船钟') },
-  { ang:180, id:'green',  label:tr('温室门'),   go:'green',  color:'#5ea39b', name:tr('温室'),   en:'GREENHOUSE' },
-  { ang:225, id:'board',  label:tr('布告板') },
-  { ang:270, id:'radio',  label:tr('电台室门'), go:'radio',  color:'#c47b7b', name:tr('电台室'), en:'RADIO' },
-  { ang:315, id:'dome',   label:tr('穹顶梯'),   go:'dome' }
+  { ang:40,  id:'window', label:tr('舷窗长椅') },
+  { ang:80,  id:'galley', label:tr('小厨房门'), go:'galley', color:'#d9a95c', name:tr('小厨房'), en:'GALLEY' },
+  { ang:120, id:'mail',   label:tr('信箱与船钟') },
+  { ang:160, id:'green',  label:tr('温室门'),   go:'green',  color:'#5ea39b', name:tr('温室'),   en:'GREENHOUSE' },
+  { ang:200, id:'gang',   label:tr('舷门'),     go:'hatch',  color:'#9cbcd2', name:tr('舷梯'),   en:'GANGWAY' },
+  { ang:240, id:'board',  label:tr('布告板') },
+  { ang:280, id:'radio',  label:tr('电台室门'), go:'radio',  color:'#c47b7b', name:tr('电台室'), en:'RADIO' },
+  { ang:320, id:'dome',   label:tr('穹顶梯'),   go:'dome' }
 ];
 export const angDiff = (a,b) => mod(a - b + 180, 360) - 180;
 ACT['go'] = { tap(a){ go(a[0]); } };

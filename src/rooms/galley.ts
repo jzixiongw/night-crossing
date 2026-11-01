@@ -104,7 +104,7 @@ export function boilKettle(){
   G.warmUntil = now() + 10*MIN;
   say(S.room === 'galley' ? tr('水开了。蒸汽扑上舷窗，起了一层雾。') : tr('厨房的水壶响了。'));
   setTimeout(() => { if (S.flameOn){ S.flameOn = false; S.flameSnd && S.flameSnd.stop(); S.flameSnd = null; AU.click(); } }, 1800);
-  if (!G.tea.kind && once('jarHint')) say(tr('架子上有三罐茶叶，挑一罐。不挑也行，就喝白水。'), null, 2800);
+  if (!G.tea.kind && once('jarHint')) say(tr('挑一罐。开罐的时候味道最冲。'), null, 2800);
   else if (once('pourHint')) say(tr('按住水壶，往杯子里倒。'), null, 2800);
   markDirty();
 }
@@ -146,7 +146,7 @@ ACT['gal:dough'] = {
     if (d.st === 'none'){ say(tr('板上空着。面粉袋在右边。')); return; }
     if (d.st === 'kneaded'){ say(tr('揉好了。挑一个形状。')); showShapes(); return; }
     if (d.st === 'shaped'){ G.dough.st = 'proofing'; G.dough.proof = 0; AU.soft();
-      say(tr('你把面团放进发酵箱，关上小门。它要自己待一阵，大约二十分钟。你可以走开。')); addLog(tr('揉好一团面，放进发酵箱')); markDirty(); return; }
+      say(tr('你把面团放进发酵箱，关上小门。它要自己待一阵，大约二十分钟。')); addLog(tr('揉好一团面，放进发酵箱')); markDirty(); return; }
     if (d.st === 'proofing' || d.st === 'proofed'){ say(tr('面团在上面的发酵箱里。')); return; }
     if (d.st === 'inOven' || d.st === 'baking'){ say(tr('面团在烤箱里。')); return; }
   },
@@ -187,7 +187,7 @@ export function finishBake(){
   G.baked++; G.warmUntil = now() + 10*MIN; G.dough = { st:'none', strokes:0, shape:null, proof:0 };
   addLog(tr('烤好一个面包'));
   if (S.room === 'galley'){ say(tr('叮。面包烤好了，放在左边的架子上晾着。')); if (anWhere() === 'galley') say(tr('好香。'), AN, 3000); }
-  else say(tr('厨房那边“叮”了一声。面包烤好了。'));
+  else say(tr('厨房那边"叮"了一声。面包烤好了。'));
   markDirty();
 }
 ACT['bread:take'] = { tap(){ breadEat(); } };
@@ -379,9 +379,9 @@ ROOMS.galley = {
   zc:[760, 470],
   enter(){
     setCtx([]);
-    if (once('galleyFirst')) say(tr('小厨房。水龙头、炉子、三罐茶叶，还有一袋面粉。'));
+    if (once('galleyFirst')) say(tr('小厨房里一直有点面包的味道。'));
     else if (G.dough.st === 'proofed') say(tr('发酵箱里的面团发好了。'));
-    if (anWhere() === 'galley') say(once('anGalley') ? tr('早。我在这儿吃早饭，你随便用厨房。') : tr('早。'), AN, 1800);
+    if (anWhere() === 'galley') say(once('anGalley') ? tr('早。我在这儿吃早饭。') : tr('早。'), AN, 1800);
     if (G.dough.st === 'kneaded') showShapes();
   },
   exit(){ if (S.pour) stopPour(); if (S.tapOn){ S.tapOn = false; S.tapSnd && S.tapSnd.stop(); } setCtx([]); },

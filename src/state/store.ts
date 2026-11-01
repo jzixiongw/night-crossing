@@ -8,7 +8,13 @@ export function freshSave(): Save {
     blanket:false, passedLights:0, lampTime:[0,0,0], mapLen:0, doodles:0, draws:0,
     tea:{ kind:null, level:0, temp:0, steep:0, leaves:false }, cups:0, kettle:{ pos:'sink', water:0, hot:0 }, warmUntil:0,
     dough:{ st:'none', strokes:0, shape:null, proof:0 }, breads:[], baked:0, gaveAn:0, pears:3, pearAt:0, bite:0, pearsEaten:0,
-    pots:[null,null,null,null,null], growLamp:true, vase:null, blooms:0,
+    /* The previous keeper left one pot in bloom, so the first call can be
+       answered on the first night instead of after the first growth cycle. */
+    pots:[{ sp:'bell', g:1, water:.6, lean:0, planted:Date.now(), bloomAt:0, stage:4 },null,null,null,null], growLamp:true, vase:null, blooms:0,
+    /* The round: where the ship is headed, when it gets there, and what it has
+       delivered. `eta` of 0 means the first call has not been timed yet; board()
+       sets it, so a save made and left unopened does not arrive in the dark. */
+    call:{ to:'dock', eta:0, docked:0 }, calls:[], rig:null, declined:[],
     radioOn:false, freq:.82, found:[], strip:new Array(16).fill(0), ghost:false, wind:0, phones:false,
     lines:[], names:{}, landed:[], domeLight:true, lie:false, lineSeq:0,
     mail:{ box:['welcome'], read:[], arrived:{}, nextAt:0, idx:1, out:[] },
@@ -21,7 +27,7 @@ export function setG(next: Save){ G = next; }
 export function migrate(o){
   const f = freshSave();
   for (const k in f) if (o[k] === undefined) o[k] = f[k];
-  for (const k of ['tea','kettle','dough','mail']) for (const kk in f[k]) if (o[k][kk] === undefined) o[k][kk] = f[k][kk];
+  for (const k of ['tea','kettle','dough','mail','call']) for (const kk in f[k]) if (o[k][kk] === undefined) o[k][kk] = f[k][kk];
   if (!Array.isArray(o.strip) || o.strip.length !== 16) o.strip = f.strip;
   if (!Array.isArray(o.pots) || o.pots.length !== 5) o.pots = f.pots;
   return o;

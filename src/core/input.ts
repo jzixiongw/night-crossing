@@ -94,7 +94,7 @@ $('#back').onclick = () => go('corridor');
 
 export function showHints(){
   const box = $('#hints'); box.innerHTML = '';
-  if (S.room === 'corridor' && once('dragHint')) say(tr('也可以按住环廊左右拖。'));
+  if (S.room === 'corridor' && once('dragHint')) say(tr('按住环廊也能左右拖。'));
   const seen = new Set();
   focusables().forEach(({ h, X, Y }) => {
     if (seen.has(h.label)) return; seen.add(h.label);

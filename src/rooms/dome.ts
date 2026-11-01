@@ -67,7 +67,7 @@ ACT['d:sky'] = { tap(a, e, P){
   if (st){
     if (!S.pick){ S.pick = { s:st.id }; AU.tap(); if (once('pick')) say(tr('选中了一颗星。再点另一颗，连一条线。点空处，线就悬在那儿。')); }
     else if (S.pick.s === st.id){ S.pick = null; AU.tap(); say(tr('这一笔先到这里。')); }
-    else { addLine(S.pick, { s:st.id }); S.pick = { s:st.id }; if (once('line1')) say(tr('连上了。可以接着往下连，也可以再点一下这颗星停笔。')); }
+    else { addLine(S.pick, { s:st.id }); S.pick = { s:st.id }; if (once('line1')) say(tr('连上了。再点一下这颗星就停笔。')); }
   } else if (S.pick){
     const hid = STARS.filter(s => s.tier === 3 && starAlpha(s) < .3).find(s => Math.hypot(wdx(s.x, p.x), s.y - p.y) < 30);
     addLine(S.pick, hid ? { s:hid.id } : { x:p.x, y:p.y }); S.pick = null;
@@ -138,7 +138,7 @@ ROOMS.dome = {
   zc:[800, 420],
   enter(){
     S.pick = null; domeCtx();
-    if (once('domeFirst')) say(tr('观景穹顶。头顶全是星星。小灯开着的时候，只看得见亮的那些。'));
+    if (once('domeFirst')) say(tr('小灯开着的时候，头顶只看得见最亮的那几颗。'));
     else if (G.lines.length){ const off = skyOff(); const vis = G.lines.some(l => { const p = endPos(l.a); const sx = mod(p.x - off, SKY_W); return sx > 0 && sx < 1600; });
       say(vis ? tr('你连过的星线还在头顶。') : tr('你连过的星线这会儿转到别处去了。过一阵，它们会转回来。')); }
     if (anWhere() === 'dome') say(once('anDome') ? tr('晚上我在这儿对图。把灯关了，眼睛别动，等一会儿。') : tr('来了。'), AN, 2000);

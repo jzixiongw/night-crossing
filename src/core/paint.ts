@@ -3,11 +3,52 @@ import { hex, mk, mulberry32, rgba } from './util';
 /* ================= PAINTERLY PRIMITIVES (no contour lines) =================
    vol(): light plane → base offset away from the light → core-shadow crescent → bounce-light rim → brush grain.
    Edges come from value changes between planes, never from a stroked outline. */
-export const brush = mk(192,192);
-(() => { const b = brush.getContext('2d'), r = mulberry32(7); b.fillStyle = 'rgb(128,128,128)'; b.fillRect(0,0,192,192); b.lineCap = 'round';
-  for (let i=0;i<820;i++){ const x = r()*192, y = r()*192, l = 5 + r()*16, a = -.6 + (r()-.5)*.7, w = 1.2 + r()*3.4, v = r() < .5 ? 255 : 0, al = .05 + r()*.13;
+/* ---- brush tiles ----
+   One tile at one scale and one stroke angle, laid over every object in the
+   game, reads as a sheet of texture stretched across the picture rather than as
+   paint. Three things break that up, and all three are free:
+
+     - three tiles, each with its own stroke length, width, density and angle;
+     - the tile a volume gets is chosen by how big the volume is, so a kettle is
+       not grained at the same frequency as a wall;
+     - the pattern is rotated and offset per draw call, from a hash of the call's
+       own numbers, so neighbouring objects never line their grain up.
+
+   The tiles stay tileable: every stroke is drawn nine times, at each wrap. */
+function brushTile(seed, n, lenA, lenB, wA, wB, ang, spread, alpha, blots){
+  const cvs = mk(192,192), b = cvs.getContext('2d'), r = mulberry32(seed);
+  b.fillStyle = 'rgb(128,128,128)'; b.fillRect(0,0,192,192); b.lineCap = 'round';
+  const nine = draw => { for (const ox of [-192,0,192]) for (const oy of [-192,0,192]) draw(ox, oy); };
+  /* soft loaded marks first: broad, low contrast, they give the grain a second
+     and much lower frequency so it does not read as uniform noise */
+  for (let i=0;i<blots;i++){
+    const x = r()*192, y = r()*192, rx = 14 + r()*34, ry = 8 + r()*18, a = r()*Math.PI, v = r() < .5 ? 255 : 0;
+    b.fillStyle = `rgba(${v},${v},${v},${.03 + r()*.05})`;
+    nine((ox,oy) => { b.beginPath(); b.ellipse(x+ox, y+oy, rx, ry, a, 0, Math.PI*2); b.fill(); });
+  }
+  for (let i=0;i<n;i++){
+    const x = r()*192, y = r()*192, l = lenA + r()*(lenB-lenA), a = ang + (r()-.5)*spread,
+      w = wA + r()*(wB-wA), v = r() < .5 ? 255 : 0, al = alpha*(.35 + r());
     b.strokeStyle = `rgba(${v},${v},${v},${al})`; b.lineWidth = w;
-    for (const ox of [-192,0,192]) for (const oy of [-192,0,192]){ b.beginPath(); b.moveTo(x+ox, y+oy); b.lineTo(x+ox+Math.cos(a)*l, y+oy+Math.sin(a)*l); b.stroke(); } } })();
+    /* a slight bow in each stroke, so none of them is a straight line */
+    const bow = (r()-.5)*l*.3, nx = -Math.sin(a), ny = Math.cos(a);
+    nine((ox,oy) => { b.beginPath(); b.moveTo(x+ox, y+oy);
+      b.quadraticCurveTo(x+ox+Math.cos(a)*l*.5 + nx*bow, y+oy+Math.sin(a)*l*.5 + ny*bow, x+ox+Math.cos(a)*l, y+oy+Math.sin(a)*l);
+      b.stroke(); });
+  }
+  return cvs;
+}
+export const BRUSH = [
+  brushTile(7,  1150, 3, 9,  .8, 2.0, -.5,  1.5, .11, 10),   // fine: small objects
+  brushTile(23,  820, 6, 20, 1.2, 3.4, -.62, 1.1, .15,  8),  // mid: the old look, looser
+  brushTile(91,  380, 16, 48, 2.6, 7.5, -.78, .85, .17,  6)  // coarse: walls, floors, hulls
+];
+export const brush = BRUSH[1];
+export const TEX_A = [1, 1, .84];
+/* A tile index from how large the volume is: `s` is the core-shadow offset, so
+   it already tracks object size across all ~250 call sites without new args. */
+export function brushOf(sa){ return sa > 7.5 ? 2 : sa > 3 ? 1 : 0; }
+export function brushScale(sa){ return Math.max(.45, Math.min(1.9, .44 + sa*.12)); }
 export const grainA = mk(128,128);
 (() => { const g = grainA.getContext('2d'), d = g.createImageData(128,128), r = mulberry32(37); for (let i=0;i<d.data.length;i+=4){ const v = r() < .5 ? 255 : 0; d.data[i] = d.data[i+1] = d.data[i+2] = v; d.data[i+3] = (r()*10)|0; } g.putImageData(d,0,0); })();
 export function softSprite(col, mid=.42){ const c = mk(128,128), g = c.getContext('2d'), gr = g.createRadialGradient(64,64,0,64,64,64); const A = hex(col);
@@ -18,7 +59,18 @@ export const SPR_OF = { amber:SAMBER, teal:STEAL, rose:SROSE };
 export const SPC = {};
 export function spr(col){ return SPC[col] || (SPC[col] = softSprite(col)); }
 export const pats = new WeakMap();
-export function pat(c){ let p = pats.get(c); if (!p){ p = c.createPattern(brush, 'repeat'); pats.set(c, p); } return p; }
+/* `kind` picks a tile, `sc` scales the grain and `rot` turns it. The pattern
+   object is shared per context, so its transform is set on every use rather
+   than once; a browser without CanvasPattern.setTransform just gets the tile
+   at its natural size, which is where this started. */
+export function pat(c, kind = 1, sc = 1, rot = 0, ph = 0){
+  let a = pats.get(c); if (!a){ a = []; pats.set(c, a); }
+  const p = a[kind] || (a[kind] = c.createPattern(BRUSH[kind], 'repeat'));
+  try { p.setTransform(new DOMMatrix().translateSelf(ph, ph*.7).rotateSelf(rot*57.29577951308232).scaleSelf(sc, sc)); } catch(e){}
+  return p;
+}
+/* A repeatable number in [0,1) from the numbers a draw call already carries. */
+export function jit(a, b, c2, d){ const v = Math.sin(a*12.9898 + b*78.233 + c2*37.719 + d*4.137)*43758.5453; return v - Math.floor(v); }
 export function rr(c,x,y,w,h,r){ r = Math.max(0, Math.min(r, w/2, h/2)); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
 export function ell(c,x,y,rx,ry,rot=0){ c.moveTo(x + rx*Math.cos(rot), y + rx*Math.sin(rot)); c.ellipse(x, y, Math.max(.01,rx), Math.max(.01,ry), rot, 0, Math.PI*2); c.closePath(); }
 export function blob(c, pts){ const n = pts.length; c.moveTo((pts[n-1][0]+pts[0][0])/2, (pts[n-1][1]+pts[0][1])/2);
@@ -40,7 +92,13 @@ export function vol(c, fn, col, o: any = {}){
   if (o.g){ const [y0,y1,a0,a1] = o.g, gr = c.createLinearGradient(0,y0,0,y1); gr.addColorStop(0,a0); gr.addColorStop(1,a1); c.fillStyle = gr; c.beginPath(); fn(c); c.fill(rule); }
   if (o.gx){ const [x0,x1,a0,a1] = o.gx, gr = c.createLinearGradient(x0,0,x1,0); gr.addColorStop(0,a0); gr.addColorStop(1,a1); c.fillStyle = gr; c.beginPath(); fn(c); c.fill(rule); }
   if (o.hl){ const [hx,hy,hr,ha,hc] = o.hl, gr = c.createRadialGradient(hx,hy,0,hx,hy,hr); gr.addColorStop(0, hc ? rgba(hc,ha) : `rgba(255,246,228,${ha})`); gr.addColorStop(1, hc ? rgba(hc,0) : 'rgba(255,246,228,0)'); c.fillStyle = gr; c.fillRect(hx-hr, hy-hr, hr*2, hr*2); }
-  if (o.tex !== 0){ c.globalAlpha = o.tex ?? .42; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c); c.beginPath(); fn(c); c.fill(rule); }
+  if (o.tex !== 0){
+    const sa = Math.abs(s), bi = o.bi ?? brushOf(sa), h = jit(lx, ly, s, k), h2 = jit(k, s, lx*3.1, ly*7.3);
+    c.globalAlpha = (o.tex ?? .42) * TEX_A[bi];
+    c.globalCompositeOperation = 'soft-light';
+    c.fillStyle = pat(c, bi, brushScale(sa), (h - .5)*1.1, h2*192);
+    c.beginPath(); fn(c); c.fill(rule);
+  }
   c.restore();
 }
 export function flat(c, fn, col, a=1){ c.save(); c.globalAlpha *= a; c.fillStyle = col; c.beginPath(); fn(c); c.fill(); c.restore(); }

@@ -1,6 +1,8 @@
 import { tr } from '../i18n';
 import { HOUR, MIN } from '../core/util';
 import { LETTERS, SEEDS } from '../data/index';
+import { portById } from '../data/ports';
+import { LINGER } from '../rooms/hatch';
 import { galleyWarm, renderDough, renderPears } from '../rooms/galley';
 import { WATER_MS, bloomReady } from '../rooms/green';
 import { S } from './runtime';
@@ -48,6 +50,19 @@ export function advance(ms, mode){
   });
   // music box plays out while nobody is listening
   if (mode === 'hidden' || mode === 'away'){ if (G.wind > 0){ G.wind = Math.max(0, G.wind - ms/(360*16)); if (G.wind <= 0) ev.push({ room:'radio', text:tr('八音盒转完了，停在那儿。') }); } }
+  /* The round. The ship comes alongside on its own schedule and then holds
+     there, so an arrival is news waiting at the door rather than a thing that
+     can be missed. Nothing about the call advances until the door is opened. */
+  if (G.call && !G.call.docked && G.call.eta && tnow >= G.call.eta){
+    G.call.docked = tnow;
+    const P = portById(G.call.to);
+    if (P){ ev.push({ room:'corridor', text:tr('船靠上了{0}。舷门那边有人在等。', P.name), any:true, dock:true });
+      addLog(tr('靠上{0}', P.name)); }
+  }
+  /* The ship casts off again on a clock, not on the player still being in the
+     room, so a tab closed between the handover and the parting still ends the
+     call instead of leaving the ship tied up at a port it has finished with. */
+  if (G.call && G.call.gave && tnow - G.call.gave > LINGER && S.room !== 'hatch'){ G.call = null; markDirty(); }
   // mail boat
   let guard = 0;
   while (G.mail.nextAt && tnow >= G.mail.nextAt && guard++ < 60){
