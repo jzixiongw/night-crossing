@@ -1,0 +1,10 @@
+node_modules
+dist
+*.local
+.DS_Store
+index.html.backup
+
+# Raw verification captures (75 MB of PNGs, regenerable from the capture rig).
+# The 7 entry images in submission/images/ are tracked; these are the working
+# evidence behind them.
+submission/_audit

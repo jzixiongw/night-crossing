@@ -1,0 +1,96 @@
+import { tr, isEN } from '../i18n';
+import { AU } from '../audio/index';
+import { dropCaches } from '../core/cache';
+import { render } from '../core/render';
+import { setViewFocus } from '../core/surface';
+
+import { $, mod, stage } from '../core/util';
+import { S } from '../state/runtime';
+import { markDirty } from '../state/save';
+import { G } from '../state/store';
+import { clearCaptions } from '../ui/captions';
+import { closePanels } from '../ui/panels';
+import { CAM } from '../core/camera';
+
+/* ================= ROOMS, NAV, INPUT ================= */
+/* A room is a set of optional draw/lifecycle hooks the pipeline calls in order:
+   back -> room (onto the scene buffer) -> light (the darkness wash) -> over.
+   This is the contract a different engine's Scene would have to satisfy. */
+export interface Room {
+  back?(c: CanvasRenderingContext2D, dt: number): void;   // layers behind the play plane
+  room?(c: CanvasRenderingContext2D, dt: number): void;   // the lit room itself
+  light?(): void;                                         // punch holes in the darkness
+  over?(c: CanvasRenderingContext2D, dt: number): void;   // foreground + additive glows
+  update?(dt: number): void;                              // simulation, no drawing
+  enter?(from?: string): void;
+  exit?(): void;
+  zoom?(): number;                                        // camera zoom target
+  zc?: [number, number];                                  // zoom centre in design space
+  tapEmpty?(e: PointerEvent): void;                       // click that hit no region
+  [key: string]: any;
+}
+
+/* Action ids are colon-paths ("gh:seeds"); resolveAct walks them longest-first. */
+export interface Action { tap?(...a: any[]): void; key?(...a: any[]): void; [key: string]: any }
+
+export const ROOMS: Record<string, Room> = {};
+export const ACT: Record<string, Action> = {};
+export const ROOM_NAMES = { corridor:tr('环廊'), cabin:tr('客舱'), galley:tr('小厨房'), green:tr('温室'), radio:tr('电台室'), dome:tr('观景穹顶') };
+export const ROOM_EN = { corridor:'RING', cabin:'CABIN', galley:'GALLEY', green:'GREENHOUSE', radio:'RADIO ROOM', dome:'DOME' };
+export const ROOM_KEY = { corridor:'ring:', cabin:'cab:', galley:'gal:', green:'gh:', radio:'rad:', dome:'dm:' };
+export const RING = [
+  { ang:0,   id:'cabin',  label:tr('客舱门'),   go:'cabin',  color:'#c98a5a', name:tr('客舱'),   en:'CABIN' },
+  { ang:45,  id:'window', label:tr('舷窗长椅') },
+  { ang:90,  id:'galley', label:tr('小厨房门'), go:'galley', color:'#d9a95c', name:tr('小厨房'), en:'GALLEY' },
+  { ang:135, id:'mail',   label:tr('信箱与船钟') },
+  { ang:180, id:'green',  label:tr('温室门'),   go:'green',  color:'#5ea39b', name:tr('温室'),   en:'GREENHOUSE' },
+  { ang:225, id:'board',  label:tr('布告板') },
+  { ang:270, id:'radio',  label:tr('电台室门'), go:'radio',  color:'#c47b7b', name:tr('电台室'), en:'RADIO' },
+  { ang:315, id:'dome',   label:tr('穹顶梯'),   go:'dome' }
+];
+export const angDiff = (a,b) => mod(a - b + 180, 360) - 180;
+ACT['go'] = { tap(a){ go(a[0]); } };
+
+export function go(room){
+  if (S.trans || room === S.room || !ROOMS[room]) return;
+  S.trans = true; closePanels(); S.focusKey = null;
+  const from = S.room; AU.soft();
+  S.zoomOverride = 1.34; CAM.zx = 800; CAM.zy = 500;
+  $('#fade').classList.add('on');
+  clearCaptions();
+  setTimeout(() => {
+    try { ROOMS[from] && ROOMS[from].exit && ROOMS[from].exit(); } catch(e){ console.error(e); }
+    S.room = room; G.lastRoom = room;
+    dropCaches(['ring:', ROOM_KEY[room], 'sh:']);
+    if (room === 'corridor'){ const st = RING.find(s => s.go === from); if (st){ S.phi = st.ang; S.phiTarget = null; S.phiV = 0; } }
+    S.zoomOverride = null; CAM.zoom = 1.12; CAM.lift = 0; CAM.rot = 0;
+    const R = ROOMS[room]; CAM.zx = (R.zc || [800,470])[0]; CAM.zy = (R.zc || [800,470])[1];
+    setViewFocus(CAM.zx, CAM.zy);
+    try { R.enter && R.enter(from); } catch(e){ console.error(e); }
+    updateHud(); setAmbience();
+    try { render(0, ROOMS[room]); } catch(e){ console.error(e); }
+    $('#fade').classList.remove('on');
+    setTimeout(() => { S.trans = false; }, 380);
+    markDirty();
+  }, 480);
+}
+export function updateHud(){
+  const inRing = S.room === 'corridor';
+  $('#nav').hidden = !inRing || S.sitting; $('#back').hidden = inRing; stage.classList.toggle('ring', inRing && !S.sitting);
+  /* Chinese pairs the room name with its romanised tag; in English that would
+     only say the same thing twice. */
+  if (!inRing) $('#where').textContent = isEN ? ROOM_NAMES[S.room] : ROOM_NAMES[S.room] + ' · ' + ROOM_EN[S.room];
+  else S.ringLabel = '';
+}
+export function setCtx(list){
+  const box = $('#ctx'); box.innerHTML = '';
+  list.forEach(it => { const b = document.createElement('button'); b.type = 'button'; b.className = 'pill' + (it.on ? ' on' : ''); b.textContent = it.label; b.onclick = it.fn; box.appendChild(b); });
+}
+export function setAmbience(){
+  if (!AU.ready) return;
+  const r = S.room;
+  const cfg = { corridor:[160,.05,.7], cabin:[300,0,.8], galley:[380,.03,.8], green:[3200,.014,.6], radio:[500,0,.8], dome:[180,.025,.5] }[r] || [300,0,.8];
+  AU.ambF.frequency.setTargetAtTime(cfg[0], AU.ctx.currentTime, .6);
+  AU.set(AU.amb.gain, cfg[1] * (G.phones && r==='radio' ? .3 : 1), .8);
+  AU.set(AU.hum.gain, r === 'dome' ? .1 : r === 'corridor' ? .22 : .18, .8);
+}
