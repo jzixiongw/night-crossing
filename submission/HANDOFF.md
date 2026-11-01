@@ -64,7 +64,7 @@ submission/
 **P1 — strongly worth doing**
 
 6. **Record the video.** `video/shotlist.md` is shot-by-shot with timings and the subtitle file is written. Record without `?debug` so the time control never appears on screen.
-7. **Make a baseline commit.** The repository currently has **no commits at all**, so nothing pins the claims to a build.
+7. ~~**Make a baseline commit.**~~ **Done 2026-11-01** on your authorization — `3417c3a`, the repository's first commit, 272 files.
 
 **P2 — only if the above are done**
 
@@ -83,4 +83,4 @@ If you add anything to the portal that I have not written, check it against `01_
 - English verified by an automated assertion that no CJK appears in visible DOM text or attributes across the whole walkthrough.
 - Chinese still correct at `?lang=zh`.
 - Portrait verified at 3:4 and 9:16; landscape regression at exactly 1.778.
-- **Version marker: none.** No commits exist. See item 7.
+- **Version marker:** `3417c3a` on `main`. Quote it if iF asks what was submitted.

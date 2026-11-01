@@ -2,8 +2,8 @@
 
 **Updated:** 2026-11-01
 **Deadline:** 2026-11-04 23:59 **PST** (~3.5 days)
-**Version marker:** no git commits exist yet (`git log` empty, working tree untracked). **Needs a baseline commit** so submitted claims are pinned to a build.
-**Build:** `npm run build` clean (`tsc --noEmit` + vite). 46 modules, 183 KB JS / 74 KB gzip, 15.7 KB CSS.
+**Version marker:** baseline commit `3417c3a` on `main` (2026-11-01), 272 files. Everything below is pinned to that build. `submission/_audit/` is git-ignored, so a fresh clone will not carry the raw captures.
+**Build:** `npm run build` clean (`tsc --noEmit` + vite) at `3417c3a`. 48 modules, 239.83 kB JS / 98.11 kB gzip, 16.53 kB CSS.
 **Audited by:** running the built `dist/` on a local static server, driven through Chrome DevTools Protocol (no stubs, no mockups). Captures in `submission/_audit/` (local only — git-ignored, 75 MB of regenerable PNGs).
 
 ---
@@ -72,7 +72,7 @@ Risk: a flat translation would hurt more than it helps — the restraint of the 
 
 **P1-1 · A debug control ships to judges.** Settings shows **"测试用：时间流速 ×20"** (test-only time speed). A judge will see a dev affordance in a finished product. Should be gated to non-production builds.
 **P1-2 · `favicon.ico` 404s** on every load — the only network error in the build. A blank tab icon on a judged URL.
-**P1-3 · No baseline commit.** Nothing is pinned; claims cannot be tied to a build.
+**P1-3 · No baseline commit.** Nothing is pinned; claims cannot be tied to a build. — **Fixed:** `3417c3a`, the repository's first commit, made on the owner's authorization 2026-11-01.
 **P1-4 · Canvas `aria-label` and all control labels are Chinese** — the accessibility story is real (Tab cycles hit regions, Enter activates, focus ring is drawn on canvas) but is invisible to an English-speaking judge or screen reader.
 **P1-5 · The establishing view is weak as a thumbnail.** The ring corridor at a door is dark and dominated by one door. The strongest compositions are cabin, galley and dome. Image 1 must carry the gallery thumbnail.
 
@@ -165,4 +165,4 @@ Run against the production build (`npm run build`, served static), scripted over
 - **Video export.** This machine has no ffmpeg and no screen-capture tool, so a finished MP4 cannot be produced here. Delivered instead: a shot-by-shot list with timings and a complete subtitle file. Deliberately **no empty `.mp4`** was created to tick a box.
 - **PDF export.** Same reasoning — it is P2, and the brief says to stop P2 when it competes with P0. The outline is executable.
 - **Entry name.** Unresolved by the owner, so the build still says *Night Crossing* and `entry-fields.md` carries both options with counts.
-- **No commits.** The repository has no history at all, so no version marker can be quoted. Flagged in the handoff; not done unprompted.
+- ~~**No commits.**~~ **Resolved 2026-11-01** on the owner's authorization: baseline commit `3417c3a` now pins every claim above to a build.

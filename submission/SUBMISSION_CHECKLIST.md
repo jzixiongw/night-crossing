@@ -70,4 +70,4 @@ Tick only what has been **verified**, not what has been produced. `[!]` marks so
 - [x] Portrait layout real; landscape regression confirmed at exactly 1.778.
 - [x] Sound can be declined before boarding; reduced motion honoured.
 - [x] Save survives reload; reset works.
-- [ ] **Baseline commit made** so the submitted claims are pinned to a build.
+- [x] **Baseline commit made** so the submitted claims are pinned to a build — `3417c3a`.
