@@ -10,7 +10,9 @@ import { markDirty } from '../state/save';
 import { G } from '../state/store';
 import { clearCaptions } from '../ui/captions';
 import { closePanels } from '../ui/panels';
-import { CAM } from '../core/camera';
+import { CAM, resetView, setPanRange } from '../core/camera';
+import { showHints } from '../core/input';
+import { STEPS, stepNow } from '../ui/worksheet';
 
 /* ================= ROOMS, NAV, INPUT ================= */
 /* A room is a set of optional draw/lifecycle hooks the pipeline calls in order:
@@ -26,6 +28,8 @@ export interface Room {
   exit?(): void;
   zoom?(): number;                                        // camera zoom target
   zc?: [number, number];                                  // zoom centre in design space
+  pan?: [number, number, number?];                        // how far the player may swing the view
+
   tapEmpty?(e: PointerEvent): void;                       // click that hit no region
   [key: string]: any;
 }
@@ -35,22 +39,27 @@ export interface Action { tap?(...a: any[]): void; key?(...a: any[]): void; [key
 
 export const ROOMS: Record<string, Room> = {};
 export const ACT: Record<string, Action> = {};
-export const ROOM_NAMES = { corridor:tr('环廊'), cabin:tr('客舱'), galley:tr('小厨房'), green:tr('温室'), radio:tr('电台室'), dome:tr('观景穹顶'), hatch:tr('舷梯') };
-export const ROOM_EN = { corridor:'RING', cabin:'CABIN', galley:'GALLEY', green:'GREENHOUSE', radio:'RADIO ROOM', dome:'DOME', hatch:'GANGWAY' };
+export const ROOM_NAMES = { corridor:tr('环廊'), cabin:tr('驾驶舱'), galley:tr('小厨房'), green:tr('温室'), radio:tr('电台室'), dome:tr('观景穹顶'), hatch:tr('舷梯') };
+export const ROOM_EN = { corridor:'RING', cabin:'BRIDGE', galley:'GALLEY', green:'GREENHOUSE', radio:'RADIO ROOM', dome:'DOME', hatch:'GANGWAY' };
 export const ROOM_KEY = { corridor:'ring:', cabin:'cab:', galley:'gal:', green:'gh:', radio:'rad:', dome:'dm:', hatch:'hat:' };
 /* Nine stations at 40 degrees, not eight at 45: the gangway is where the round
    touches the ship, so it needed a wall of its own rather than a share of one.
    The ribs, hull ports and near pillars in corridor.ts step on the same lattice. */
 export const STEP = 40;
+/* The order is the work. Walking the ring one way takes you through a whole
+   job in the order it has to happen -- the request comes in at the radio, the
+   board shows where you are in it, the greenhouse grows and builds it, the
+   bridge steers to the place that asked, and the gangway hands it over. The
+   four stations after that are the ones you stop at because you want to. */
 export const RING = [
-  { ang:0,   id:'cabin',  label:tr('客舱门'),   go:'cabin',  color:'#c98a5a', name:tr('客舱'),   en:'CABIN' },
-  { ang:40,  id:'window', label:tr('舷窗长椅') },
-  { ang:80,  id:'galley', label:tr('小厨房门'), go:'galley', color:'#d9a95c', name:tr('小厨房'), en:'GALLEY' },
-  { ang:120, id:'mail',   label:tr('信箱与船钟') },
-  { ang:160, id:'green',  label:tr('温室门'),   go:'green',  color:'#5ea39b', name:tr('温室'),   en:'GREENHOUSE' },
-  { ang:200, id:'gang',   label:tr('舷门'),     go:'hatch',  color:'#9cbcd2', name:tr('舷梯'),   en:'GANGWAY' },
-  { ang:240, id:'board',  label:tr('布告板') },
-  { ang:280, id:'radio',  label:tr('电台室门'), go:'radio',  color:'#c47b7b', name:tr('电台室'), en:'RADIO' },
+  { ang:0,   id:'radio',  label:tr('电台室门'), go:'radio',  color:'#c47b7b', name:tr('电台室'), en:'RADIO', step:1 },
+  { ang:40,  id:'board',  label:tr('工单板') },
+  { ang:80,  id:'green',  label:tr('温室门'),   go:'green',  color:'#5ea39b', name:tr('温室'),   en:'GREENHOUSE', step:2 },
+  { ang:120, id:'cabin',  label:tr('驾驶舱门'), go:'cabin',  color:'#c98a5a', name:tr('驾驶舱'), en:'BRIDGE', step:3 },
+  { ang:160, id:'gang',   label:tr('舷门'),     go:'hatch',  color:'#9cbcd2', name:tr('舷梯'),   en:'GANGWAY', step:4 },
+  { ang:200, id:'galley', label:tr('小厨房门'), go:'galley', color:'#d9a95c', name:tr('小厨房'), en:'GALLEY' },
+  { ang:240, id:'window', label:tr('舷窗长椅') },
+  { ang:280, id:'mail',   label:tr('信箱与船钟') },
   { ang:320, id:'dome',   label:tr('穹顶梯'),   go:'dome' }
 ];
 export const angDiff = (a,b) => mod(a - b + 180, 360) - 180;
@@ -69,9 +78,24 @@ export function go(room){
     dropCaches(['ring:', ROOM_KEY[room], 'sh:']);
     if (room === 'corridor'){ const st = RING.find(s => s.go === from); if (st){ S.phi = st.ang; S.phiTarget = null; S.phiV = 0; } }
     S.zoomOverride = null; CAM.zoom = 1.12; CAM.lift = 0; CAM.rot = 0;
-    const R = ROOMS[room]; CAM.zx = (R.zc || [800,470])[0]; CAM.zy = (R.zc || [800,470])[1];
+    resetView(); CAM.panX = 0; CAM.panY = 0; CAM.user = 1;
+    const R = ROOMS[room];
+    CAM.zx = (R.zc || [800,470])[0]; CAM.zy = (R.zc || [800,470])[1];
+    /* How far this room lets the player swing the view. Most rooms are composed
+       to fit the window; the greenhouse is wider than one. */
+    setPanRange(...(R.pan || []));
     setViewFocus(CAM.zx, CAM.zy);
     try { R.enter && R.enter(from); } catch(e){ console.error(e); }
+    /* Walking into the room the job is waiting in rings the touchable things
+       once. It answers "what am I supposed to do here" with the room itself
+       rather than with another sentence, and only the first time per step. */
+    try {
+      const i = stepNow();
+      if (i >= 0 && STEPS[i].where === room && S.hintedStep !== STEPS[i].id){
+        S.hintedStep = STEPS[i].id;
+        setTimeout(() => { if (S.room === room) showHints(); }, 900);
+      }
+    } catch(e){ console.error(e); }
     updateHud(); setAmbience();
     try { render(0, ROOMS[room]); } catch(e){ console.error(e); }
     $('#fade').classList.remove('on');

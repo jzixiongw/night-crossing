@@ -3,9 +3,11 @@
 The single source of truth for every word a player reads. If this file and a
 habit disagree, this file wins.
 
-Companion files: [CLAUDE.md](../CLAUDE.md) loads the hard rules into every
-session; `npm run voice` checks the build mechanically; the skill in
-`.claude/skills/night-crossing-voice/` loads this document before any copy work.
+Reference, not required reading. The routine gate is `npm run voice`, which
+checks most of what follows mechanically; [CLAUDE.md](../CLAUDE.md) carries the
+few rules a machine cannot see. Come here for the section you need — §2–3 the
+two hard bans, §4 the nine tells, §5 the warmth, §6 the register map, §7
+numbers, §9 the i18n table — or read it through before writing a new scene.
 
 ---
 

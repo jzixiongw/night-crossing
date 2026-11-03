@@ -1,8 +1,7 @@
 import { tr } from '../i18n';
 import { AU } from '../audio/index';
 import { M } from '../audio/music';
-import { anAsleep, anHere, anWhere } from '../characters/an-lines';
-import { breadP, cupSteam, drawAn, drawCupP } from '../characters/an';
+import { breadP, cupSteam, drawCupP } from '../characters/an';
 import { layerCache } from '../core/cache';
 import { CAM, inv, lp, mat, setL, tp } from '../core/camera';
 import { drawFX, flare } from '../core/fx';
@@ -14,22 +13,23 @@ import { P, shell } from '../core/shell';
 import { RS } from '../core/surface';
 import { $, D2R, MIN, clamp, hex, lerp, mixHex, mk, mulberry32, pick, rand } from '../core/util';
 import { CN, COL, ORDER, ROUTES } from '../data/index';
-import { PORTS, PORT_ORDER } from '../data/ports';
+import { PORTS } from '../data/ports';
 import { callPort, docked, visits } from './hatch';
 import { fx } from './radio';
 import { ACT, ROOMS, setCtx } from './registry';
 import { PR, S } from '../state/runtime';
 import { markDirty } from '../state/save';
 import { G } from '../state/store';
+import { hangSlip } from '../ui/sheet';
 import { now } from '../state/time';
-import { AN, addLog, once, onceS, say } from '../ui/captions';
+import { addLog, once, onceS, say } from '../ui/captions';
 import { K_BS, K_LP, K_NR, K_SP, K_WL } from '../core/depth';
 import { anyOpen, closePanels } from '../ui/panels';
 
 /* ================= CABIN ================= */
 
 export const WIN = { left:[176,140,534,374], right:[890,140,534,374] };
-export const CAB_SHELL = { kb:K_WL, kf:1.75, b:[96,44,1504,700], f:[-340,-280,1940,1180],
+export const CAB_SHELL = { kb:K_WL, kf:1.75, b:[-140,44,1740,700], f:[-620,-420,2220,1340],
   ceil:[[0,'#3a4c72'],[1,'#141c31']], floor:[[0,'#3a3043'],[.35,'#4b3a48'],[1,'#2a2131']], side:[[0,'#2f3f62'],[1,'#1a2440']], seams:9, seamCol:'rgba(20,10,20,.32)' };
 export const spo = () => ({ dx:S.turnX || 0, noRot:true });
 export const ROUTE_SKY = { harbor:['#0b1428','#1a2b4d'], nebula:['#140f28','#2c2347'], ring:['#081a24','#16323f'], quiet:['#05080f','#0c1426'] };
@@ -101,9 +101,7 @@ export function answer(b){
   setTimeout(() => { S.bulbs = G.bulbs.map((c,i) => ({ color:c, born: i < G.bulbs.length-1 ? -99 : S.T, slot:S.slots[i % S.slots.length] })); AU.bell(C.midi+12, .05); }, 900);
   G.mapDots = (G.mapDots || []).concat([b.color]).slice(-10);
   if (onceS('log-ans-'+b.color)) addLog(tr('回应了一盏「{0}」', C.beacon));
-  const asleep = anAsleep();
-  if (!G.named.includes(b.color)){ G.named.push(b.color); if (anHere() && !asleep) say(C.line, AN, 3200); else S.pendingNames.push(b.color); }
-  else if (anHere() && !asleep && Math.random() < .5) say(tr('又一盏"{0}"。我在图上点了个点。', C.beacon), AN, 3000);
+  if (!G.named.includes(b.color)){ G.named.push(b.color); say(C.line, null, 3200); }
   markDirty();
 }
 export function miss(b){
@@ -178,13 +176,19 @@ export function updateGlass(dt){
 ACT['cab:blanket'] = { tap(){
   G.blanket = !G.blanket; AU.soft();
   say(G.blanket ? tr('你把毯子拿过来，搭在腿上。毯子有点旧，很厚。') : tr('毯子叠好，放回长椅上。'));
-  if (G.blanket && once('blanketTalk') && anHere() && !anAsleep()) say(tr('那条毯子是船上的，上一班就在了。'), AN, 3400);
   markDirty();
 }};
 export const PLANT = [tr('叶子晃了晃。'),tr('叶子背面有一层细绒毛。'),tr('盆土是湿的，有人浇过水。'),tr('一片新叶还卷着。')];
 export let plantI = 0;
 ACT['cab:plant'] = { tap(){ S.plantV += G.reduced ? 4 : 16; AU.leaf(); say(PLANT[plantI++ % PLANT.length]); } };
 ACT['cab:route'] = { tap(){ openRoutes(); } };
+ACT['cab:chartlamp'] = { tap(){ G.chartLamp = !G.chartLamp; AU.chain(); markDirty();
+  say(G.chartLamp ? tr('图桌的灯亮了，照在那张没画完的图上。') : tr('图桌的灯关了。')); } };
+ACT['cab:chart'] = { tap(){ AU.paper();
+  const n = ORDER.filter(cl => G.answered[cl] > 0).length;
+  say(once('chartFirst') ? tr('上一个开这艘船的人留下的图。线画到一半就停了。')
+    : n ? tr('你回应过的灯，图上都点了个点，一共 {0} 种颜色。', n)
+        : tr('图上还没有点。窗外的灯回应过一盏，这里就多一个点。')); } };
 ACT['cab:vase'] = { tap(){
   AU.tap();
   if (!G.vase){ say(once('vaseEmpty') ? tr('一只空的小花瓶。温室里的花开了，可以剪一枝来。') : tr('瓶子还空着。')); return; }
@@ -195,10 +199,16 @@ ACT['cab:vase'] = { tap(){
    The sign by the window used to pick a backdrop. It now picks where the ship
    is going, and the lane comes with the place rather than the other way round,
    so the one choice the cabin offers is the main line of the game. */
+/* The course board takes the slips you tore off the printer, and nothing else.
+   A place the ship has not been asked to go to is not on it. */
 export function renderRoutes(){
   const list = $('#routeList'); list.innerHTML = '';
   const cur = G.call ? G.call.to : null;
-  PORT_ORDER.forEach(id => {
+  const ids = [...new Set<string>([...(cur ? [cur] : []), ...G.slips])];
+  $('#routeSub').textContent = ids.length
+    ? tr('放一张上去，船就在下一个弯转过去。')
+    : tr('板子空着。单子从电台室的调度打印机出来。');
+  ids.forEach(id => {
     const P = PORTS[id], R = ROUTES[P.lane], b = document.createElement('button'); b.type = 'button';
     const been = visits(id);
     if (id === cur) b.classList.add('cur');
@@ -218,10 +228,14 @@ export function takeCall(id){
   const P = PORTS[id];
   if (docked()){ say(tr('船正靠着。先把舷门那边的事办完。')); return; }
   if (G.call && G.call.to === id){ say(tr('照现在这样走。')); return; }
+  /* The slip goes onto the board and off your hands. */
+  if (G.call && !G.slips.includes(G.call.to)) G.slips.push(G.call.to);
+  G.slips = G.slips.filter(x => x !== id);
   G.call = { to:id, eta:now() + P.mins*MIN, docked:0 };
   setRoute(P.lane);
-  say(tr('船转向{0}。', P.name), null, 900);
-  addLog(tr('接下{0}这一趟', P.name));
+  AU.paper();
+  say(tr('单子卡上航向板。船转向{0}。', P.name), null, 700);
+  addLog(tr('定了航向：{0}', P.name));
 }
 export function setRoute(r){
   if (r === G.route){ markDirty(); return; }
@@ -234,7 +248,6 @@ export function finishTurn(r){
   if (r === 'ring') S.ringX = 1900;
   if (S.room === 'cabin'){
     say(R.arrive);
-    if (anHere()){ if (r !== 'quiet' && S.asleepRoute){ S.asleepRoute = false; say(tr('岸醒了，揉了揉眼睛。')); } else if (!anAsleep()) say(R.say, AN, 3400); }
   }
   S.nextSpawn = rand(4,8);
 }
@@ -261,6 +274,14 @@ export function cabWallArt(g){
     for (let k=0;k<7;k++){ const xx = x + 90 + k*60; for (const yy of [y-14, y+h+14]) vol(g, cc => ell(cc, xx, yy, 4, 4), MAT.metal, { k:.6, s:1.4, tex:0 }); }
     for (let k=0;k<4;k++){ const yy = y + 90 + k*67; for (const xx of [x-14, x+w+14]) vol(g, cc => ell(cc, xx, yy, 4, 4), MAT.metal, { k:.6, s:1.4, tex:0 }); }
     vol(g, cc => rr(cc, x-30, y+h+22, w+60, 20, 8), MAT.metalD, { k:1.5, s:4 }); }
+  // breaker panel on the right wall
+  shadow(g, 1612, 468, 96, 12, .4);
+  vol(g, cc => rr(cc, 1510, 236, 206, 232, 12), MAT.metalD, { k:3.5, s:9, r:2, hl:[1545,250,80,.16] });
+  vol(g, cc => rr(cc, 1526, 252, 174, 162, 8), MAT.dark, { k:-2, s:-4, lx:.5, ly:.8, r:0, tex:.4 });
+  for (let i=0;i<8;i++){ const bx = 1544 + (i%4)*44, by = 274 + Math.floor(i/4)*72;
+    vol(g, cc => rr(cc, bx, by, 24, 46, 6), MAT.cream, { k:1.2, s:3, tex:.2 });
+    flat(g, cc => rr(cc, bx + 7, by + (i%3 ? 6 : 26), 10, 14, 4), '#2a3550', .7); }
+  flat(g, cc => rr(cc, 1532, 436, 162, 2, 1), '#c4b392', .35);
   // route sign plate
   shadow(g, 800, 498, 70, 10, .4);
   vol(g, cc => rr(cc, 738, 386, 124, 104, 14), MAT.paper, { k:2, s:5, r:1.5 });
@@ -284,14 +305,14 @@ export function cabMidArt(g){
   vol(g, cc => { cc.moveTo(598,694); cc.lineTo(682,694); cc.lineTo(670,758); cc.lineTo(610,758); cc.closePath(); }, MAT.pot, { k:3, s:8, r:2, hl:[620,710,40,.25] });
   vol(g, cc => rr(cc, 590, 682, 100, 20, 8), MAT.pot, { k:1.5, s:4 });
   flat(g, cc => ell(cc, 640, 684, 44, 6), '#3b2a26');
-  // armchair (right)
-  shadow(g, 1222, 760, 160, 20, .6);
-  for (const x of [1136, 1306]) vol(g, cc => rr(cc, x-8, 700, 16, 58, 6), MAT.woodD, { k:2, s:5 });
-  vol(g, cc => rr(cc, 1112, 446, 220, 230, 60), MAT.plum, { k:6, s:14, r:3, hl:[1170,470,120,.18] });
-  vol(g, cc => rr(cc, 1096, 600, 54, 112, 24), MAT.plum, { k:4, s:9, r:2 });
-  vol(g, cc => rr(cc, 1294, 600, 54, 112, 24), MAT.plum, { k:4, s:9, r:2 });
-  vol(g, cc => rr(cc, 1140, 632, 164, 70, 22), MAT.plum, { k:3, s:8, r:2, hl:[1200,640,90,.18] });
-  // side table
+  // chart table (right): legs, rail and the stool pushed under it
+  shadow(g, 1230, 790, 190, 22, .6);
+  for (const x of [1116, 1352]) vol(g, cc => rr(cc, x-9, 660, 18, 130, 7), MAT.woodD, { k:2, s:5 });
+  vol(g, cc => rr(cc, 1116, 736, 236, 12, 6), MAT.woodD, { k:1.2, s:3 });
+  shadow(g, 1246, 790, 70, 10, .5);
+  vol(g, cc => { rr(cc, 1218, 700, 10, 86, 5); rr(cc, 1264, 700, 10, 86, 5); }, MAT.metalD, { k:1.2, s:3 });
+  vol(g, cc => ell(cc, 1246, 696, 48, 12), MAT.woodD, { k:1.6, s:4 });
+  // side table under the chart lamp
   shadow(g, 1420, 762, 70, 12, .55);
   vol(g, cc => rr(cc, 1412, 610, 16, 148, 6), MAT.woodD, { k:2, s:5 });
   vol(g, cc => ell(cc, 1420, 756, 44, 8), MAT.woodD, { k:1.5, s:4 });
@@ -454,10 +475,7 @@ ROOMS.cabin = {
   zc:[800, 450],
   enter(){
     setCtx([]); S.nextSpawn = 3; S.vis = [.1,.55,1][G.lamp];
-    const where = anWhere();
     if (once('cabinFirst')) say(tr('舱灯开着的时候，窗玻璃上只映得出舱里的东西。'), null, 300);
-    else if (where === 'cabinSleep') say(tr('客舱里很静。岸已经睡了。'), null, 300);
-    if (S.pendingNames.length && anHere() && !anAsleep()) say(tr('刚才你回应的那盏灯，我认得。点我一下，我跟你说。'), AN, 2400);
   },
   exit(){ S.beacons = []; S.glassHold = null; CAM.rot = 0; },
   update(dt){
@@ -473,13 +491,11 @@ ROOMS.cabin = {
     CAM.lift = Math.sin(S.T*.8)*2*k;
     const visT = [.1,.55,1][G.lamp]; S.vis += (visT - S.vis)*(1-Math.exp(-dt*2.5));
     S.filT = (S.filT ?? 1) + dt; S.lampFil = G.lamp === 0 ? Math.min(1, S.filT/.6) * (S.filT < .25 ? (Math.random() < .5 ? .4 : 1) : 1) : 1;
-    const here = anHere(), asleep = anAsleep();
-    const wantRead = here && G.lamp === 2 && !asleep;
-    if (wantRead !== S.reading){ S.readTimer += dt; if (S.readTimer > (wantRead ? 1.3 : .6)){ S.reading = wantRead; S.readTimer = 0; if (wantRead){ AU.tap(); if (onceS('readLamp')) say(tr('岸拧亮了自己的小灯。')); } } } else S.readTimer = 0;
+    S.reading = G.chartLamp;
     S.readGlow = (S.readGlow || 0) + ((S.reading ? 1 : 0) - (S.readGlow || 0))*(1-Math.exp(-dt*4));
     if (S.routeVis === 'harbor') S.harborT += dt;
     if (S.routeVis === 'ring'){ S.ringX -= dt*7; if (S.ringX < -650) S.ringX = 2000; }
-    if (G.route === 'quiet' && !S.turn){ S.quietT += dt; if (S.quietT > 18 && !S.asleepRoute && here){ S.asleepRoute = true; say(tr('岸把航图盖在腿上，睡着了。')); } } else { S.quietT = 0; }
+    if (G.route === 'quiet' && !S.turn) S.quietT += dt; else S.quietT = 0;
     if (S.routeVis === 'quiet'){ S.nextMeteor -= dt; if (S.nextMeteor <= 0){ S.nextMeteor = rand(5,11); S.meteors.push({ x:rand(300,1500), y:rand(150,300), t:0 }); } }
     updateBeacons(dt); updateGlass(dt);
     S.lampV += (-7*S.lampA - 1.1*S.lampV + Math.cos(S.T*.55)*.6*k)*dt; S.lampA += S.lampV*dt;
@@ -497,8 +513,7 @@ ROOMS.cabin = {
     if (S.cabinT > 9 && G.flags.lamp1 === undefined && G.flags.lamp2 === undefined && onceS('lampHint')) say(tr('灯罩下面垂着一根灯绳。'));
     const ready = (S.firstAnswerAt && S.run - S.firstAnswerAt > 7) || S.cabinT > 110;
     if (ready && !G.junction && !S.turn && !anyOpen()){ G.junction = true; markDirty();
-      if (anHere() && !asleep) say(tr('前面要分岔了。你选哪边，我画哪边。'), AN); setTimeout(() => { if (S.room === 'cabin') openRoutes(); }, 1800); }
-    if (PR.idleT > 150 && here && !asleep && !G.blanket && onceS('anBlanket')){ G.blanket = true; AU.soft(); say(tr('你好一会儿没动。岸把毯子拿过来，搭在你腿上。')); markDirty(); }
+      setTimeout(() => { if (S.room === 'cabin') openRoutes(); }, 1800); }
     if (S.cabinT > 45 && once('doorHint')) say(tr('左边是舱门。出去是环廊，沿着它能走到别的舱。'));
   },
   back(c, dt){ drawSpace(c, dt); },
@@ -520,9 +535,12 @@ ROOMS.cabin = {
     layerCache(c, 'cab:wall', K_WL, cabWallArt);
     { /* the sign says the destination now, and the lane under it in small type */
       const P = callPort();
-      txtFit(c, P ? tr(P.name) : tr('没有下一站'), 800, 452, 104, 19, '#2a3550');
-      txtFit(c, tr(ROUTES[G.route].name), 800, 474, 104, 12, '#7d7a72'); }
+      if (P){ txtFit(c, tr(P.name), 800, 452, 104, 19, '#2a3550');
+        txtFit(c, tr(ROUTES[G.route].name), 800, 474, 104, 12, '#7d7a72'); }
+      else txtFit(c, tr('还没定'), 800, 462, 104, 18, '#9a9384'); }
     hit(c, 'cab:route', ['r', 738, 386, 124, 104], { label:tr('航程单') });
+    /* the work slip, on the pier beside the left window */
+    setL(c, K_WL); hangSlip(c, 26, 152, 132, -.014);
     for (const s of ['left','right']){ const [x,y,w,h] = WIN[s]; hit(c, 'cab:glass:' + s, ['r', x, y, w, h], { label:s === 'left' ? tr('舷窗（长按哈气）') : tr('舷窗'), cur:'crosshair' }); }
     drawBulbs(c);
     // mid plane
@@ -533,18 +551,20 @@ ROOMS.cabin = {
       vol(c, cc => leafPath(cc, 0, 0, ex, ey, 12 + (i%3)*2, a*4), i%2 ? MAT.leaf : MAT.leafD, { k:1.5, s:4, tex:.3 }); });
     c.restore(); hit(c, 'cab:plant', ['r', 570, 590, 140, 110], { label:tr('盆栽') });
     if (!G.blanket){ setL(c, 1); vol(c, cc => rr(cc, 392, 568, 148, 44, 14), MAT.blanket, { k:2, s:5, r:1.5 }); flat(c, cc => { rr(cc, 420, 570, 7, 40, 3); rr(cc, 470, 570, 7, 40, 3); }, '#f6dcbf', .7); hit(c, 'cab:blanket', ['r', 392, 560, 148, 56], { label:tr('毯子') }); }
-    const here = anHere(), asleep = anAsleep();
-    // reading lamp on the side table
+    /* The chart table. Whoever ran this ship before kept the running chart here
+       and never finished it; every beacon you answer puts another dot on it. */
     setL(c, 1);
     vol(c, cc => { rr(cc, 1416, 500, 8, 104, 4); ell(cc, 1420, 604, 20, 5); }, MAT.brass, { k:.8, s:2, tex:0 });
     vol(c, cc => { cc.moveTo(1384,512); cc.lineTo(1456,512); cc.lineTo(1440,470); cc.lineTo(1400,470); cc.closePath(); }, S.reading ? { l:'#ffe0a8', b:'#f2c27f', d:'#c28a4e', r:'#fff' } : { l:'#a8c2d6', b:'#7fa0bb', d:'#4b6a83', r:'#c4d8e6' }, { k:1.5, s:4 });
-    if (here){
-      drawAn(c, 1222, 640, { pose:'map', asleep, dots:(G.mapDots || []).map(x => COL[x].hex) });
-      hit(c, 'an:talk', ['r', 1150, 400, 150, 214], { label:tr('岸'), key:'an' });
-      hit(c, 'cab:route', ['r', 1150, 600, 150, 60], { key:'anmap' });
-    } else {
-      vol(c, cc => polyP(cc, [[1366,600],[1452,594],[1458,606],[1372,612]]), MAT.paper, { k:.6, s:1.5, tex:0 });
-    }
+    hit(c, 'cab:chartlamp', ['r', 1378, 462, 86, 150], { label:S.reading ? tr('关掉图桌的灯') : tr('打开图桌的灯') });
+    { const board = cc => polyP(cc, [[1086,646],[1362,612],[1376,652],[1100,686]]);
+      vol(c, board, MAT.wood, { k:2.5, s:6, r:1.5, hl:[1160,634,120,.2] });
+      vol(c, cc => polyP(cc, [[1104,648],[1348,618],[1358,648],[1114,678]]), MAT.paper, { k:1, s:2.6, tex:.3 });
+      /* the unfinished line, and a dot for every beacon that has answered */
+      flat(c, cc => { cc.moveTo(1120,666); cc.bezierCurveTo(1170,636, 1216,672, 1268,640); cc.lineTo(1270,644); cc.bezierCurveTo(1216,676, 1170,642, 1122,670); cc.closePath(); }, '#33466e', .72);
+      ORDER.filter(cl => G.answered[cl] > 0).forEach((cl,i) => flat(c, cc => ell(cc, 1136 + i*26, 660 - i*4, 3.6, 3.6), COL[cl].hex));
+      flat(c, cc => rr(cc, 1310, 626, 44, 5, 2.5), '#8a5a44', .8);
+      hit(c, 'cab:chart', ['r', 1086, 606, 296, 86], { label:tr('图桌') }); }
     drawLamp(c);
     drawMoth(c);
     // near plane
@@ -572,6 +592,8 @@ ROOMS.cabin = {
     S.bulbs.forEach(b => hole(K_BS, b.slot.x, b.slot.y + 28, 150, .55*Math.min(1, (S.T - b.born)/.6)));
     hole(K_NR, 1168, 740, 260, .45 + .3*(S.lanternPulse||0));
     hole(K_WL, 443, 400, 420, .12 + .2*S.vis, null, 320); hole(K_WL, 1157, 400, 420, .12 + .2*S.vis, null, 320);
+    /* enough spill onto the pier to read the slip pinned there */
+    hole(K_WL, 96, 274, 250, .2 + on*.18, null, 180);
   },
   over(c, dt){
     const refl = clamp(.72 - (S.vis-.1)/.9*.68, 0, 1);
@@ -580,7 +602,6 @@ ROOMS.cabin = {
       if (refl > .02){ c.globalAlpha = refl*.55; const g = c.createLinearGradient(0, y, 0, y+h); g.addColorStop(0, 'rgba(255,214,160,.32)'); g.addColorStop(1, 'rgba(120,80,60,.55)'); c.fillStyle = g; c.fillRect(x, y, w, h);
         c.globalAlpha = refl; c.globalCompositeOperation = 'lighter'; const [lx] = lampPos(); glowAt(c, SWARM, s === 'left' ? 1600 - lx - 200 : 1600 - lx + 180, y + 120, 90, .6*refl);
         c.globalCompositeOperation = 'source-over';
-        if (s === 'left' && anHere()){ c.globalAlpha = refl*.35; flat(c, cc => { ell(cc, 300, 330, 26, 30); rr(cc, 262, 360, 76, 120, 30); }, '#2a1c22'); }
         c.globalAlpha = refl*.5; flat(c, cc => rr(cc, x, y + h - 60, w, 60, 0), '#3a2620');
         c.globalAlpha = 1; }
       c.globalAlpha = .07; c.fillStyle = '#fff'; c.beginPath(); c.moveTo(x+120, y+h); c.lineTo(x+170, y+h); c.lineTo(x+320, y); c.lineTo(x+270, y); c.closePath(); c.fill();

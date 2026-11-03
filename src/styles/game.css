@@ -90,6 +90,26 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 @keyframes pulse{50%{transform:scale(1.25);opacity:.6}}
 @keyframes hintIn{from{opacity:0}}
 
+/* the three slots on the door screen */
+#slots{display:grid;grid-template-columns:repeat(3,1fr);gap:.6em;width:100%;margin:.2em 0 .4em}
+.slot{
+  position:relative;display:grid;justify-items:start;gap:.2em;text-align:left;cursor:pointer;
+  background:rgba(180,205,224,.06);border:1px solid var(--ui-line);border-radius:12px;
+  padding:.7em .8em;color:var(--ui-fg);font:inherit;min-height:4.6em;align-content:start;
+}
+.slot:hover{background:rgba(180,205,224,.12)}
+.slot.cur{border-color:rgba(255,217,163,.6);background:rgba(255,217,163,.08)}
+.slot b{font:400 clamp(12px,1.35cqw,17px)/1.2 var(--f-display);letter-spacing:.04em}
+.slot span{color:var(--ui-dim);font-size:clamp(9px,.95cqw,12px);line-height:1.5}
+.slot small{color:var(--ui-dim);opacity:.75;font-family:var(--f-mono);font-size:clamp(8px,.82cqw,10.5px);letter-spacing:.06em}
+.slot-x{
+  position:absolute;top:.3em;right:.4em;width:1.5em;height:1.5em;display:grid;place-items:center;
+  border-radius:50%;color:var(--ui-dim);font-style:normal;font-size:1em;line-height:1;
+}
+.slot-x:hover{background:rgba(233,143,140,.2);color:#f3c0bd}
+.slot-x.arm{background:rgba(233,143,140,.35);color:#fff}
+@media (max-width:620px){ #slots{grid-template-columns:1fr} .slot{min-height:0} }
+
 /* floating panel */
 .panel{
   position:absolute;right:3cqw;top:8.5cqw;width:min(36cqw,400px);max-height:calc(100% - 17cqw);overflow:auto;

@@ -31,4 +31,6 @@ export const MAT = {
   scarf:{l:'#ffcd94',b:'#ef9f57',d:'#b0652f',r:'#f6b06a'},
   plum:{l:'#c99aa8',b:'#9a6d7c',d:'#5e3f4b',r:'#b4848f'}
 };
-export const POT_COL = ['#7fa0bb','#c98a5a','#9cbcd2','#e09f70','#5d8794'];
+/* One per pot, in the order the greenhouse stands them: five along the bench,
+   three on the seedling shelf behind it. */
+export const POT_COL = ['#7fa0bb','#c98a5a','#9cbcd2','#e09f70','#5d8794','#a8899c','#7f9a74','#c0a079'];

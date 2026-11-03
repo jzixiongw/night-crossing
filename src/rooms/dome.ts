@@ -1,7 +1,5 @@
 import { tr } from '../i18n';
 import { AU } from '../audio/index';
-import { anWhere } from '../characters/an-lines';
-import { drawAn } from '../characters/an';
 import { layerCache } from '../core/cache';
 import { inv, mat, setL } from '../core/camera';
 import { drawFX } from '../core/fx';
@@ -17,7 +15,7 @@ import { PR, S } from '../state/runtime';
 import { markDirty } from '../state/save';
 import { G } from '../state/store';
 import { now } from '../state/time';
-import { AN, addLog, once, onceS, say } from '../ui/captions';
+import { addLog, once, onceS, say } from '../ui/captions';
 import { closePanels } from '../ui/panels';
 
 /* ================= OBSERVATION DOME: star lines ================= */
@@ -141,7 +139,6 @@ ROOMS.dome = {
     if (once('domeFirst')) say(tr('小灯开着的时候，头顶只看得见最亮的那几颗。'));
     else if (G.lines.length){ const off = skyOff(); const vis = G.lines.some(l => { const p = endPos(l.a); const sx = mod(p.x - off, SKY_W); return sx > 0 && sx < 1600; });
       say(vis ? tr('你连过的星线还在头顶。') : tr('你连过的星线这会儿转到别处去了。过一阵，它们会转回来。')); }
-    if (anWhere() === 'dome') say(once('anDome') ? tr('晚上我在这儿对图。把灯关了，眼睛别动，等一会儿。') : tr('来了。'), AN, 2000);
   },
   exit(){ S.pick = null; setCtx([]); },
   update(dt){
@@ -149,7 +146,7 @@ ROOMS.dome = {
     else S.adapt = Math.max(0, S.adapt - dt*1.5);
     if (S.adapt > .6 && once('adapted')) say(tr('眼睛慢慢适应了。更暗的星浮出来了。'));
     S.domeT = (S.domeT||0) + dt;
-    if (!G.domeLight && S.adapt < .15 && PR.speed > 600 && S.domeT > 20 && onceS('adaptHint')) say(anWhere() === 'dome' ? tr('手别动。眼睛跟着手跑，就看不见暗的了。') : tr('光标一晃，眼睛就跟着动。停一停试试。'), anWhere() === 'dome' ? AN : null);
+    if (!G.domeLight && S.adapt < .15 && PR.speed > 600 && S.domeT > 20 && onceS('adaptHint')) say(tr('光标一晃，眼睛就跟着动。停一停试试。'));
     let changed = false; const t = now();
     STARS.forEach(st => { if (st.tier !== 3) return; const v = varB(st, t) >= .3; if (S.varVis[st.id] !== v){ S.varVis[st.id] = v; changed = true; } });
     if (changed){
@@ -208,7 +205,6 @@ ROOMS.dome = {
     vol(c, cc => { cc.moveTo(270,694); cc.bezierCurveTo(272,664, 290,656, 300,656); cc.bezierCurveTo(310,656, 328,664, 330,694); cc.closePath(); }, G.domeLight ? MAT.amber : MAT.tealD, { k:1.5, s:4, r:1 });
     flat(c, cc => ell(cc, 300, 694, 30, 5), G.domeLight ? '#ffe2b0' : '#1c2a2a');
     hit(c, 'd:light', ['r', 250, 640, 100, 180], { label:tr('小灯') });
-    if (anWhere() === 'dome'){ drawAn(c, 1480, 680, { pose:'map', s:.82, face:-1 }); hit(c, 'an:talk', ['r', 1420, 460, 120, 230], { label:tr('岸'), key:'an' }); }
     layerCache(c, 'dm:near', 1.25, domeNearArt, { dy:(S.lieK || 0)*300 });
     setL(c, 1.25, { dy:(S.lieK || 0)*300 });
     hit(c, 'd:lie', ['r', 360, 812, 880, 140], { label:G.lie ? tr('坐起来') : tr('长椅（躺下）') });
@@ -216,7 +212,6 @@ ROOMS.dome = {
   light(){
     lightBegin('#04070f', .42 + .34*(1 - S.dLamp));
     hole(1, 300, 690, 360, .9*S.dLamp, { dy:(S.lieK || 0)*160 }, 260);
-    if (anWhere() === 'dome') hole(1, 1300, 640, 260, .2, { dy:(S.lieK || 0)*160 });
     hole(.5, 800, 300, 900, .3*(1 - S.dLamp*.4), null, 500);
   },
   over(c, dt){

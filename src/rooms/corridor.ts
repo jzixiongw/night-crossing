@@ -1,12 +1,11 @@
 import { tr } from '../i18n';
 import { AU } from '../audio/index';
-import { anWhere } from '../characters/an-lines';
-import { drawAnSilhouette } from '../characters/an';
 import { CACHE, blit, cacheGet } from '../core/cache';
 import { CAM, mat, tp } from '../core/camera';
 import { hit } from '../core/hits';
 import { holeM, lightBegin } from '../core/light';
 import { MAT } from '../core/materials';
+import { PORT_ORDER } from '../data/ports';
 import { SAMBER, SIND, SPINK, SROSE, STEAL, SWARM, ell, flat, glowAt, pat, polyP, rr, shadow, stemPath, txt, txtFit, vol } from '../core/paint';
 import { CH, CW, RS } from '../core/surface';
 import { $, D2R, hex, hhmm, lerp, mixHex, mod, mulberry32, rand, rgba, ymd } from '../core/util';
@@ -17,27 +16,38 @@ import { G } from '../state/store';
 import { localHour, now } from '../state/time';
 import { addLog, once, onceS, say } from '../ui/captions';
 import { logLines, openLog } from '../ui/log';
+import { orderState } from '../ui/worksheet';
+import { drawSlip, voyageSlip, workSlip } from '../ui/sheet';
 import { callPort, docked } from './hatch';
 import { openMail, updateMailbox } from '../ui/mail';
 
 /* ================= RING CORRIDOR =================
-   The ship is a spinning ring whose centre sits far above the frame. Each depth layer rotates about that centre:
-   the far wall (stations), the floor band and the near pillars sweep at different screen speeds, so walking reads in depth. */
-export const RC = { x:800, y:-1300 };
+   The corridor is built like every other room: a flat ceiling and a flat wall
+   across the frame, a floor that fans out toward the viewer, and the walk
+   sliding the whole lattice sideways -- the far wall slowest, the near pillars
+   fastest. The ceiling and the floor are the quads between the wall and a near
+   edge off the top and the bottom of the frame, recomputed every frame, so they
+   shear as the camera drifts. */
 export const WINDOW_ANG = RING.find(s => s.id === 'window').ang;
-export const K_RW = .7, K_RN = 1.5;
-export const R_WB = 2080, R_WT = 1590, R_FN = 2290, R_CN = 1450;
+export const K_RW = .62, K_RN = 1.32;        // the far wall, and the near pillars
+export const PPD = 30;                        // design units of wall per degree walked
+export const WT = 190, WB = 790;              // the wall's top rail, and its foot
+export const FN = 1020, CN = -330;            // the near edge of the floor, and of the ceiling
+export const SPREAD = 1.86;                   // how far the floor has fanned out by its near edge
 export function mmul(A, B){ return [A[0]*B[0]+A[2]*B[1], A[1]*B[0]+A[3]*B[1], A[0]*B[2]+A[2]*B[3], A[1]*B[2]+A[3]*B[3], A[0]*B[4]+A[2]*B[5]+A[4], A[1]*B[4]+A[3]*B[5]+A[5]]; }
-export function rotAbout(cx, cy, a){ const cs = Math.cos(a), sn = Math.sin(a); return [cs, sn, -sn, cs, cx - cs*cx + sn*cy, cy - sn*cx - cs*cy]; }
-export function ringM(k, rel){ return mmul(mat(k), rotAbout(RC.x, RC.y, -rel*D2R)); }
+/* `rate` is how fast this layer slides past the walk, counted against the wall.
+   It is kept apart from the depth `k` because the bench has to stay in its
+   alcove while still sitting on a nearer plane than the wall behind it. */
+export function ringM(k, rel, rate?){ return mmul(mat(k), [1, 0, 0, 1, -rel*PPD*(rate ?? k/K_RW), 0]); }
 export function setM(c, m){ c.setTransform(m[0],m[1],m[2],m[3],m[4],m[5]); }
-export function ringPt(k, R, deg){ return tp(mat(k), RC.x + R*Math.sin(deg*D2R), RC.y + R*Math.cos(deg*D2R)); }
-export function bandPts(k0, R0, k1, R1, a0, a1, step=1.5){
-  const pts = []; for (let a=a0; a<=a1+1e-6; a+=step) pts.push(ringPt(k0, R0, a)); for (let a=a1; a>=a0-1e-6; a-=step) pts.push(ringPt(k1, R1, a)); return pts;
-}
-export function surf(t, kind){ // a point on the floor (or ceiling) band, t = 0 at the wall, 1 at the near edge
-  return kind === 'floor' ? [lerp(K_RW, K_RN, t), lerp(R_WB, R_FN, t)] : [lerp(K_RW, K_RN, t), lerp(R_WT, R_CN, t)];
-}
+/* A point on the floor or the ceiling: t = 0 at the wall, 1 at the near edge,
+   x in wall space. Both fan out by the same amount, so the seams overhead run
+   away at the same rate as the ones underfoot. */
+export function spt(t, x, yFar, yNear){ return tp(mat(lerp(K_RW, K_RN, t)), 800 + (x - 800)*lerp(1, SPREAD, t), lerp(yFar, yNear, t)); }
+export function fpt(t, x){ return spt(t, x, WB, FN); }
+export function cpt(t, x){ return spt(t, x, WT, CN); }
+export function fquad(t0, t1, x0, x1){ return [fpt(t0,x0), fpt(t0,x1), fpt(t1,x1), fpt(t1,x0)]; }
+export function cquad(t0, t1, x0, x1){ return [cpt(t0,x0), cpt(t0,x1), cpt(t1,x1), cpt(t1,x0)]; }
 
 /* ---- station art (cached sprites in station-local coords: x≈800 centre, base on y=780) ---- */
 export const ST_BOX = [400, 140, 840, 680];
@@ -84,9 +94,9 @@ export function gangArt(g, st){
   flat(g, cc => { rr(cc, 716, 420, 168, 12, 6); rr(cc, 716, 676, 168, 12, 6); }, '#2c3f5e', .6);
   vol(g, cc => rr(cc, 846, 528, 24, 92, 12), MAT.brass, { k:1.6, s:4 });
   vol(g, cc => rr(cc, 762, 268, 76, 28, 9), MAT.metalD, { k:2, s:5 });
-  vol(g, cc => rr(cc, 696, 180, 208, 64, 10), MAT.paper, { k:2, s:5, r:1.5 });
-  txt(g, st.name, 800, 216, 25, '#2a3550');
-  txt(g, st.en, 800, 232, 10, '#7d7a72', { mono:true, ls:3 });
+  vol(g, cc => rr(cc, 696, 204, 208, 64, 10), MAT.paper, { k:2, s:5, r:1.5 });
+  txt(g, st.name, 800, 240, 25, '#2a3550');
+  txt(g, st.en, 800, 256, 10, '#7d7a72', { mono:true, ls:3 });
   vol(g, cc => rr(cc, 668, 770, 264, 16, 8), MAT.metalD, { k:1.5, s:3.5 });
 }
 export function stationArt(g, st){
@@ -114,29 +124,35 @@ export function stationArt(g, st){
     return;
   }
   if (st.id === 'board'){
-    shadow(g, 780, 600, 300, 24, .5);
-    vol(g, cc => rr(cc, 516, 266, 528, 338, 16), MAT.woodD, { k:4, s:10, r:2.5 });
-    vol(g, cc => rr(cc, 532, 282, 496, 306, 10), MAT.cork, { k:-2, s:-6, lx:.5, ly:.8, r:0, tex:.7 });
-    g.save(); g.translate(780, 276); g.rotate(-.035); vol(g, cc => rr(cc, -90, -20, 180, 40, 6), MAT.paper, { k:1.5, s:3.5 }); txt(g, tr('航行日志'), 0, 8, 22, '#2a3550'); g.restore();
-    g.save(); g.translate(1155, 400); g.rotate(.035);
-    shadow(g, 4, 118, 90, 10, .4);
-    vol(g, cc => rr(cc, -85, -110, 170, 226, 6), MAT.paper, { k:2, s:5, r:1.5 });
-    txt(g, tr('本船须知'), 0, -76, 21, '#2a3550');
-    flat(g, cc => rr(cc, -68, -64, 136, 2, 1), '#c4b392');
-    [tr('一　炉子用完关掉。'),tr('二　夜里走廊扶栏。'),tr('三　邮船每两钟头'),tr('　　靠一次舷。'),tr('四　穹顶熄灯轻声。')].forEach((l,i) => txt(g, l, -66, -36 + i*27, 15, '#2a3550', { align:'left' }));
+    /* The cork carries three pinned things, and only one of them is static:
+       the work slip and the voyage slip are written on as the round moves, so
+       they are painted live in ringStationLive. What is cached here is the
+       board, the log column and the ship's notice beside it. */
+    shadow(g, 790, 614, 300, 24, .5);
+    vol(g, cc => rr(cc, 520, 252, 560, 360, 16), MAT.woodD, { k:4, s:10, r:2.5 });
+    vol(g, cc => rr(cc, 536, 268, 528, 328, 10), MAT.cork, { k:-2, s:-6, lx:.5, ly:.8, r:0, tex:.7 });
+    g.save(); g.translate(1004, 288); g.rotate(-.03);
+    vol(g, cc => rr(cc, -60, -15, 120, 30, 5), MAT.paper, { k:1.4, s:3.5 });
+    txtFit(g, tr('航行日志'), 0, 6, 104, 17, '#2a3550'); g.restore();
+    const items = G.log.slice(0,2);
+    items.forEach((e,i) => { const x = 944, y = 310 + i*140, rot = [-2.4, 2][i]*D2R;
+      const lines = logLines(e.text, 6);
+      g.save(); g.translate(x+60, y+56); g.rotate(rot); g.translate(-x-60, -y-56);
+      shadow(g, x+62, y+114, 58, 8, .35);
+      vol(g, cc => rr(cc, x, y, 120, 112, 4), MAT.paper, { k:1.4, s:3, r:1 });
+      vol(g, cc => ell(cc, x+60, y+6, 5.5, 5.5), MAT.rose, { k:.8, s:2, tex:0 });
+      txt(g, ymd(e.t).slice(5) + ' ' + hhmm(e.t), x+9, y+30, 9.5, '#7d7a72', { mono:true, align:'left' });
+      lines.forEach((l,k) => txt(g, l, x+9, y+56+k*21, 13.5, '#2a3550', { align:'left' }));
+      g.restore(); });
+    if (!items.length) txt(g, tr('还没有记录。'), 1004, 430, 16, '#3a2414');
+    g.save(); g.translate(1163, 400); g.rotate(.035);
+    shadow(g, 4, 118, 78, 10, .4);
+    vol(g, cc => rr(cc, -74, -110, 148, 226, 6), MAT.paper, { k:2, s:5, r:1.5 });
+    txt(g, tr('本船须知'), 0, -76, 20, '#2a3550');
+    flat(g, cc => rr(cc, -60, -64, 120, 2, 1), '#c4b392');
+    [tr('一　炉子用完关掉。'),tr('二　夜里走廊扶栏。'),tr('三　邮船每两钟头'),tr('　　靠一次舷。'),tr('四　穹顶熄灯轻声。')].forEach((l,i) => txt(g, l, -58, -36 + i*27, 14.5, '#2a3550', { align:'left' }));
     vol(g, cc => ell(cc, 0, -100, 6, 6), MAT.rose, { k:.8, s:2, tex:0 });
     g.restore();
-    const items = G.log.slice(0,6);
-    items.forEach((e,i) => { const col = i % 3, row = Math.floor(i/3), x = 552 + col*160, y = 306 + row*138, rot = [-3,2,-1,3,-2,1][i]*D2R;
-      const lines = logLines(e.text);
-      g.save(); g.translate(x+70, y+56); g.rotate(rot); g.translate(-x-70, -y-56);
-      shadow(g, x+74, y+114, 70, 8, .35);
-      vol(g, cc => rr(cc, x, y, 140, 112, 4), MAT.paper, { k:1.4, s:3, r:1 });
-      vol(g, cc => ell(cc, x+70, y+6, 5.5, 5.5), MAT.rose, { k:.8, s:2, tex:0 });
-      txt(g, ymd(e.t).slice(5) + ' ' + hhmm(e.t), x+12, y+30, 11, '#7d7a72', { mono:true, align:'left' });
-      lines.forEach((l,k) => txt(g, l, x+12, y+56+k*22, 16, '#2a3550', { align:'left' }));
-      g.restore(); });
-    if (!items.length) txt(g, tr('还没有记录。'), 780, 440, 20, '#3a2414');
     return;
   }
   if (st.id === 'dome'){
@@ -222,71 +238,73 @@ ROOMS.corridor = {
   },
   room(c){
     const phi = S.phi;
-    // backdrop: the near ceiling and what lies beyond the near floor edge
-    c.setTransform(1,0,0,1,0,0); c.fillStyle = '#121a2e'; c.fillRect(0,0,CW,CH);
-    // ceiling band
-    const ceil = bandPts(K_RW, R_WT, K_RN, R_CN, -42, 42);
-    let g0 = ringPt(K_RW, R_WT, 0), g1 = ringPt(K_RN, R_CN, 0);
-    let gr = c.createLinearGradient(0, g1[1], 0, g0[1]); gr.addColorStop(0, '#1a2440'); gr.addColorStop(.7, '#2b3a5c'); gr.addColorStop(1, '#3a4d74');
+    c.setTransform(1,0,0,1,0,0); c.fillStyle = '#0c1322'; c.fillRect(0,0,CW,CH);
+    // the ceiling, running back over the viewer
+    const ceil = cquad(0, 1, -2400, 4000);
+    let gr = c.createLinearGradient(0, cpt(0,800)[1], 0, cpt(.45,800)[1]);
+    gr.addColorStop(0, '#3a4d74'); gr.addColorStop(.5, '#2b3a5c'); gr.addColorStop(1, '#19233e');
     c.beginPath(); polyP(c, ceil); c.fillStyle = gr; c.fill();
-    // light strip running along the ceiling
-    const strip = []; for (let a=-42;a<=42;a+=2){ const [k,R] = surf(.32,'ceil'); strip.push(ringPt(k, R, a)); } for (let a=42;a>=-42;a-=2){ const [k,R] = surf(.4,'ceil'); strip.push(ringPt(k, R, a)); }
-    c.beginPath(); polyP(c, strip); c.fillStyle = 'rgba(200,220,240,.12)'; c.fill();
-    // far wall annulus
-    const wall = bandPts(K_RW, R_WT, K_RW, R_WB, -36, 36);
-    g0 = ringPt(K_RW, R_WT, 0); g1 = ringPt(K_RW, R_WB, 0);
-    gr = c.createLinearGradient(0, g0[1], 0, g1[1]); gr.addColorStop(0, '#2e3f62'); gr.addColorStop(.12, '#4a6189'); gr.addColorStop(.6, '#3d527a'); gr.addColorStop(.88, '#33476c'); gr.addColorStop(1, '#253553');
-    c.beginPath(); polyP(c, wall); c.fillStyle = gr; c.fill();
-    c.save(); c.beginPath(); polyP(c, wall); c.clip(); c.globalAlpha = .35; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c, 2, 1.75, -.24, 90); c.fill(); c.restore();
-    // trim rails (painted bands, top and bottom of the wall)
-    const band = (k, R0, R1, col, a=1) => { c.setTransform(1,0,0,1,0,0); c.beginPath(); polyP(c, bandPts(k, R0, k, R1, -36, 36)); c.globalAlpha = a; c.fillStyle = col; c.fill(); c.globalAlpha = 1; };
-    band(K_RW, R_WT, R_WT + 26, '#2a3a5c'); band(K_RW, R_WT + 26, R_WT + 32, '#6f8fbd', .8);
-    band(K_RW, R_WB - 64, R_WB - 58, '#7da0cc', .5); band(K_RW, R_WB - 58, R_WB, '#2b3c5e');
-    // ribs + ports + stations (far wall, rotated about the ring centre)
-    for (let k=0;k<18;k++){ const ang = STEP/4 + k*(STEP/2), d = angDiff(ang, phi); if (Math.abs(d) > 30) continue; setM(c, ringM(K_RW, d)); blit(c, RIB()); }
-    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, phi); if (Math.abs(d) > 30) continue; const m = ringM(K_RW, d); setM(c, m);
+    c.save(); c.beginPath(); polyP(c, ceil); c.clip(); c.globalAlpha = .3; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c, 2, 1.6, .3, 110); c.fill(); c.restore();
+    /* Beams overhead on the same lattice as the ribs below, each with a lit
+       edge on the side the lamps are. They are what makes walking read up
+       there, where the ceiling itself has nothing else to go by. */
+    for (let k=0;k<18;k++){ const ang = STEP/4 + k*(STEP/2), d = angDiff(ang, phi); if (Math.abs(d) > 46) continue; const x = 800 - d*PPD;
+      c.beginPath(); polyP(c, [cpt(0, x-11), cpt(0, x+11), cpt(.62, x+18), cpt(.62, x-18)]); c.fillStyle = 'rgba(9,14,28,.42)'; c.fill();
+      c.beginPath(); polyP(c, [cpt(0, x+6), cpt(0, x+11), cpt(.62, x+18), cpt(.62, x+10)]); c.fillStyle = 'rgba(146,174,208,.16)'; c.fill(); }
+    // the light strip the whole corridor runs under
+    c.beginPath(); polyP(c, cquad(.09, .18, -2400, 4000)); c.fillStyle = 'rgba(205,224,242,.16)'; c.fill();
+    c.beginPath(); polyP(c, cquad(.115, .155, -2400, 4000)); c.fillStyle = 'rgba(228,240,252,.2)'; c.fill();
+    c.beginPath(); polyP(c, cquad(0, .04, -2400, 4000)); c.fillStyle = 'rgba(5,9,20,.4)'; c.fill();
+    // the far wall: the surface stands still, and only what is mounted on it walks past
+    setM(c, mat(K_RW));
+    gr = c.createLinearGradient(0, WT, 0, WB);
+    gr.addColorStop(0, '#2e3f62'); gr.addColorStop(.12, '#4a6189'); gr.addColorStop(.6, '#3d527a'); gr.addColorStop(.88, '#33476c'); gr.addColorStop(1, '#253553');
+    c.beginPath(); c.rect(-5000, WT, 10000, WB - WT); c.fillStyle = gr; c.fill();
+    c.save(); c.clip(); c.globalAlpha = .35; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c, 2, 1.75, -.24, 90); c.fill(); c.restore();
+    // the rails the wall is trimmed with, top and bottom
+    flat(c, cc => cc.rect(-5000, WT, 10000, 26), '#2a3a5c');
+    flat(c, cc => cc.rect(-5000, WT + 26, 10000, 7), '#6f8fbd', .8);
+    flat(c, cc => cc.rect(-5000, WB - 66, 10000, 7), '#7da0cc', .5);
+    flat(c, cc => cc.rect(-5000, WB - 59, 10000, 59), '#2b3c5e');
+    // ribs + hull ports + stations, all on the wall, all sliding at the wall's rate
+    for (let k=0;k<18;k++){ const ang = STEP/4 + k*(STEP/2), d = angDiff(ang, phi); if (Math.abs(d) > 44) continue; setM(c, ringM(K_RW, d, 1)); blit(c, RIB()); }
+    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, phi); if (Math.abs(d) > 44) continue; const m = ringM(K_RW, d, 1); setM(c, m);
       c.save(); c.beginPath(); ell(c, 800, 430, 44, 44); c.clip();
       const sg = c.createLinearGradient(0, 386, 0, 474); sg.addColorStop(0, '#0a1226'); sg.addColorStop(1, '#1a2b4d'); c.fillStyle = sg; c.fillRect(740, 380, 120, 100);
       const sx = -mod(S.T*(S.sitting ? 9 : 14)*.6 + k*31, 120);
       S.portStars.forEach(s => { const x = 800 + mod(s.x + sx + 60, 120) - 60; c.fillStyle = '#e2ecf5'; c.globalAlpha = .9; c.fillRect(x, 430 + s.y, s.r, s.r); }); c.globalAlpha = 1;
       c.globalAlpha = .12; c.fillStyle = '#fff'; c.beginPath(); c.moveTo(770,380); c.lineTo(790,380); c.lineTo(760,480); c.lineTo(740,480); c.closePath(); c.fill(); c.globalAlpha = 1;
       c.restore(); blit(c, PORT()); }
-    const where = anWhere();
     RING.forEach(st => {
-      const d = angDiff(st.ang, phi); if (Math.abs(d) > 34) return;
-      const m = ringM(K_RW, d); setM(c, m);
+      const d = angDiff(st.ang, phi); if (Math.abs(d) > 48) return;
+      const m = ringM(K_RW, d, 1); setM(c, m);
       if (st.id === 'window') drawBigWindow(c);
       blit(c, stationSprite(st));
-      ringStationLive(c, st, where);
+      ringStationLive(c, st);
     });
-    // floor band
+    // the floor, fanning out toward the viewer
     c.setTransform(1,0,0,1,0,0);
-    const floor = bandPts(K_RW, R_WB, K_RN, R_FN, -42, 42);
-    g0 = ringPt(K_RW, R_WB, 0); g1 = ringPt(K_RN, R_FN, 0);
-    gr = c.createLinearGradient(0, g0[1], 0, g1[1]); gr.addColorStop(0, '#1c2741'); gr.addColorStop(.3, '#2f3e60'); gr.addColorStop(1, '#3d4f75');
+    const floor = fquad(0, 1, -2400, 4000);
+    gr = c.createLinearGradient(0, fpt(0,800)[1], 0, fpt(1,800)[1]);
+    gr.addColorStop(0, '#1c2741'); gr.addColorStop(.3, '#2f3e60'); gr.addColorStop(1, '#3d4f75');
     c.beginPath(); polyP(c, floor); c.fillStyle = gr; c.fill();
-    const runner = []; for (let a=-42;a<=42;a+=1.5){ const [k,R] = surf(.32,'floor'); runner.push(ringPt(k, R, a)); } for (let a=42;a>=-42;a-=1.5){ const [k,R] = surf(.7,'floor'); runner.push(ringPt(k, R, a)); }
-    c.beginPath(); polyP(c, runner); c.fillStyle = '#5a3f4f'; c.fill();
-    const runIn = []; for (let a=-42;a<=42;a+=1.5){ const [k,R] = surf(.38,'floor'); runIn.push(ringPt(k, R, a)); } for (let a=42;a>=-42;a-=1.5){ const [k,R] = surf(.64,'floor'); runIn.push(ringPt(k, R, a)); }
-    c.beginPath(); polyP(c, runIn); c.fillStyle = '#7a5566'; c.fill();
+    c.beginPath(); polyP(c, fquad(.3, .72, -2400, 4000)); c.fillStyle = '#5a3f4f'; c.fill();
+    c.beginPath(); polyP(c, fquad(.36, .66, -2400, 4000)); c.fillStyle = '#7a5566'; c.fill();
     c.save(); c.beginPath(); polyP(c, floor); c.clip(); c.globalAlpha = .4; c.globalCompositeOperation = 'soft-light'; c.fillStyle = pat(c, 2, 1.4, .36, 150); c.fill(); c.restore();
-    // seams sweep with the spin
+    // the seams run away from the viewer and sweep past as you walk
     c.fillStyle = 'rgba(8,12,26,.34)';
-    for (let k=0;k<72;k++){ const ang = k*5, d = angDiff(ang, phi); if (Math.abs(d) > 40) continue;
-      const a0 = ringPt(K_RW, R_WB, d - .05), a1 = ringPt(K_RW, R_WB, d + .05), b0 = ringPt(K_RN, R_FN, d - .18), b1 = ringPt(K_RN, R_FN, d + .18);
-      c.beginPath(); polyP(c, [a0, a1, b1, b0]); c.fill(); }
-    const ao = []; for (let a=-42;a<=42;a+=2) ao.push(ringPt(K_RW, R_WB, a)); for (let a=42;a>=-42;a-=2){ const [k,R] = surf(.12,'floor'); ao.push(ringPt(k, R, a)); }
-    c.beginPath(); polyP(c, ao); c.fillStyle = 'rgba(5,9,20,.45)'; c.fill();
-    // bench in front of the big window (play plane)
-    { const d = angDiff(WINDOW_ANG, phi); if (Math.abs(d) < 34){ const m = mmul(ringM(1, d), [1,0,0,1,0,-34]); setM(c, m); blit(c, BENCH()); if (!S.sitting) hit(c, 'ring:sit', ['r', 490, 730, 620, 140], { label:tr('舷窗长椅') }); } }
-    // near pillars, fastest
-    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, phi); if (Math.abs(d) > 26) continue; setM(c, ringM(K_RN, d)); blit(c, PILLAR()); }
+    for (let k=0;k<72;k++){ const ang = k*5, d = angDiff(ang, phi); if (Math.abs(d) > 46) continue; const x = 800 - d*PPD;
+      c.beginPath(); polyP(c, [fpt(0, x-2), fpt(0, x+2), fpt(1, x+6), fpt(1, x-6)]); c.fill(); }
+    c.beginPath(); polyP(c, fquad(0, .11, -2400, 4000)); c.fillStyle = 'rgba(5,9,20,.45)'; c.fill();
+    // the bench in front of the big window, on the play plane
+    { const d = angDiff(WINDOW_ANG, phi); if (Math.abs(d) < 40){ setM(c, mmul(ringM(1, d, 1.2), [1,0,0,1,0,-26])); blit(c, BENCH()); if (!S.sitting) hit(c, 'ring:sit', ['r', 490, 730, 620, 140], { label:tr('舷窗长椅') }); } }
+    // the near pillars, fastest
+    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, phi); if (Math.abs(d) > 30) continue; setM(c, ringM(K_RN, d, 1.6)); blit(c, PILLAR()); }
   },
   light(){
     lightBegin('#050a1a', .5);
-    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, S.phi); if (Math.abs(d) > 34) continue; const m = ringM(K_RW, d); holeM(m, 800, 360, 340, .85, 300); }
-    const where = anWhere();
-    RING.forEach(st => { const d = angDiff(st.ang, S.phi); if (Math.abs(d) > 34) return; const m = ringM(K_RW, d);
+    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, S.phi); if (Math.abs(d) > 44) continue; const m = ringM(K_RW, d, 1); holeM(m, 800, 360, 340, .85, 300); }
+    RING.forEach(st => { const d = angDiff(st.ang, S.phi); if (Math.abs(d) > 48) return; const m = ringM(K_RW, d, 1);
       if (st.id === 'gang') holeM(m, 800, 300, docked() ? 150 : 70, docked() ? .6 : .18);
       else if (st.go && st.id !== 'dome') holeM(m, 800, 440, 120, .55);
       if (st.id === 'window') holeM(m, 800, 420, 420, .35, 240);
@@ -294,10 +312,9 @@ ROOMS.corridor = {
       if (st.id === 'mail') holeM(m, 800, 300, 160, .2); });
   },
   over(c){
-    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, S.phi); if (Math.abs(d) > 34) continue; const m = ringM(K_RW, d); setM(c, m);
+    for (let k=0;k<9;k++){ const ang = STEP/2 + k*STEP, d = angDiff(ang, S.phi); if (Math.abs(d) > 44) continue; const m = ringM(K_RW, d, 1); setM(c, m);
       c.globalCompositeOperation = 'lighter'; glowAt(c, SWARM, 800, 352, 110, .42); glowAt(c, SWARM, 800, 336, 26, .8); c.globalCompositeOperation = 'source-over'; }
-    const where = anWhere();
-    RING.forEach(st => { const d = angDiff(st.ang, S.phi); if (Math.abs(d) > 34) return; const m = ringM(K_RW, d); setM(c, m);
+    RING.forEach(st => { const d = angDiff(st.ang, S.phi); if (Math.abs(d) > 48) return; const m = ringM(K_RW, d, 1); setM(c, m);
       c.globalCompositeOperation = 'lighter';
       if (st.id === 'gang'){ if (docked()) glowAt(c, SWARM, 800, 284, 74, .5 + .12*Math.sin(S.T*1.6)); }
       else if (st.go && st.id !== 'dome'){ const spr = st.id === 'green' ? (G.growLamp ? SPINK : STEAL) : SWARM; glowAt(c, spr, 800, 440, 70, st.id === 'green' && G.growLamp ? .55 : .35); }
@@ -325,7 +342,7 @@ export function drawBigWindow(c){
   c.beginPath(); c.moveTo(590,556); c.lineTo(604,556); c.lineTo(724,268); c.lineTo(710,268); c.closePath(); c.fill(); c.globalAlpha = 1;
   c.restore();
 }
-export function ringStationLive(c, st, where){
+export function ringStationLive(c, st){
   if (st.id === 'gang'){
     /* The plate under the lamp is the one place in the ring that says where the
        ship is going, so it is painted live rather than cached with the door. */
@@ -340,11 +357,9 @@ export function ringStationLive(c, st, where){
     return;
   }
   if (st.go && st.id !== 'dome'){
-    const there = where === st.id || (st.id === 'cabin' && where === 'cabinSleep');
     c.save(); c.beginPath(); ell(c, 800, 440, 31, 31); c.clip();
     const glowCol = st.id === 'green' ? (G.growLamp ? '#ff9fbf' : '#62b0a8') : '#f2a95b';
     const gg = c.createRadialGradient(800, 450, 2, 800, 440, 34); gg.addColorStop(0, rgba(glowCol, .9)); gg.addColorStop(1, rgba(glowCol, .25)); c.fillStyle = gg; c.fillRect(760, 400, 80, 80);
-    if (there) drawAnSilhouette(c, 798, 452, 1, '#16213a', .88);
     c.restore();
     flat(c, cc => { ell(cc, 788, 424, 12, 6, -.6); }, '#ffffff', .18);
     if (st.id === 'radio'){ const air = G.radioOn || G.wind > 0; txt(c, 'ON AIR', 877, 493, 11, air ? '#ffb4a6' : '#5a4a5a', { mono:true, ls:1 }); }
@@ -368,7 +383,23 @@ export function ringStationLive(c, st, where){
     hit(c, 'ring:mail', ['r', 690, 480, 220, 150], { label:tr('信箱') + (n ? tr('（{0} 封）', n) : '') });
     return;
   }
-  if (st.id === 'board'){ hit(c, 'ring:log', ['r', 516, 266, 528, 338], { label:tr('布告板') }); return; }
+  if (st.id === 'board'){
+    /* The whole job, written out by hand: five lines down the left of the
+       cork, the one you are on arrowed and opened up into its parts, the ones
+       behind you ringed. Beside it, the round the ship is working. Reading the
+       two should make the next thing to do obvious without a word of
+       narration. */
+    c.save(); c.translate(546, 278); c.rotate(-.011);
+    const ws = workSlip(200, false); const wh = drawSlip(c, ws);
+    hit(c, 'ui:work', ['r', -8, -8, 216, wh + 16], { label:tr('这一趟'), key:'work' });
+    c.restore();
+    c.save(); c.translate(752, 292); c.rotate(.016);
+    const vs = voyageSlip(184); const vh = drawSlip(c, vs);
+    hit(c, 'ring:voyage', ['r', -8, -8, 200, vh + 16], { label:tr('航程'), key:'voyage' });
+    c.restore();
+    hit(c, 'ring:log', ['r', 938, 272, 132, 300], { label:tr('航行日志') });
+    return;
+  }
   if (st.id === 'dome'){ hit(c, 'go:dome', ['r', 700, 196, 390, 590], { label:tr('穹顶梯') }); }
 }
 export function updateOtherShip(dt){
@@ -394,6 +425,12 @@ ACT['ring:ship'] = { tap(){
   say(G.shipsSeen === 1 ? tr('你朝那艘船挥了挥手。它的窗灯一盏盏眨了一下。') : tr('那艘船的窗灯又眨了一下。'));
 }};
 ACT['ring:clock'] = { tap(){ AU.tap(); const h = localHour();
-  say(tr('船钟指着 {0}。航行第 {1} 夜。', hhmm(now()), G.nights.length) + (h >= 22 || h < 6 ? tr('夜深了，岸多半在上面的穹顶，或者睡了。') : '')); } };
+  say(tr('船钟指着 {0}。航行第 {1} 夜。', hhmm(now()), G.nights.length) + (h >= 22 || h < 6 ? tr('夜深了。外面的灯也少了。') : '')); } };
 ACT['ring:mail'] = { tap(){ openMail(); } };
 ACT['ring:log'] = { tap(){ openLog(); } };
+ACT['ring:voyage'] = { tap(){ AU.paper();
+  const P = callPort();
+  if (P){ say(P.ask); return; }
+  const left = PORT_ORDER.filter(id => orderState(id) !== 'done').length;
+  say(left ? tr('还有 {0} 个地方在等灯。', left) : tr('四个地方的灯都送到了。'));
+}};

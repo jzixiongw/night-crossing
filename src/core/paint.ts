@@ -115,8 +115,11 @@ export function sphere(c, x, y, r, col, o: any = {}){
    same thing is usually several words, so a label that must stay inside its box
    asks for txtFit: it shrinks to a floor, then wraps once at a space. Chinese has
    no spaces to wrap at and rarely overflows, so it simply keeps its size. */
+/* One face table, so measuring a string and setting it cannot disagree. */
+export function fontOf(size, o: any = {}){ return `${o.w || 400} ${size}px ${o.mono ? '"DM Mono", ui-monospace, monospace' : o.sans ? '"Noto Sans SC", "PingFang SC", sans-serif' : '"ZCOOL XiaoWei", "Songti SC", "STSong", serif'}`; }
+export function txtW(c, s, size, o: any = {}){ c.save(); c.font = fontOf(size, o); const w = c.measureText(s).width; c.restore(); return w; }
 export function txtFit(c, s, x, y, maxW, size, color, o: any = {}){
-  const measure = (str, px) => { c.save(); c.font = `${o.w || 400} ${px}px ${o.mono ? '"DM Mono", ui-monospace, monospace' : o.sans ? '"Noto Sans SC", "PingFang SC", sans-serif' : '"ZCOOL XiaoWei", "Songti SC", "STSong", serif'}`; const w = c.measureText(str).width; c.restore(); return w; };
+  const measure = (str, px) => txtW(c, str, px, o);
   const floor = o.floor ?? size * 0.72;
   let px = size;
   while (px > floor && measure(s, px) > maxW) px -= .5;
@@ -131,7 +134,7 @@ export function txtFit(c, s, x, y, maxW, size, color, o: any = {}){
   txt(c, b, x, y + p2 * .58, p2, color, o);
 }
 export function txt(c, s, x, y, size, color, o: any = {}){
-  c.save(); c.font = `${o.w || 400} ${size}px ${o.mono ? '"DM Mono", ui-monospace, monospace' : o.sans ? '"Noto Sans SC", "PingFang SC", sans-serif' : '"ZCOOL XiaoWei", "Songti SC", "STSong", serif'}`;
+  c.save(); c.font = fontOf(size, o);
   c.textAlign = o.align || 'center'; c.textBaseline = o.base || 'alphabetic'; c.fillStyle = color; c.globalAlpha *= (o.a ?? 1);
   if (o.ls){ try { c.letterSpacing = o.ls + 'px'; } catch(e){} }
   c.fillText(s, x, y); c.restore();

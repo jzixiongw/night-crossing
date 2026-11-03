@@ -2,15 +2,18 @@ import { tr } from '../i18n';
 import { AU } from '../audio/index';
 import { layerCache } from '../core/cache';
 import { setL } from '../core/camera';
+import { hangSlip } from '../ui/sheet';
 import { drawFX, flare } from '../core/fx';
 import { hit } from '../core/hits';
 import { glowL, hole, lightBegin } from '../core/light';
 import { MAT } from '../core/materials';
-import { STEAL, SWARM, ell, flat, pat, rr, shadow, star5, stemPath, txt, vol } from '../core/paint';
+import { STEAL, SWARM, ell, flat, pat, rr, shadow, star5, stemPath, txt, txtFit, vol } from '../core/paint';
 import { P, shell } from '../core/shell';
 import { D2R, clamp, hhmm, mixHex, mulberry32, rand } from '../core/util';
 import { MUSIC_MOTIF, NOTE_MIDI, STATIONS } from '../data/index';
 import { ACT, ROOMS, setAmbience, setCtx } from './registry';
+import { PORTS } from '../data/ports';
+import { openRequest } from '../ui/worksheet';
 import { S } from '../state/runtime';
 import { markDirty } from '../state/save';
 import { G } from '../state/store';
@@ -22,13 +25,16 @@ import { K_SP, K_WL } from '../core/depth';
 export const FMIN = .5, FMAX = 1.7;
 export const fx = f => 500 + (f - FMIN)/(FMAX - FMIN)*236;
 export const SX0 = 806, SY0 = 404, STW = 378/16, STH = 146/6;
-export const RAD_SHELL = { kb:.62, kf:1.75, b:[80,40,1520,640], f:[-340,-280,1940,1180],
+export const RAD_SHELL = { kb:.62, kf:1.75, b:[-140,40,1740,640], f:[-620,-420,2220,1340],
   ceil:[[0,'#3d2f40'],[1,'#141019']], floor:[[0,'#3a2a2c'],[.4,'#4a3434'],[1,'#21181b']], side:[[0,'#35283a'],[1,'#191320']], seams:8, seamCol:'rgba(16,6,10,.35)' };
 export function buildRadio(){ S.crankA = 0; S.rGains = { st:-1, v:-1 }; S.notes = []; const R = mulberry32(5); S.rStars = []; for (let i=0;i<40;i++) S.rStars.push({ x:R(), y:R(), r:.6 + R()*1.4 }); }
 export function renderStrip(){} function renderTable(){}
 export function stationNow(){
   const h = localHour(); let best = null, bc = 0, near = null;
-  STATIONS.forEach(st => { const d = Math.abs(G.freq - st.f); const c = clamp(1 - d/.045, 0, 1);
+  /* Most stations are a needle to thread, which is the point of them. Dispatch
+     is not: it is the first step of every job, so it carries a wide, strong
+     band that a rough turn of the knob lands inside. */
+  STATIONS.forEach(st => { const d = Math.abs(G.freq - st.f); const c = clamp(1 - d/((st as any).w || .045), 0, 1);
     if (!inHours(h, st.hours)){ if (d < .03) near = st; return; }
     if (c > bc){ bc = c; best = st; } });
   return { st:best, c:bc, near };
@@ -51,6 +57,22 @@ ACT['r:tune'] = {
   key(){ tuneTo(G.freq + .01 > FMAX ? FMIN : G.freq + .01); if (onceS('tuneKey')) say(tr('用鼠标拖动旋钮会快很多。')); }
 };
 ACT['r:dial'] = { tap(a, e, P){ if (!e || !P) return; tuneTo(FMIN + (P.x - 500)/236*(FMAX - FMIN)); AU.tap(); markDirty(); } };
+export const DISPATCH_F = 1.09;
+ACT['r:slip'] = { tap(){
+  AU.paper();
+  if (!G.printed){
+    const open = openRequest();
+    say(once('slipEmpty')
+      ? tr('打印口是空的。收音机调到 {0} 的调度台，委托会从这儿出来。', DISPATCH_F.toFixed(2))
+      : open ? tr('打印口还是空的。') : tr('打印口空着。手上的单子先送完吧。'));
+    return;
+  }
+  const P = PORTS[G.printed]; G.slips.push(G.printed); G.printed = null; markDirty();
+  AU.ratchet();
+  say(tr('你撕下单子。{0}那边要一盏灯。', P.name));
+  if (once('slipFirst')) say(tr('单子带到驾驶舱，放上航向板，船就往那边开。'), null, 2800);
+  addLog(tr('接下{0}这一趟', P.name));
+}};
 ACT['r:table'] = { tap(){
   AU.paper(); const n = G.found.length;
   say(n ? tr('台表上记了 {0} 个台，一共 {1} 行。有的台只在某些钟点出来。', n, STATIONS.length) : tr('台表还是空的。调到一个台，它会自己记上。'));
@@ -111,10 +133,18 @@ export function radioTick(dt){
   if (st && c > .55){
     if (S.stationId !== st.id){ S.stationId = st.id; S.subT = 1.2; S.subI = 0; S.radioBeat = 0; S.motifI = 0; }
     if (c > .75 && !G.found.includes(st.id)){ G.found.push(st.id); AU.chime(); addLog(tr('在 {0} 收到「{1}」', st.f.toFixed(2), st.name)); say(tr('收到了：「{0}」。台表上多了一行。', st.name)); markDirty(); }
+    /* Locking onto dispatch prints the slip. It stays in the tray once printed,
+       so tuning away does not cost the job. */
+    if (st.id === 'dispatch' && c > .6 && !G.printed){
+      const id = openRequest();
+      if (id){ G.printed = id; AU.ratchet(); markDirty();
+        say(tr('打印口响了一下，吐出一张单子。'), null, 900); }
+    }
     if (st.id === 'music' && c > .7 && !G.ghost){ G.ghost = true; say(tr('纸带上浮出几个淡淡的格子，跟着曲子的拍子。'), null, 1500); markDirty(); }
     S.subT -= dt;
     if (S.subT <= 0){ S.subT = 7.5; let line = st.lines[S.subI % st.lines.length]; S.subI++;
       if (line === '@MAIL') line = tr('下一班邮船大约 {0} 靠舷。', hhmm(G.mail.nextAt)) + (G.mail.box.length ? tr('信箱里现在有 {0} 封。', G.mail.box.length) : '');
+      if (line === '@JOB'){ const id = openRequest(); line = id ? tr(PORTS[id].ask) : tr('今晚没有新的委托了。'); }
       say(line, st.name); }
     S.radioBeat = (S.radioBeat || 0) - dt;
     if (S.radioBeat <= 0){
@@ -146,13 +176,13 @@ export function radWallArt(g){
 }
 export function radMidArt(g){
   shadow(g, 830, 790, 720, 26, .6);
-  for (const x of [190, 1470]) vol(g, cc => rr(cc, x-14, 680, 28, 110, 8), MAT.woodD, { k:2, s:5 });
-  vol(g, cc => rr(cc, 150, 576, 1360, 120, 10), MAT.woodD, { k:4, s:10, tex:.6, g:[576, 696, 'rgba(0,0,0,0)', 'rgba(6,4,8,.4)'] });
+  for (const x of [-70, 190, 1470, 1660]) vol(g, cc => rr(cc, x-14, 680, 28, 110, 8), MAT.woodD, { k:2, s:5 });
+  vol(g, cc => rr(cc, -110, 576, 1800, 120, 10), MAT.woodD, { k:4, s:10, tex:.6, g:[576, 696, 'rgba(0,0,0,0)', 'rgba(6,4,8,.4)'] });
   for (const [x,w] of [[220,280],[1110,340]]) vol(g, cc => rr(cc, x, 600, w, 80, 8), MAT.woodD, { k:-2, s:-5, lx:.5, ly:.8, r:0, tex:.5 });
   for (const x of [360, 1280]) vol(g, cc => rr(cc, x-18, 634, 36, 8, 4), MAT.brass, { k:.6, s:1.5, tex:0 });
   // rug under the chair space
   vol(g, cc => ell(cc, 800, 840, 420, 40), { l:'#8a6070', b:'#6b4757', d:'#43293a' }, { k:2, s:5, tex:.7 });
-  vol(g, cc => rr(cc, 130, 552, 1400, 30, 10), MAT.wood, { k:2, s:5, hl:[700,556,400,.2] });
+  vol(g, cc => rr(cc, -130, 552, 1840, 30, 10), MAT.wood, { k:2, s:5, hl:[700,556,400,.2] });
   // radio cabinet
   shadow(g, 618, 566, 190, 12, .6);
   vol(g, cc => { cc.moveTo(456,560); cc.lineTo(456,340); cc.bezierCurveTo(456,300, 480,292, 618,292); cc.bezierCurveTo(756,292, 780,300, 780,340); cc.lineTo(780,560); cc.closePath(); }, MAT.wood, { k:5, s:12, r:3, hl:[520,320,120,.22] });
@@ -195,6 +225,8 @@ ROOMS.radio = {
       if (f){ txt(c, st.f.toFixed(2), 320, y, 13, '#2a3550', { mono:true, align:'left' }); txt(c, st.name, 384, y, 16, '#2a3550', { align:'left' }); txt(c, st.desc, 704, y, 11, '#7d7a72', { align:'right', sans:true }); }
       else { txt(c, '·.··', 320, y, 13, '#b5a888', { mono:true, align:'left' }); txt(c, '· · · · · ·', 384, y, 14, '#b5a888', { align:'left' }); } });
     hit(c, 'r:table', ['r', 296, 126, 428, 206], { label:tr('台表') });
+    /* the work slip, on the wall beside the set */
+    setL(c, K_WL); hangSlip(c, 800, 118, 158, -.015);
     layerCache(c, 'rad:mid', 1, radMidArt);
     setL(c, 1);
     // dial window
@@ -204,6 +236,12 @@ ROOMS.radio = {
     for (let k=0;k<=24;k++){ const f = FMIN + k*.05, x = fx(f), major = k%2 === 0; c.fillStyle = '#5a382c'; c.fillRect(x - (major ? 1 : .6), major ? 396 : 402, major ? 2 : 1.2, major ? 18 : 12); if (k%4 === 0) txt(c, f.toFixed(1), x, 390, 11, '#5a382c', { mono:true }); }
     txt(c, tr('航频 · MHz'), 490, 350, 9, '#9a7a62', { mono:true, align:'left', ls:2 });
     STATIONS.filter(st => G.found.includes(st.id)).forEach(st => flat(c, cc => ell(cc, fx(st.f), 418, 3, 3), '#c46a52'));
+    /* The dispatch frequency is scratched into the dial, because somebody who
+       works this ship would have scratched it there on the first night. */
+    { const dx = fx(DISPATCH_F), dw = (fx(DISPATCH_F + .14) - dx);
+      flat(c, cc => rr(cc, dx - dw, 332, dw*2, 10, 5), '#c46a52', .22);
+      flat(c, cc => { cc.moveTo(dx, 344); cc.lineTo(dx - 5, 334); cc.lineTo(dx + 5, 334); cc.closePath(); }, '#c46a52');
+      txt(c, tr('单'), dx, 366, 12, '#8a5a44'); }
     vol(c, cc => rr(cc, fx(G.freq) - 2, 336, 4, 82, 2), MAT.rose, { k:.4, s:1, tex:0 });
     c.restore();
     hit(c, 'r:dial', ['r', 480, 330, 276, 92], { label:tr('刻度盘') });
@@ -225,6 +263,36 @@ ROOMS.radio = {
       vol(c, cc => { cc.moveTo(-34,30); cc.bezierCurveTo(-34,-30, 34,-30, 34,30); cc.lineTo(26,30); cc.bezierCurveTo(26,-18, -26,-18, -26,30); cc.closePath(); }, MAT.navy, { k:1.2, s:3, tex:0 });
       vol(c, cc => { rr(cc, -44, 22, 20, 36, 9); rr(cc, 24, 22, 20, 36, 9); }, MAT.rose, { k:1.5, s:4, tex:0 }); c.restore(); }
     hit(c, 'r:phones', ['r', 330, 370, 92, 100], { label:G.phones ? tr('摘下耳机') : tr('耳机') });
+    /* The printer. A job arrives here and nowhere else, so it says what it is
+       doing with a lamp and with a slip of paper hanging out of the slot. */
+    setL(c, K_WL);
+    { const ready = !!G.printed;
+      // the bracket it hangs off, so it sits in front of the wall rather than on it
+      vol(c, cc => { rr(cc, 86, 340, 14, 42, 6); rr(cc, 256, 340, 14, 42, 6); }, MAT.metalD, { k:1.2, s:3, tex:0 });
+      shadow(c, 178, 352, 118, 14, .45);
+      vol(c, cc => rr(cc, 62, 188, 232, 158, 14), MAT.metal, { k:4, s:10, r:2.5, tex:.4, hl:[104,202,96,.2] });
+      // the paper roll behind its window
+      vol(c, cc => rr(cc, 80, 204, 204, 74, 8), MAT.dark, { k:-2, s:-4, lx:.5, ly:.8, r:0, tex:.4 });
+      vol(c, cc => ell(cc, 182, 242, 30, 30), MAT.cream, { k:1.4, s:3.4, tex:.3 });
+      flat(c, cc => ell(cc, 182, 242, 7, 7), '#6d5c3a');
+      // the slot, with its teeth
+      vol(c, cc => rr(cc, 88, 316, 180, 18, 9), MAT.metalD, { k:1.4, s:3.4, tex:0 });
+      flat(c, cc => rr(cc, 96, 322, 164, 7, 3.5), '#0e1628');
+      for (let k=0;k<13;k++) flat(c, cc => { cc.moveTo(100 + k*13, 329); cc.lineTo(106 + k*13, 329); cc.lineTo(103 + k*13, 334); cc.closePath(); }, '#8ea4bd', .5);
+      flat(c, cc => ell(cc, 268, 206, 7, 7), ready ? '#ffd9a3' : '#4a5570');
+      txt(c, tr('调度'), 182, 300, 17, ready ? '#ffe7c4' : '#8396ad');
+      if (ready){
+        const P = PORTS[G.printed];
+        c.save(); c.translate(178, 334); c.rotate(.03);
+        vol(c, cc => rr(cc, -86, 0, 172, 96, 3), MAT.paper, { k:1.4, s:3.2, r:1 });
+        txtFit(c, tr(P.name), 0, 36, 150, 21, '#2a3550');
+        flat(c, cc => rr(cc, -62, 50, 124, 1.6, .8), '#c4b392');
+        txtFit(c, tr('要一盏灯'), 0, 74, 150, 14, '#7d7a72');
+        c.restore();
+      }
+      hit(c, 'r:slip', ['r', 54, 188, 250, 266], { label:ready ? tr('撕下单子') : tr('调度打印机') });
+    }
+    setL(c, 1);
     // desk lamp
     vol(c, cc => { stemPath(cc, 236, 552, 222, 480, 244, 420, 4, 3); stemPath(cc, 244, 420, 270, 398, 300, 404, 3, 3); }, MAT.metalD, { k:.8, s:2, tex:0 });
     c.save(); c.translate(306, 410); c.rotate(.5);
@@ -251,6 +319,7 @@ ROOMS.radio = {
     hole(1, 618, 376, 260, .55*(S.dialGlow||0), null, 140);
     hole(K_WL, 1360, 200, 220, .4);
     hole(K_WL, 510, 230, 300, .2, null, 160);
+    hole(K_WL, 878, 240, 240, .22, null, 170);
   },
   over(c, dt){
     if (!S.rLampOff){ glowL(c, 1, SWARM, 330, 440, 200, .45, null, 110); glowL(c, 1, SWARM, 306, 412, 40, .8); }

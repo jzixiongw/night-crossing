@@ -15,7 +15,7 @@
 
 <div id="fade"></div>
 <div id="brand"><b>夜航</b><span id="where">NIGHT CROSSING</span></div>
-<div id="status" hidden><span id="stNight"></span><span id="stClock"></span><span id="stCall"></span><span id="stPresence"></span></div>
+<div id="status" hidden><span id="stNight"></span><span id="stClock"></span><span id="stPresence"></span></div>
 <div id="hud" hidden>
   <button class="pill" id="bSound" type="button">声音 开</button>
   <button class="pill" id="bHints" type="button">能碰什么</button>
@@ -28,15 +28,15 @@
 <div id="nav" hidden>
   <button class="arrow" id="navL" type="button" aria-label="沿环往左走">‹</button>
   <svg id="ringMap" viewBox="0 0 220 64" aria-label="环形船的位置图"></svg>
-  <div id="navLabel">客舱门</div>
+  <div id="navLabel">电台室门</div>
   <button class="arrow" id="navR" type="button" aria-label="沿环往右走">›</button>
 </div>
 <button class="pill" id="back" type="button" hidden>‹ 回环廊</button>
 <div id="ctx"></div>
 
 <div id="routePanel" class="panel" hidden>
-  <h2>航程单</h2>
-  <p class="sub">每一处都托人要过一盏灯。挑一个，船就往那边转。</p>
+  <h2>航向板</h2>
+  <p class="sub" id="routeSub">放一张上去，船就在下一个弯转过去。</p>
   <div class="list" id="routeList"></div>
   <button class="later" id="routeLater" type="button">先不挑</button>
 </div>
@@ -65,7 +65,9 @@
   <div class="setrow"><span>语言</span><button class="pill" id="sLang" type="button">中文</button>
     <small>换语言会重新载入这一页。航程已经存好，不会丢。</small></div>
   <div class="setrow"><span>存档</span><span id="sSave" class="mono" style="color:var(--ui-dim);font-size:.9em">—</span></div>
-  <div class="setrow" id="resetRow"><span>清空航程，从头登船</span><button class="pill" id="sReset" type="button">清空</button></div>
+  <div class="setrow"><span>换一位</span><button class="pill" id="sSwitch" type="button">回到门口</button>
+    <small>回到三个存档位那一页。这一位的航程已经存好。</small></div>
+  <div class="setrow" id="resetRow"><span>清空这一位的航程</span><button class="pill" id="sReset" type="button">清空</button></div>
   <button class="later" id="settingsClose" type="button">关上</button>
 </div>
 
@@ -138,6 +140,7 @@
       <div class="intro-en">NIGHT CROSSING · 长航</div>
       <p id="introLead">末班船刚离港。这艘船归你开。</p>
       <p id="introBody">温室里种出来的东西，一路送给沿途要光的人。沿着环廊走一圈，会走回原处。</p>
+      <div id="slots"></div>
       <div class="intro-actions">
         <button class="btn primary" id="board" type="button">开船</button>
         <button class="btn" id="boardMute" type="button">静音开船</button>

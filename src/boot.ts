@@ -15,13 +15,14 @@ import { buildRadio } from './rooms/radio';
 import { ROOMS, ROOM_KEY, setAmbience, updateHud } from './rooms/registry';
 import { advance } from './state/progress';
 import { S } from './state/runtime';
-import { cloudInit, persist, readLocal, withTimeout } from './state/save';
-import { G, setG, migrate } from './state/store';
+import { SV, cloudInit, lastSlot, migrateLegacyLocal, persist, readLocal, setSlot, withTimeout } from './state/save';
+import { G, setG, migrate, freshSave } from './state/store';
+import { renderSlots, setCloudSlots, setOnPicked, slotSave } from './ui/slots';
 import { now } from './state/time';
 import { showAway } from './ui/away';
 import { addLog, say } from './ui/captions';
 import { updateMailbox } from './ui/mail';
-import { CAM } from './core/camera';
+import { CAM, resetView, setPanRange } from './core/camera';
 
 /* ================= BOOT ================= */
 export function applyLoaded(){
@@ -38,7 +39,13 @@ export function applyLoaded(){
     $('#introBody').textContent = (gap > MIN ? tr('上次下船是 {0}前。', durText(gap)) : '') + tr('东西都在你离开时的地方，只是多走了一段时间。');
     $('#board').textContent = tr('回到船上');
     $('#introFine').textContent = tr('夜航 No.{0} · 第 {1} 夜。', G.no, Math.max(1,G.nights.length));
+  } else {
+    $('#introLead').textContent = tr('末班船刚离港。这艘船归你开。');
+    $('#introBody').textContent = tr('温室里种出来的东西，一路送给沿途要光的人。沿着环廊走一圈，会走回原处。');
+    $('#board').textContent = tr('开船');
+    $('#introFine').textContent = tr('航程存在这艘船上。下次打开，船还在原处。');
   }
+  renderSlots();
 }
 export let saveReady = null;
 export function start(hot){
@@ -47,11 +54,20 @@ export function start(hot){
   resize(true);
   new ResizeObserver(() => resize()).observe(stage);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { CACHE.clear(); });
-  const local = readLocal();
+  /* Pick up the slot that was last open, show the three cards, and only then go
+     looking for the cloud: the door has to be usable before any network does. */
+  migrateLegacyLocal();
+  setSlot(lastSlot());
+  setOnPicked(applyLoaded);
   const hotG = hot && hot.G && hot.G.v === 2 ? hot.G : null;
+  const local = hotG && (!readLocal() || (hotG.savedAt||0) > (readLocal().savedAt||0)) ? hotG : readLocal();
+  setG(local ? migrate(JSON.parse(JSON.stringify(local))) : freshSave());
+  applyLoaded();
   $('#board').disabled = true; $('#boardMute').disabled = true; const label = $('#board').textContent; $('#board').textContent = tr('正在找这艘船…');
   saveReady = withTimeout(cloudInit(), 4000).then(cloud => {
-    const cands = [hotG, local, cloud].filter(Boolean).sort((a,b) => (b.savedAt||0) - (a.savedAt||0));
+    setCloudSlots(cloud || {});
+    const best = slotSave(SV.slot);
+    const cands = [hotG, best].filter(Boolean).sort((a,b) => (b.savedAt||0) - (a.savedAt||0));
     if (cands.length) setG(migrate(JSON.parse(JSON.stringify(cands[0]))));
     applyLoaded();
   }).catch(err => { console.error(err); applyLoaded(); }).finally(() => {
@@ -66,9 +82,6 @@ export function board(withSound){
   const t = now(), first = G.visits === 0, gap = G.lastSeen ? t - G.lastSeen : 0;
   G.visits++; const dk = dayKey(t); if (!G.nights.includes(dk)){ G.nights.push(dk); if (G.nights.length > 400) G.nights.shift(); }
   if (!G.mail.nextAt) G.mail.nextAt = t + 30*MIN;
-  /* The first call is timed from the first boarding, not from the save being
-     made, so a ship opened a week later is still twelve minutes out. */
-  if (G.call && !G.call.eta) G.call.eta = t + 12*MIN;
   S.started = true; S.sessionStart = t;
   const ev = gap > 0 ? advance(gap, 'away') : [];
   addLog(first ? tr('登船') : tr('再次登船'));
@@ -77,13 +90,14 @@ export function board(withSound){
   const room = first ? 'cabin' : (ROOMS[G.lastRoom] ? G.lastRoom : 'corridor');
   S.room = room; dropCaches(['ring:', ROOM_KEY[room], 'sh:']);
   const RR = ROOMS[room]; CAM.zx = (RR.zc || [800,470])[0]; CAM.zy = (RR.zc || [800,470])[1]; CAM.zoom = 1.1;
+  setPanRange(...(RR.pan || []));
+  resetView(); CAM.panX = 0; CAM.panY = 0; CAM.user = 1;
   setViewFocus(CAM.zx, CAM.zy);
   if (room === 'corridor'){ S.phi = G.ang || 0; S.phiTarget = nearestStation().ang; }
   RR.enter('intro');
   if (first){
-    const P = callPort();
     say(tr('末班船离港了。下一站很远，船会自己开。'), null, 900);
-    if (P) say(tr('{0}要一盏灯。温室里有一株开好了。', P.name), null, 4200);
+    say(tr('电台室收到一张单子。左上角那排点子是这一趟要做的事。'), null, 4200);
   } else if (docked()){ const P = callPort(); if (P) say(tr('船还靠在{0}。舷门那边有人在等。', P.name), null, 1400); }
   updateHud(); setAmbience(); updateMailbox();
   if (!first && gap > 10*MIN) setTimeout(() => showAway(gap, ev), 700);

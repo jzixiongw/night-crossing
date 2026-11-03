@@ -1,7 +1,6 @@
 import { tr } from '../i18n';
 import { AU } from '../audio/index';
-import { anAsleep, anHere, anWhere } from '../characters/an-lines';
-import { breadP, cupSteam, drawAn, drawCupP, pearP } from '../characters/an';
+import { breadP, cupSteam, drawCupP, pearP } from '../characters/an';
 import { layerCache } from '../core/cache';
 import { CAM, setL } from '../core/camera';
 import { drawFX, drawPuffs, puff } from '../core/fx';
@@ -18,12 +17,12 @@ import { S } from '../state/runtime';
 import { markDirty } from '../state/save';
 import { G } from '../state/store';
 import { now } from '../state/time';
-import { AN, addLog, once, onceS, say } from '../ui/captions';
+import { addLog, once, onceS, say } from '../ui/captions';
 import { K_NR, K_SP, K_WL } from '../core/depth';
 
 /* ================= GALLEY: tea, bread, pears ================= */
 export const KPOS = { sink:{ x:300, y:548, r:0 }, stove:{ x:566, y:548, r:0 }, pour:{ x:742, y:470, r:34 } };
-export const GAL_SHELL = { kb:.62, kf:1.75, b:[80,40,1520,640], f:[-340,-280,1940,1180],
+export const GAL_SHELL = { kb:.62, kf:1.75, b:[-140,40,1740,640], f:[-620,-420,2220,1340],
   ceil:[[0,'#3c4566'],[1,'#151b30']], floor:[[0,'#3a4a62'],[.4,'#4b5a73'],[1,'#252f45']], side:[[0,'#34405e'],[1,'#1b2238']], seams:12, seamCol:'rgba(10,14,28,.35)' };
 export const TEA_X = { osm:190, mint:300, barley:410 };
 export function buildGalley(){
@@ -186,7 +185,7 @@ export function finishBake(){
   G.breads.push({ shape:d.shape || 'round', at:now() }); if (G.breads.length > 6) G.breads.shift();
   G.baked++; G.warmUntil = now() + 10*MIN; G.dough = { st:'none', strokes:0, shape:null, proof:0 };
   addLog(tr('烤好一个面包'));
-  if (S.room === 'galley'){ say(tr('叮。面包烤好了，放在左边的架子上晾着。')); if (anWhere() === 'galley') say(tr('好香。'), AN, 3000); }
+  if (S.room === 'galley') say(tr('叮。面包烤好了，放在左边的架子上晾着。'));
   else say(tr('厨房那边"叮"了一声。面包烤好了。'));
   markDirty();
 }
@@ -195,12 +194,6 @@ ACT['bread:eat'] = { tap(){ breadEat(); } };
 export function breadEat(){
   if (!G.breads.length){ AU.tap(); say(S.room === 'galley' ? tr('架子上空着。面团烤好了会放在这里。') : tr('盘子空了。')); return; }
   const b = G.breads[0], warm = now() - b.at < 20*MIN;
-  const anHereNow = anWhere() === S.room || (S.room === 'cabin' && anHere());
-  if (anHereNow && !anAsleep() && !S.caps.gaveBread){
-    S.caps.gaveBread = true; G.breads.shift(); G.gaveAn++; G.doodles++; AU.paper();
-    say(tr('你掰了一半给岸。')); say(G.gaveAn === 1 ? tr('谢谢。我在图边上画个面包，记着。') : tr('又是你烤的。图边上的面包快排成一排了。'), AN, 2200);
-    addLog(tr('分了半个面包给岸')); markDirty(); return;
-  }
   G.breads.shift(); AU.crunch();
   say(warm ? tr('面包还是温的，外皮脆。') : tr('面包凉了，嚼起来有麦子的甜。')); markDirty();
 }
@@ -368,12 +361,9 @@ export function drawGalleyLive(c){
     c.beginPath(); c.moveTo(sp[0]-3, sp[1]); c.quadraticCurveTo(sp[0] + 12, sp[1] + 20, 758, 516); c.lineTo(764, 516); c.quadraticCurveTo(sp[0] + 18, sp[1] + 16, sp[0]+3, sp[1]); c.closePath(); c.fill(); c.globalAlpha = 1; }
   drawKettle(c);
   setL(c, 1);
-  // pears + 岸
   for (let i=0;i<G.pears;i++) pearP(c, 1330 + i*30, 600 - (i===1?8:0), 1, i === 0 ? G.bite : 0);
   vol(c, cc => { cc.moveTo(1300,598); cc.quadraticCurveTo(1360,632, 1420,598); cc.lineTo(1414,606); cc.quadraticCurveTo(1360,636, 1306,606); cc.closePath(); }, MAT.cream, { k:1, s:2.5, tex:0 });
   hit(c, 'gal:pear', ['r', 1300, 560, 130, 56], { label:tr('星梨') });
-  if (anWhere() === 'galley'){ vol(c, cc => rr(cc, 1430, 660, 110, 30, 12), MAT.woodD, { k:2, s:5 }); vol(c, cc => rr(cc, 1478, 690, 14, 80, 6), MAT.woodD, { k:1.5, s:4 });
-    drawAn(c, 1486, 650, { pose:'cup', s:.92, face:1 }); hit(c, 'an:talk', ['r', 1430, 420, 120, 230], { label:tr('岸'), key:'an' }); }
 }
 ROOMS.galley = {
   zc:[760, 470],
@@ -381,7 +371,6 @@ ROOMS.galley = {
     setCtx([]);
     if (once('galleyFirst')) say(tr('小厨房里一直有点面包的味道。'));
     else if (G.dough.st === 'proofed') say(tr('发酵箱里的面团发好了。'));
-    if (anWhere() === 'galley') say(once('anGalley') ? tr('早。我在这儿吃早饭。') : tr('早。'), AN, 1800);
     if (G.dough.st === 'kneaded') showShapes();
   },
   exit(){ if (S.pour) stopPour(); if (S.tapOn){ S.tapOn = false; S.tapSnd && S.tapSnd.stop(); } setCtx([]); },
@@ -422,7 +411,6 @@ ROOMS.galley = {
     if (G.dough.st === 'baking') hole(1, 605, 714, 260, .7);
     hole(K_WL, 1000, 190, 240, .4); hole(K_WL, 1430, 320, 260, .35, null, 320);
     hole(K_WL, 1040, 342, 120, .45);
-    if (anWhere() === 'galley') hole(1, 1480, 520, 200, .25);
   },
   over(c, dt){
     // porthole fog after boiling

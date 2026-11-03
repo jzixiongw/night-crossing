@@ -2,17 +2,16 @@ import { tr } from '../i18n';
 import { updateMusic } from '../audio/music';
 import { render } from './render';
 import { QUAL, resize, setQual } from './surface';
-import { $, durText, hhmm } from './util';
+import { $, hhmm } from './util';
 import { galleyTick } from '../rooms/galley';
 import { radioTick } from '../rooms/radio';
 import { ROOMS } from '../rooms/registry';
-import { callPort, docked, etaLeft } from '../rooms/hatch';
 import { advance, liveEvents } from '../state/progress';
 import { PR, S } from '../state/runtime';
 import { SV, persist } from '../state/save';
 import { G } from '../state/store';
 import { now } from '../state/time';
-import { CAM } from './camera';
+import { CAM, clampPan } from './camera';
 
 /* ================= MAIN LOOP ================= */
 export let lastT = performance.now(), statusT = 0, saveT = 0;
@@ -36,12 +35,6 @@ export function frame(tnow){
     statusT -= dt; if (statusT <= 0){ statusT = 1;
       $('#stNight').textContent = tr('第 {0} 夜', Math.max(1,G.nights.length));
       $('#stClock').textContent = tr('舱时 ') + hhmm(now()) + (G.speed > 1 ? tr(' · 时间 ×') + G.speed : '');
-      /* The one line that is always on screen says where the ship is headed.
-         Without it the round is only visible to someone who opens the sign. */
-      const P = callPort();
-      $('#stCall').textContent = !P ? tr('没有下一站')
-        : docked() ? tr('靠在 {0}', P.name)
-        : tr('下一站 {0} · 还有 {1}', P.name, durText(etaLeft()));
       $('#stPresence').innerHTML = PR.focused ? '' : tr('<i>你在忙，船在走</i>');
       G.sessionsMin += 1/60;
     }
@@ -53,6 +46,12 @@ export function frame(tnow){
   if (S.T - CAM.last > 4){ CAM.tx = Math.sin(S.T*.07)*.35; CAM.ty = Math.cos(S.T*.05)*.2; }
   const f = 1 - Math.exp(-dt*2.2); CAM.px += (CAM.tx - CAM.px)*f; CAM.py += (CAM.ty - CAM.py)*f;
   const zt = S.zoomOverride ?? (R && R.zoom ? R.zoom() : 1); CAM.zoom += (zt - CAM.zoom)*(1 - Math.exp(-dt*(S.zoomOverride ? 4 : 2.4)));
+  /* The player's own view. A drag writes the target and lets go; this is what
+     makes a flick settle instead of stopping where the finger stopped. */
+  if (!(S.drag && S.drag.view)) clampPan();
+  const vf = 1 - Math.exp(-dt*(S.drag && S.drag.view ? 22 : 7));
+  CAM.panX += (CAM.tpanX - CAM.panX)*vf; CAM.panY += (CAM.tpanY - CAM.panY)*vf;
+  CAM.user += (CAM.tuser - CAM.user)*(1 - Math.exp(-dt*9));
   for (let i=S.anims.length-1;i>=0;i--){ const a = S.anims[i]; a.t += dt; const q = Math.min(1, a.t/a.dur); try { a.fn(q); } catch(e){} if (q >= 1){ S.anims.splice(i,1); a.done && a.done(); } }
   updateMusic(dt);
   if (PR.visible){ try { render(dt, R); } catch(err){ console.error(err); } }

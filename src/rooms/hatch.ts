@@ -17,6 +17,7 @@ import { ACT, ROOMS, setCtx } from './registry';
 import { S } from '../state/runtime';
 import { markDirty } from '../state/save';
 import { G } from '../state/store';
+import { hangSlip } from '../ui/sheet';
 import { now } from '../state/time';
 import { addLog, once, say } from '../ui/captions';
 
@@ -28,7 +29,7 @@ import { addLog, once, say } from '../ui/captions';
    opened, so arriving is never something the player can miss by being away.
    What is on the far side is painted per port: a few shapes and one light,
    which is as much of anyone's home as a doorway ever shows. */
-export const HAT_SHELL = { kb:.62, kf:1.75, b:[200,60,1400,680], f:[-340,-280,1940,1180],
+export const HAT_SHELL = { kb:.62, kf:1.75, b:[-140,60,1740,680], f:[-620,-420,2220,1340],
   ceil:[[0,'rgba(58,78,112,.3)'],[1,'rgba(10,16,30,.85)']], floor:[[0,'#2b3752'],[.4,'#3a4868'],[1,'#1c2538']],
   side:[[0,'rgba(50,68,102,.4)'],[1,'rgba(10,16,30,.9)']], seams:8, seamCol:'rgba(6,10,22,.32)' };
 export const DOOR = { x0:612, x1:988, y0:214, y1:688 };
@@ -107,6 +108,13 @@ export function hatWallArt(g){
     MAT.metalD, { k:5, s:12, r:3, eo:true });
   for (let k=0;k<22;k++){ const a = k/22*Math.PI*2, cx = 800 + Math.sin(a)*(DOOR.x1-DOOR.x0)*.62, cy = 451 + Math.cos(a)*(DOOR.y1-DOOR.y0)*.56;
     vol(g, cc => ell(cc, cx, cy, 7, 7), MAT.metal, { k:.8, s:2, tex:0 }); }
+  /* the far side: a bollard the gangway lines come off, and a porthole, so
+     swinging the view that way finds the end of the room rather than wall */
+  vol(g, cc => { rr(cc, 1418, 300, 22, 150, 10); rr(cc, 1402, 282, 54, 26, 10); }, MAT.metalD, { k:2.5, s:6 });
+  for (let k=0;k<5;k++) vol(g, cc => ell(cc, 1429, 330 + k*26, 26, 9), MAT.copper, { k:1, s:2.5, tex:.3 });
+  g.save(); g.globalCompositeOperation = 'destination-out'; g.beginPath(); ell(g, 1600, 330, 76, 76); g.fill(); g.restore();
+  vol(g, cc => { ell(cc, 1600, 330, 98, 98); ell(cc, 1600, 330, 76, 76); }, MAT.brass, { k:3, s:8, r:2, eo:true });
+  for (let k=0;k<8;k++){ const a = k*Math.PI/4; vol(g, cc => ell(cc, 1600 + Math.sin(a)*88, 330 - Math.cos(a)*88, 6, 6), MAT.metal, { k:.8, s:2, tex:0 }); }
   /* the lamp over the door, and the sign nobody has repainted */
   vol(g, cc => rr(cc, 762, 128, 76, 30, 10), MAT.metalD, { k:2, s:5 });
   vol(g, cc => rr(cc, 1060, 300, 190, 72, 10), MAT.paper, { k:2, s:5, r:1.5 });
@@ -118,13 +126,14 @@ export function hatWallArt(g){
 export function hatFloorArt(g){
   /* the worn band the gangway crew stands on, and the yellow edge of the sill */
   flat(g, cc => rr(cc, 520, 700, 560, 180, 14), '#1b2742', .55);
+  flat(g, cc => rr(cc, -140, 836, 1880, 8, 4), '#1b2742', .4);
   flat(g, cc => rr(cc, 540, 712, 520, 14, 7), '#c8a45e', .5);
   for (let i=0;i<9;i++) flat(g, cc => rr(cc, 556 + i*56, 736, 30, 9, 4), '#c8a45e', .22);
 }
 export function hatNearArt(g){
   shadow(g, 800, 980, 760, 40, .5);
-  vol(g, cc => rr(cc, -60, 880, 1720, 160, 20), MAT.metalD, { k:-3, s:-7, lx:.4, ly:.9, r:0, tex:.6 });
-  vol(g, cc => rr(cc, -60, 872, 1720, 16, 8), MAT.metal, { k:1.5, s:3.5 });
+  vol(g, cc => rr(cc, -520, 880, 2640, 160, 20), MAT.metalD, { k:-3, s:-7, lx:.4, ly:.9, r:0, tex:.6 });
+  vol(g, cc => rr(cc, -520, 872, 2640, 16, 8), MAT.metal, { k:1.5, s:3.5 });
 }
 /* ---- the piece, on its stand by the door ---- */
 export function drawRig(c, x, y, rig, s = 1){
@@ -241,6 +250,8 @@ ROOMS.hatch = {
     const P = callPort(), open = S.doorK;
     layerCache(c, 'hat:floor', 1, hatFloorArt);
     layerCache(c, 'hat:wall', K_WL, hatWallArt);
+    /* the work slip, on the wall you pass on the way to the door */
+    setL(c, K_WL); hangSlip(c, 280, 186, 158, .014);
     /* What is through the door goes on after the wall, because the wall is one
        cached rect with no hole in it, and is clipped to the opening and set on a
        deeper layer so it drifts slower than the hull around it. */
@@ -265,11 +276,22 @@ ROOMS.hatch = {
         { k:3.5, s:9, r:2, tex:.45, hl:[side < 0 ? DOOR.x0+70 : 860, DOOR.y0+120, 150, .14] });
       for (let k=0;k<4;k++) flat(c, cc => rr(cc, DOOR.x0 + 24 + (side < 0 ? 0 : half), DOOR.y0 + 70 + k*110, half - 48, 10, 5), '#2c3f5e', .5);
       if (side > 0){
-        vol(c, cc => rr(cc, 820, 430, 22, 94, 11), MAT.brass, { k:1.4, s:3.5 });
-        vol(c, cc => ell(cc, 831, 430, 16, 16), MAT.brass, { k:1.2, s:3, tex:0 });
+        /* The handle lies flat across the dogs while the ship is under way and
+           stands upright once it can be turned, so the door's own state is
+           readable from across the room. */
+        const can = docked();
+        c.save(); c.translate(831, 452); c.rotate(can ? 0 : Math.PI/2);
+        vol(c, cc => rr(cc, -11, -56, 22, 108, 11), MAT.brass, { k:1.4, s:3.5 });
+        vol(c, cc => ell(cc, 0, -34, 16, 16), MAT.brass, { k:1.2, s:3, tex:0 });
+        c.restore();
       }
       c.restore();
     }
+    { const can = docked(), lamp = can && !gave();
+      vol(c, cc => rr(cc, 718, 150, 164, 34, 10), MAT.metalD, { k:1.6, s:4, tex:.3 });
+      flat(c, cc => ell(cc, 752, 167, 10, 10), lamp ? '#ffd9a3' : '#3c4a63');
+      flat(c, cc => ell(cc, 800, 167, 10, 10), can ? '#3c4a63' : '#c47b7b');
+      flat(c, cc => ell(cc, 848, 167, 10, 10), gave() ? '#7fb0a0' : '#3c4a63'); }
     if (open < .5) hit(c, 'hat:door', ['r', DOOR.x0, DOOR.y0, DOOR.x1-DOOR.x0, DOOR.y1-DOOR.y0], { label:docked() ? tr('开舷门') : tr('舷门') });
     /* the stand, and whatever is standing on it */
     setL(c, 1);
@@ -287,6 +309,7 @@ ROOMS.hatch = {
     lightBegin('#050a1a', .62);
     hole(K_WL, 800, 150, 340, .62, null, 230);
     hole(1, STAND.x, STAND.y - 140, 250, .34);
+    hole(K_WL, 358, 300, 250, .26, null, 180);
     if (S.doorK > .02) hole(K_WL*.8, 800, 450, 300*S.doorK, .7*S.doorK, null, 340*S.doorK);
     if (S.holdK > .02 && S.visPt){ const [hx,hy] = holdPt(callPort().look);
       hole(K_WL*.8, S.visPt[0] + hx, S.visPt[1] + hy, 300*S.holdK, .75*S.holdK); }

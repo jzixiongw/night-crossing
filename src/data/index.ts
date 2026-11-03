@@ -26,13 +26,24 @@ export const TEA = {
   barley:{ name:tr('炒大麦'), jar:'#b88050', hex:'#9a5f34', lid:'#e98f8c', sip:[tr('有一股烤过的香味。'),tr('像晒过的谷仓。')], steep:tr('麦粒沉下去，水慢慢变成深棕色。') },
   water:{ name:tr('白水'), hex:'#cfe2ee', sip:[tr('就是热水。')], steep:'' }
 };
+/* Six shapes, not six palettes. Each one has to read from across the room by
+   its silhouette alone -- climbing, hanging, unrolling, fruiting, flat, tiered --
+   because the greenhouse is wide enough now that most of them are seen at a
+   distance, over the shoulder of something else. */
 export const SEEDS = {
   vine:{ name:tr('星藤'), color:'#e98f8c', desc:tr('往上爬的藤。开花时，花是五个尖的，会发一点光。') },
   bell:{ name:tr('月铃'), color:'#9fd2c4', desc:tr('三根细茎，垂着淡蓝的铃。手慢慢经过时，会响。') },
-  fern:{ name:tr('雾蕨'), color:'#ffd9a3', desc:tr('卷着的嫩叶一圈圈打开。喷水时会冒一点雾。') }
+  fern:{ name:tr('雾蕨'), color:'#ffd9a3', desc:tr('卷着的嫩叶一圈圈打开。喷水时会冒一点雾。') },
+  lamp:{ name:tr('纸灯果'), color:'#f2c46b', desc:tr('它挂一串纸一样的灯笼。开花的时候，里面会亮起来。') },
+  moss:{ name:tr('潮苔'), color:'#8fc49a', desc:tr('它长成贴着土的一团。喷过水以后，它会涨起来一点。') },
+  tree:{ name:tr('伞木'), color:'#c9a9e0', desc:tr('叶子一层一层地摊开。它长得最慢。') }
 };
 export const NOTE_MIDI = [74,71,69,66,64,62]; // strip rows, top to bottom (D major pentatonic)
 export const STATIONS = [
+  /* The only station the round runs through. Everything else on the dial is
+     what the room is like to sit in; this one is why the room is on the ring. */
+  { id:'dispatch', f:1.09, w:.14, name:tr('调度台'), hours:[0,24], kind:'beeps', desc:tr('全天'),
+    lines:['@JOB'] },
   { id:'weather', f:.68, name:tr('无处天气'), hours:[0,24], kind:'murmur', desc:tr('全天'),
     lines:[tr('以下是今夜各处的天气。'),tr('无处：有雾，局部有星。风从左舷来。'),tr('远港：晴转更晴。海面平。'),tr('回声浮标附近：小雨，雨声会晚一点到。'),tr('明日：大部分地方，跟今天差不多。')] },
   { id:'numbers', f:.97, name:tr('慢数台'), hours:[0,24], kind:'beeps', desc:tr('全天，很弱'),
@@ -57,7 +68,7 @@ export const LETTERS = [
   { id:'passenger', from:tr('另一艘船上的旅客'), body:tr('我这边的舷窗朝下，只能看见很远的一片光。\n今天把窗擦了一遍，没擦干净。\n不知道这封信会到谁手里。'), sig:tr('同一条航线上的人') },
   { id:'repair', from:tr('八音盒修理匠'), body:tr('空着的格子也是一拍。\n发条往一个方向拧，拧多少圈，它就转多少遍。'), sig:tr('修理铺') },
   { id:'harbor', from:tr('港务局'), body:tr('各航道情况如下：\n近港航道，灯多。星云浅湾，三色航标都有。环带慢道，节奏稳。\n静默段夜里最安静，适合不说话。'), sig:tr('港务局 · 夜班') },
-  { id:'colleague', from:tr('岸的老同事'), body:tr('听说她又在画航图。\n她画图从来不画终点，线画到哪儿算哪儿。\n替我问声好。'), sig:tr('测绘处') },
+  { id:'colleague', from:tr('上一个开这艘船的人'), body:tr('图桌上那张图是我画的，没画完。\n我画图从来不画终点，线走到哪儿算哪儿。\n温室左边第一盆是我种的，开了就端走吧。'), sig:tr('已经下船了') },
   { id:'forecast', from:tr('无处天气'), body:tr('明日天气：\n无处有雾，局部有星。\n风从左舷来，傍晚转小。'), sig:tr('天气台') },
   { id:'nobody', from:tr('（没有署名）'), body:tr('如果你在读这封信，说明邮船又绕回来了。\n这一圈和上一圈差不多。窗外的星换了几颗。'), sig:'—' },
   { id:'florist', from:tr('在别的船上种花的人'), body:tr('我种的月铃今天响了一声，就一声。\n我站着没动，等了很久，它没再响。\n我猜它要的就是这个。'), sig:tr('种花的人') },

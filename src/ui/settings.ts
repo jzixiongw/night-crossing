@@ -1,10 +1,11 @@
 import { tr, LANG, setLang } from '../i18n';
 import { AU } from '../audio/index';
 import { showHints } from '../core/input';
+import { persist } from '../state/save';
 import { $ } from '../core/util';
 import { S } from '../state/runtime';
-import { SAVE_KEY, SV, markDirty } from '../state/save';
-import { G, freshSave } from '../state/store';
+import { SV, clearSlot, markDirty } from '../state/save';
+import { G } from '../state/store';
 import { say } from './captions';
 import { openTicket } from './ticket';
 import { anyOpen, closePanels } from './panels';
@@ -33,11 +34,10 @@ $('#sSpeed').onclick = () => { G.speed = G.speed > 1 ? 1 : 20; renderSettings();
 $('#sReset').onclick = () => {
   const b = $('#sReset');
   if (!S.resetArm){ S.resetArm = true; b.textContent = tr('再点一次，确认清空'); b.classList.add('on'); setTimeout(() => { S.resetArm = false; b.textContent = tr('清空'); b.classList.remove('on'); }, 4000); return; }
-  try { localStorage.removeItem(SAVE_KEY); } catch(e){}
-  S.started = false; const fresh = freshSave();
-  const done = () => location.reload();
-  if (SV.ref) SV.ref.set(fresh).then(done, done); else done();
+  S.started = false; clearSlot(SV.slot); location.reload();
 };
+/* Back to the door, where the three slots are. The voyage is already saved. */
+$('#sSwitch').onclick = () => { persist(true); location.reload(); };
 /* The toggle always names the language you would switch TO, in that language,
    so it reads to someone who cannot read the current one. */
 const OTHER = LANG === 'en' ? 'zh' : 'en', OTHER_LABEL = LANG === 'en' ? '\u4e2d\u6587' : 'English';

@@ -1,78 +1,72 @@
 ---
 name: night-crossing-voice
-description: Load before writing, rewriting, translating or reviewing any player-facing copy in the Night Crossing game — English strings in src/i18n/en.ts, Chinese tr('…') strings anywhere in src/, UI labels and text in index.html, An's dialogue, letters, radio lines, room descriptions, button labels, or the door screen. Also use when asked to make the game's writing warmer, simpler, easier to read, less terse, less clipped, or less AI-sounding, and when checking copy before a commit or a build.
+description: Explicit request only. Load when the user asks in so many words for a voice pass, a copy rewrite, a translation pass or a review of Night Crossing's writing — or invokes /night-crossing-voice. Do not load for ordinary feature work, bug fixes, or one-off string edits, and do not apply these rules or run `npm run voice` unasked.
 ---
 
 # Night Crossing voice
 
-## Step 1 — read the contract
+You are here because the user asked for a copy pass. Outside one, none of this
+applies.
 
-Read `docs/VOICE.md` in full before writing anything. It is short. Do not work
-from the summary below; it exists only so you know what you are looking for.
-
-It opens with two hard bans, because they are what the writing fails on:
-
-**Text only says what the picture cannot (S2).** Every room is painted.
-Listing what is in it has said nothing. Carry the smell, the temperature, the
-sound, the history, or the rule the room runs on. And **never name more than
-one object in a sentence** — a list is the writer refusing to choose.
-
-**Never tell the player it's okay (S3).** No 也行 / 也可以 / 都行 / 不必, no
-*or don't*, *you don't have to*, *nothing breaks*, *no countdown*. The ship is
-forgiving and must never say so; a game that keeps reassuring you sounds like
-it expects you to be worried. Say it with the mechanism instead: report the
-forty minutes that passed, which is news rather than a promise.
-
-Underneath those: when asked for concise, concrete, restrained prose, a model
-counts words and assumes fewer words means easier reading. Those are different
-axes. The fix is **spend words on grammar, save words on content** — keep
-every subject, verb, article and auxiliary; cut adjectives, abstractions and
-metaphors instead.
-
-The nine tells it names, in the order they show up most:
-verbless fragment - dropped subject - stripped function words - inversion for
-cadence - contraction avoidance - the rarer shorter word - the closing aphorism -
-antithesis and the rule of three - dashes and colons used as rhythm.
-
-## Step 2 — know which voice you are writing
-
-`docs/VOICE.md` §4 maps them. Briefly: **An** is a working cartographer and
-always uses contractions; **narration** is complete present-tense sentences
-that report the object and never the feeling; **UI labels** are lowercase nouns
-or imperatives with no full stop; **letters** and **radio** are spoken, so they
-contract too; only the **Harbour Authority, Ship's Office and noticeboard** are
-allowed to be stiff.
-
-## Step 3 — respect the i18n coupling
-
-`src/i18n/en.ts` is keyed by the exact Chinese source string. A key that differs
-by one character — including a curly quote where the source has a straight one —
-falls through silently and renders as Chinese in the English build.
-
-- Changing English only: edit the value in `src/i18n/en.ts`.
-- Changing Chinese: write a `{"old":"new"}` mapping and run
-  `node tools/retext.mjs mapping.json`. It rewrites the source string and the
-  i18n key together, and refuses to run if either side would be orphaned.
-- Never hand-edit a Chinese string in `src/` without doing the key.
-
-## Step 4 — pass the gate
+## The gate comes first
 
 ```sh
 npm run voice
 ```
 
-It reports fragments, missing contractions, banned register words, long
-sentences, curly quotes, orphaned keys and unused keys. Errors must be zero.
-Warnings are a reading list, not a pass/fail — judge each one.
+Run it on what you wrote before you read anything. It flags lists, permission
+clauses, verbless fragments, missing contractions, em dashes, long sentences,
+formal Chinese, curly quotes, orphaned and unused keys. Errors must be zero.
+Warnings are a reading list — judge each one, and record a deliberate
+exception in `tools/voice-allow.json`.
 
-Then read the changed lines out loud. Anything you stumble on is wrong, however
-good it looks on the page.
+Then read the changed lines out loud. Anything you stumble on is wrong,
+however good it looks on the page.
+
+## The four the checker cannot see
+
+1. **Text says only what the picture cannot.** Every room is painted. Listing
+   what is in it has said nothing. Carry the smell, the temperature, the
+   sound, the history, or the rule the room runs on.
+2. **One object per sentence.** A list is the writer refusing to choose.
+   Counts are fine; naming the items is not.
+3. **Never tell the player it's okay.** The ship is forgiving and must never
+   say so; a game that keeps reassuring you sounds like it expects you to be
+   worried. Say it with the mechanism — report the forty minutes that passed.
+4. **Spend words on grammar, save words on content.** Asked for concise and
+   restrained, a model counts words and assumes fewer means easier reading.
+   Those are different axes. Keep every subject, verb, article and auxiliary;
+   cut adjectives, abstractions and metaphors instead.
+
+## Which voice you are writing
+
+`docs/VOICE.md` §4 is the register map. Briefly: **An** is a working
+cartographer and always uses contractions; **narration** is complete
+present-tense sentences that report the object and never the feeling; **UI
+labels** are lowercase nouns or imperatives with no full stop; **letters** and
+**radio** are spoken, so they contract too; only the **Harbour Authority,
+Ship's Office and noticeboard** are allowed to be stiff.
+
+## Reach into docs/VOICE.md when you need it
+
+Reference, by section — not required reading end to end.
+
+- §2–3 what the text is for, and the two hard bans in full
+- §4 the nine tells, in the order they show up
+- §5 where the warmth actually comes from
+- §6 register map · §7 numbers · §9 the i18n table
+
+## The i18n coupling
+
+`src/i18n/en.ts` is keyed by the exact Chinese source string. A key off by one
+character — a curly quote where the source has a straight one — falls through
+silently and renders as Chinese in the English build. Change Chinese with
+`node tools/retext.mjs mapping.json`, which rewrites the source and the key
+together. Never hand-edit a Chinese string in `src/` without doing the key.
 
 ## What not to do
 
-- Do not "improve" copy by compressing it. That is the failure this skill exists
-  to prevent.
-- Do not add an adjective to add warmth, and never add reassurance. Warmth here
-  is the world answering, somebody working nearby, and the report of what
-  happened while the player was away. See §5.
-- Do not touch `submission/` unless the user explicitly asks for a submission pass.
+- Do not "improve" copy by compressing it. That is the failure this skill
+  exists to prevent.
+- Do not add an adjective to add warmth, and never add reassurance.
+- Do not touch `submission/` unless the user asks for a submission pass.

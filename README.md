@@ -20,7 +20,8 @@ npm run typecheck  # tsc --noEmit on its own
 
 Three ideas carry the whole look. They are worth knowing before changing anything.
 
-**Depth layers.** Design space is a fixed 1600×900. Every draw call names a depth
+**Depth layers.** Design space is a fixed 1600×900 window onto a room that is
+wider than it. Every draw call names a depth
 `k`: `k < 1` sits behind the play plane, `k > 1` in front. `mat(k)` in
 [core/camera.ts](src/core/camera.ts) turns that depth into an affine matrix, scaling
 pointer parallax, zoom and roll by `k`. That per-layer camera is what reads as
@@ -60,6 +61,7 @@ src/
     camera.ts        CAM + mat(): depth -> transform
     depth.ts         shared layer depths
     paint.ts         vol/flat/duo/sphere/txt and the brush sprites
+    pen.ts           handwritten marks: the ring, the tick, the arrow
     materials.ts     named material palettes
     shell.ts         the 2.5D room box
     light.ts         darkness wash + light holes
@@ -77,7 +79,7 @@ src/
     hatch.ts         the gangway: the round, docking, the handover
     cabin.ts  galley.ts  green.ts  radio.ts  dome.ts
   characters/
-    an.ts an-lines.ts  岸: pose, drawing, idle lines
+    an.ts              cups, bread, pears -- props, not people
     visitor.ts         whoever is waiting at the gangway door
   data/
     index.ts         lanes, beacons, tea, seeds, stations, letters
@@ -89,6 +91,9 @@ src/
     runtime.ts       session-only state (S, PR)
     progress.ts      time passage while you are away
   ui/                captions, panels, mail, log, ticket, settings, away
+    worksheet.ts     which step of the job you are on, and how far into it
+    sheet.ts         that, painted as a slip of paper on the wall
+    slots.ts         the three saves on the door screen
   i18n/              tr(), the language choice, and the English table
   audio/             Web Audio graph + the music director
   platform/          host.d.ts: the optional `window.claude` runtime
@@ -157,23 +162,80 @@ Action ids are colon-paths; `resolveAct` walks them longest-first, so
 `cab:lamp:pull` falls back to `cab:lamp`. Both contracts are typed in
 [rooms/registry.ts](src/rooms/registry.ts).
 
+## The free camera
+
+The window is 1600×900; the rooms are about 2200 wide and are painted out to the
+corners, so dragging anywhere empty swings the view across the room, dragging up
+and down tilts it, and the wheel or a pinch pushes in to 1.9x. `CAM.panX/panY`
+and `CAM.user` in [core/camera.ts](src/core/camera.ts) are the player's half of
+the camera and ease toward their own targets; `zoom`, `rot` and `lift` stay the
+game's. Both end up in one matrix, so hit regions, lighting and the pointer need
+to know nothing about it.
+
+Two numbers hold the whole thing together. `panLimit()` says how far the view
+may swing, and `PAD_X`/`PAD_Y` in [core/cache.ts](src/core/cache.ts) size the
+layer caches for the worst case of that limit, so no drag can pull a cached
+layer's painted edge into frame. The pan is *damped* by depth rather than
+multiplied by it (`panK` in camera.ts): true parallax would swing the near plane
+half again as far as the wall and run its edge into view.
+
+Changing either number means re-checking the other, and re-checking that each
+room's `*_SHELL.b` box is still wider than what the view can reach.
+
+A room may ask for more than the default swing. `ROOMS.x.pan` is
+`[x, y, maxX]`, and `go()` hands it to `setPanRange()`; the greenhouse takes 900
+with a cap of 1040, which makes it about three windows wide. Past roughly 400 a
+room can no longer use `layerCache` -- one canvas that wide is more than a phone
+will allocate -- so it calls `cacheGet` itself for a strip of tiles and blits
+only the ones on screen. [rooms/green.ts](src/rooms/green.ts) has that in
+`wideLayer()`, which is about ten lines.
+
 ## The round
 
-The visible main line is a delivery round. [data/ports.ts](src/data/ports.ts) holds
-four places, each sitting at the end of one of the four lanes in
-[data/index.ts](src/data/index.ts), each with somebody at it who asked the ship for
-one lit plant. The cabin's sign opens the run sheet, which picks the next call and
-takes the lane with it; the greenhouse's work bench turns a flowered pot into the
-thing being carried; `ROOMS.hatch` is the one place on the ship that opens onto
-somebody else's.
+One crew, one job at a time, and the ring is laid out so that walking it one way
+goes through that job in order. The first five stations in `RING`
+([rooms/registry.ts](src/rooms/registry.ts)) are the work and the last four are
+where you stop because you want to:
 
-Three pieces of state carry it, all on the save:
+| | | |
+|---|---|---|
+| 0° | radio room | a request comes in over dispatch and prints as a slip |
+| 40° | work board | the whole job pinned up, finished steps ringed in pen |
+| 80° | greenhouse | seedlings, then the garden, then the bench, left to right |
+| 120° | bridge | the slip goes on the course board and the ship turns |
+| 160° | gangway | the door opens and the lamp changes hands |
+
+[ui/worksheet.ts](src/ui/worksheet.ts) is the only thing that decides which step
+you are on and how far into it, so every slip on the ship and the hints cannot
+disagree. Nothing enforces the order: a step is done when the world says it is,
+so setting course early and growing on the way simply lights two steps.
+
+The job is never shown as an interface element. [ui/sheet.ts](src/ui/sheet.ts)
+paints it as paper, in the room, at the room's scale and under the room's lamps:
+five lines down a slip, the finished ones ringed, an arrow at the one you are on
+and a box ticked under it for each thing that step is made of. `hangSlip()` puts
+a copy on the wall of each room the job passes through, and `drawSlip()` draws
+the big one on the cork board beside a second slip that carries the round -- one
+line per place that has asked, with the lanes sketched under them. The marks are
+made with [core/pen.ts](src/core/pen.ts), which strokes nothing: a pen mark is a
+filled ribbon that swells in the middle, and every wobble comes from a seed, so
+a tick is the same tick on every frame.
+
+[data/ports.ts](src/data/ports.ts) holds the four places, each at the end of one
+of the four lanes in [data/index.ts](src/data/index.ts). Four pieces of state
+carry a job, all on the save:
 
 | | |
 |---|---|
+| `G.printed` | the slip in the printer's tray, waiting to be torn off |
+| `G.slips` | the slips in hand, which is what the course board offers |
 | `G.call` | `{ to, eta, docked, gave }` — where the ship is headed and how far along |
-| `G.calls` | what has been delivered, which the record in the cabin reads back |
 | `G.rig` | the piece on the bench: `{ sp, glass, lit }`, finished when both are true |
+
+Every one of those states is painted on the thing it belongs to — the three
+marks on the bench plate, the indicator over the gangway door, the handle lying
+flat while the ship is under way, the band scratched into the dial. A caption
+should never be the only reason a player knows why something will not work yet.
 
 Arriving is deliberately not something the player can miss. `advance()` in
 [state/progress.ts](src/state/progress.ts) brings the ship alongside on its own
@@ -184,6 +246,15 @@ a tab closed between the handover and the parting still ends the call.
 The three beacon colours in `COL` were already named after three of these places,
 so the lights the player answers with the lantern from the cabin window are the
 places the ship is working toward.
+
+## Saves
+
+Three slots, `yehang-long-v2:s1..s3`, picked on the door screen before boarding
+and fixed for the session; `:last` remembers which. A pre-slot save moves into
+slot 1 on first run. The cloud copy, when the host provides one, is one document
+per slot under `data/users/<id>/slot<n>`, merged at boot by whichever side was
+written last. See [state/save.ts](src/state/save.ts) and
+[ui/slots.ts](src/ui/slots.ts).
 
 ## If you later move to Phaser
 
@@ -201,9 +272,7 @@ Worth knowing before committing to that move: the renderer itself is the hard
 part, not the shell. `vol()` ends every object with a `soft-light` pass, and the
 lighting is `destination-out` compositing — Canvas2D has 27 blend modes, WebGL
 has 4 natively. Phaser 4 is WebGL-first, so reproducing the current art direction
-means writing shaders, not porting calls. The ring corridor is also not an affine
-transform: `ringM()` composes the camera with a rotation about a point 1300px
-off-screen, and the floor and ceiling bands are sampled point by point.
+means writing shaders, not porting calls.
 
 A realistic path is to adopt Phaser for scenes, input, audio and tweens while
 keeping Canvas2D drawing inside a render hook, and only then decide whether the

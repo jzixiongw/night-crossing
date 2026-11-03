@@ -102,7 +102,9 @@ const VERBS = `go goes went gone come comes came take takes took put puts get ge
   isn aren wasn weren don doesn didn won haven hasn hadn couldn wouldn shouldn
   ain let s brew brews brewed brewing knead kneads sip sips sipped punch punching
   ask asks asked asking back backs backed lock locks locked finding
-  build builds built deliver delivers delivered wipe wiping ring ringing`.split(/\s+/);
+  build builds built deliver delivers delivered wipe wiping ring ringing
+  knock knocks knocked feed feeds fed tear tears tore clip clips clipped
+  swing swings swung tilt tilts tilted drag dragging pinch pinches`.split(/\s+/);
 const VERBSET = new Set([...AUX, ...VERBS]);
 
 const BANNED = [

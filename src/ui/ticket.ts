@@ -17,8 +17,9 @@ import { closePanels } from './panels';
 /* ================= TICKET + ENDING ================= */
 export function miniPots(){
   let h = `<svg viewBox="0 0 150 64" aria-hidden="true"><rect width="150" height="64" rx="8" fill="#1c2f38"/>`;
-  G.pots.forEach((p,i) => { const x = 15 + i*30; h += `<path d="M${x-9},56 L${x+9},56 L${x+7},44 L${x-7},44Z" fill="${POT_COL[i]}"/>`;
-    if (p){ const hgt = 4 + 30*p.g; h += `<path d="M${x},44 V${44-hgt}" stroke="#6bb2a8" stroke-width="2.5"/>`; if (bloomReady(p)) h += `<circle cx="${x}" cy="${44-hgt}" r="4" fill="${SEEDS[p.sp].color}"/>`; } });
+  const sp = 150/G.pots.length, w = Math.min(9, sp*.42);
+  G.pots.forEach((p,i) => { const x = sp/2 + i*sp; h += `<path d="M${x-w},56 L${x+w},56 L${x+w-2},44 L${x-w+2},44Z" fill="${POT_COL[i]}"/>`;
+    if (p){ const hgt = 4 + 30*p.g; h += `<path d="M${x},44 V${44-hgt}" stroke="#6bb2a8" stroke-width="2.5"/>`; if (bloomReady(p)) h += `<circle cx="${x}" cy="${44-hgt}" r="3.4" fill="${SEEDS[p.sp].color}"/>`; } });
   return h + '</svg>';
 }
 export function miniStrip(){
@@ -67,7 +68,7 @@ export function ticketMarkup(stub){
       <dt>${tr('航道')}</dt><dd>${route}</dd>
       <dt>${tr('到访')}</dt><dd class="wide">${calls}</dd>
       <dt>${tr('灯串')}</dt><dd class="wide">${chips ? `<div class="chips">${chips}</div>` : tr('还没有。窗外的灯会一直经过。')}${G.passedLights ? tr('　你忙的时候，窗外经过了 {0} 盏灯。', G.passedLights) : ''}</dd>
-      <dt>${tr('厨房')}</dt><dd>${tr('茶 {0} 杯 · 面包 {1} 个', G.cups, G.baked)}${G.gaveAn ? tr(' · 分给岸 {0} 次', G.gaveAn) : ''}</dd>
+      <dt>${tr('厨房')}</dt><dd>${tr('茶 {0} 杯 · 面包 {1} 个', G.cups, G.baked)}</dd>
       <dt>${tr('信')}</dt><dd>${tr('读过 {0} 封 · 寄出 {1} 张', G.mail.read.length, G.mail.out.length)}</dd>
       <dt>${tr('电台')}</dt><dd>${tr('台表记了 {0} / {1}', G.found.length, STATIONS.length)}</dd>
       <dt>${tr('穹顶')}</dt><dd>${tr('星线 {0} 笔', G.lines.length)}${names.length ? tr('：') + names.map(n => tr('「{0}」', escapeHtml(n))).join('') : ''}</dd>

@@ -21,7 +21,6 @@ export function pumpCaption(){
   cap.classList.add('on'); capShownAt = t;
   clearTimeout(capHide); capHide = setTimeout(() => { if (!capQ.length) cap.classList.remove('on'); else pumpCaption(); }, 2600 + text.length*105);
 }
-export const AN = tr('岸');
 export function once(key){ if (G.flags[key]) return false; G.flags[key] = true; markDirty(); return true; }
 export function onceS(key){ if (S.caps[key]) return false; S.caps[key] = true; return true; }
 export function addLog(text){ G.log.unshift({ t:now(), text }); if (G.log.length > 80) G.log.length = 80; markDirty(); }
