@@ -10,3 +10,8 @@ import './ui/settings';
 import './core/presence';
 
 import './boot';
+
+/* ?cabin=3d swaps the Canvas2D cabin for the experimental Three.js one in
+   src/three/. It is its own chunk, so the default game never downloads three;
+   it replaces ROOMS.cabin when it arrives and the loop picks it up next frame. */
+if (new URLSearchParams(location.search).get('cabin') === '3d') import('./three/cabin3d').catch(err => console.error(err));

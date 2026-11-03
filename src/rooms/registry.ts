@@ -31,6 +31,7 @@ export interface Room {
   pan?: [number, number, number?];                        // how far the player may swing the view
 
   tapEmpty?(e: PointerEvent): void;                       // click that hit no region
+  webgl?: boolean;                                        // draws on its own canvas; see core/render.ts
   [key: string]: any;
 }
 

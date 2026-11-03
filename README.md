@@ -97,6 +97,7 @@ src/
   i18n/              tr(), the language choice, and the English table
   audio/             Web Audio graph + the music director
   platform/          host.d.ts: the optional `window.claude` runtime
+  three/             the experimental Three.js cabin (?cabin=3d)
 public/fonts/        198 woff2 subsets + fonts.css
 ```
 
@@ -189,6 +190,40 @@ room can no longer use `layerCache` -- one canvas that wide is more than a phone
 will allocate -- so it calls `cacheGet` itself for a strip of tiles and blits
 only the ones on screen. [rooms/green.ts](src/rooms/green.ts) has that in
 `wideLayer()`, which is about ten lines.
+
+## The Three.js cabin (experimental)
+
+`?cabin=3d` swaps the cabin's Canvas2D picture for a lit 3D room built with
+three.js; everything else stays Canvas2D. It loads as its own chunk, so the
+default game never downloads three. Screenshots are in
+[docs/cabin3d/](docs/cabin3d/).
+
+Only how the cabin is **drawn** and how a pointer **finds** things changes.
+`ROOMS.cabin.update/enter/exit` and every `ACT['cab:*']` handler still run from
+[rooms/cabin.ts](src/rooms/cabin.ts), through the same loop, with the same save.
+
+| Seam | Where | What the 3D room does with it |
+|---|---|---|
+| `Room.webgl` | [core/render.ts](src/core/render.ts) | renders onto its own canvas under `#scene`; the 2D canvas keeps only the post pass and the focus ring |
+| `setPicker()` | [core/hits.ts](src/core/hits.ts) | `hitAt()` asks the room first, which raycasts; the first solid thing hit decides, so things occlude each other |
+| `localPt(h, e)` | [core/hits.ts](src/core/hits.ts) | a raycast hit carries `local(e)`, so the glass drag gets a point on the glass plane in `WIN`'s design units from wherever the camera is |
+| `CABIN_SPACE` | [rooms/cabin.ts](src/rooms/cabin.ts) | answers "which window is this beacon behind" and "where in the sky/on the glass did I tap" from the 3D camera instead of `lp()`/`mat()` |
+| `CAM.*` | [core/camera.ts](src/core/camera.ts) | the existing drag, wheel, pinch, arrow keys and reset write `panX/panY/user`; the 3D camera turns them into yaw/pitch/step/dolly, and `rot`/`lift`/`px`/`py` into roll, bob and parallax (halved under reduced motion) |
+| every frame | `HITS` | each pickable is pushed as a screen-space circle, so Tab, Enter, the focus ring and "what's touchable" work unchanged |
+
+The back wall is laid out from the 2D numbers through `wallX/wallY` in
+[three/config.ts](src/three/config.ts), so the windows *are* `WIN`, the bulbs
+hang at `S.slots`, and `S.breaths`/`S.strokes` draw onto a canvas mapped across
+the glass by UV. The sky is a backdrop placed so a beacon seen from the resting
+eye sits where the 2D cabin painted it. Every tunable — camera limits, room
+size, layout, palette, lights, toon ramp — is in that config file.
+
+The look: `MeshToonMaterial` on a three-band ramp with soft steps, the game's
+own brush tiles from `core/paint.ts` as a multiply grain, a cold fresnel rim on
+props, no outlines (as in the 2D rooms), one shadow-casting spot under the lamp
+plus soft contact blots, and the 2D glow sprites as additive halos.
+`node tools/cabin3d-check.mjs` drives it in Chrome and checks the interactions;
+its header says what it needs.
 
 ## The round
 

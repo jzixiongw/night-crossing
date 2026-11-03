@@ -1,4 +1,4 @@
-import { curM, inv, tp } from './camera';
+import { curM, inv, lpM, tp } from './camera';
 import { txt } from './paint';
 import { CH, CW, RS } from './surface';
 import { clamp } from './util';
@@ -28,7 +28,18 @@ export function shapeCenter(sh){
 }
 export function shapeRadius(h){ const sh = h.shape, s = Math.hypot(h.m[0], h.m[1]);
   if (sh[0] === 'r') return Math.min(sh[3], sh[4])*.5*s; if (sh[0] === 'c') return sh[3]*s; if (sh[0] === 'e') return Math.min(sh[3], sh[4])*s; return 40*s; }
-export function hitAt(X, Y){ for (let i=HITS_PREV.length-1; i>=0; i--){ const h = HITS_PREV[i], p = inv(h.m, X, Y); if (inShape(h.shape, p.x, p.y)) return { h, p }; } return null; }
+/* A room that is not painted with these matrices (the Three.js cabin) answers
+   the pointer itself, by raycast. It returns undefined when it is not the room
+   on screen, so the painted regions take over again. */
+let PICK: ((X: number, Y: number) => { h: any; p: { x: number; y: number } } | null | undefined) | null = null;
+export function setPicker(fn: typeof PICK){ PICK = fn; }
+/* Where a pointer event lands in a hit's own coordinates. Painted regions
+   invert their draw matrix; a raycast hit carries a `local` of its own (a
+   point on the glass, say) because no 2D matrix describes a 3D surface. */
+export function localPt(h, e){ return h.local ? h.local(e) : lpM(h.m, e); }
+export function hitAt(X, Y){
+  if (PICK){ const r = PICK(X, Y); if (r !== undefined) return r; }
+  for (let i=HITS_PREV.length-1; i>=0; i--){ const h = HITS_PREV[i], p = inv(h.m, X, Y); if (inShape(h.shape, p.x, p.y)) return { h, p }; } return null; }
 export function hitCanvasCenter(h){ const c = shapeCenter(h.shape); return tp(h.m, c[0], c[1]); }
 
 export function focusables(){ const seen = new Set(), out = []; HITS_PREV.forEach(h => { if (!h.label || seen.has(h.key)) return; const [X,Y] = hitCanvasCenter(h); if (X < 0 || X > CW || Y < 0 || Y > CH) return; seen.add(h.key); out.push({ h, X, Y }); }); return out.sort((a,b) => a.X - b.X); }

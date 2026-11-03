@@ -52,6 +52,16 @@ export function windowOf(bx, by){
   for (const side of ['left','right']){ const [x,y,w,h] = WIN[side]; if (q.x > x+6 && q.x < x+w-6 && q.y > y+6 && q.y < y+h-6) return side; }
   return null;
 }
+/* The three questions the cabin's logic asks of its own picture: which window
+   a beacon shows through, and where a pointer lands in beacon space and on
+   the wall. The answers are design units either way. The Three.js cabin
+   (src/three/) swaps in answers from its camera, so beacons, the glass and the
+   fog keep running on this file's logic. */
+export const CABIN_SPACE = {
+  windowOf: (bx: number, by: number): string | null => windowOf(bx, by),
+  sky: (e): { x: number; y: number } => lp(K_SP, e, spo()),
+  wall: (e): { x: number; y: number } => lp(K_WL, e)
+};
 /* beacons */
 export function spawnBeacon(){
   const cols = ROUTES[G.route].colors; if (!cols.length) return;
@@ -73,7 +83,7 @@ export function updateBeacons(dt){
       if (!b.answered && b.fade > 0 && !PR.focused){ G.passedLights++; markDirty(); }
       S.beacons.splice(i,1); continue;
     }
-    const I = beaconIntensity(b), on = I > .5 && !b.answered, w = windowOf(b.x, b.y);
+    const I = beaconIntensity(b), on = I > .5 && !b.answered, w = CABIN_SPACE.windowOf(b.x, b.y);
     if (on && !b.on && w && G.lamp > 0) AU.tick(COL[b.color].midi-12, G.lamp===2 ? .018 : .009);
     b.on = on;
     if (w && G.lamp > 0 && !b.answered && once('seen')) say(tr('窗外有一盏灯在闪。闪{0}下，停一停。', CN[COL[b.color].blinks]), null, 300);
@@ -124,9 +134,9 @@ ACT['cab:lantern'] = { tap(){
   say(tr('提灯转到{0}那一格。底座上有{1}道刻痕。', C.name, CN[C.blinks])); markDirty();
 }};
 export function glassClick(side, e){
-  const p = e ? lp(K_SP, e, spo()) : null;
-  let b = p ? nearestBeacon(p) : S.beacons.filter(x => windowOf(x.x,x.y)===side).sort((a,c) => a.answered-c.answered)[0] || null;
-  const q = e ? lp(K_WL, e) : null;
+  const p = e ? CABIN_SPACE.sky(e) : null;
+  let b = p ? nearestBeacon(p) : S.beacons.filter(x => CABIN_SPACE.windowOf(x.x,x.y)===side).sort((a,c) => a.answered-c.answered)[0] || null;
+  const q = e ? CABIN_SPACE.wall(e) : null;
   if (G.lamp === 0){
     AU.tap(); if (q) flare(K_WL, q.x, q.y, '#f5e6d0', 6, 36, .6);
     say(S.caps.refl ? tr('玻璃上只有舱里的倒影。') : tr('玻璃上只有舱里的倒影，看不清外面。')); S.caps.refl = true; return;

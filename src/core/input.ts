@@ -1,6 +1,6 @@
 import { tr } from '../i18n';
-import { CAM, clampPan, cpt, lpM, resetView, scaleAt, setUserZoom, viewMoved } from './camera';
-import { HITS_PREV, focusables, hitAt, shapeCenter } from './hits';
+import { CAM, clampPan, cpt, resetView, scaleAt, setUserZoom, viewMoved } from './camera';
+import { HITS_PREV, focusables, hitAt, localPt, shapeCenter } from './hits';
 import { P } from './shell';
 import { CH, CW, cv } from './surface';
 import { $, D2R, clamp, escapeHtml, lerp, mod, stage } from './util';
@@ -109,7 +109,7 @@ cv.addEventListener('pointermove', e => {
     return;
   }
   if (d.view){ moveViewDrag(e); return; }
-  if (d.ctrl && d.ctrl.move) d.ctrl.move(e, lpM(d.h.m, e));
+  if (d.ctrl && d.ctrl.move) d.ctrl.move(e, localPt(d.h, e));
 });
 export function endDrag(e, cancel){
   const d = S.drag; if (!d) return; S.drag = null;
@@ -128,7 +128,7 @@ export function endDrag(e, cancel){
     if (!d.moved && !cancel && ROOMS[S.room] && ROOMS[S.room].tapEmpty) ROOMS[S.room].tapEmpty(e);
     return;
   }
-  const P = d.h ? lpM(d.h.m, e) : null;
+  const P = d.h ? localPt(d.h, e) : null;
   if (d.ctrl){ d.ctrl.up && d.ctrl.up(e, d.moved, cancel, P); return; }
   if (!cancel && !d.moved && d.r.h.tap){ try { d.r.h.tap(d.r.args, e, P, d.h); } catch(err){ console.error(err); } }
 }
