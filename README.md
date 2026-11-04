@@ -81,6 +81,7 @@ src/
     registry.ts      ROOMS + ACT contracts, go(), HUD, the RING lattice
     corridor.ts      the ring, nine stations, big window
     hatch.ts         the gangway: the round, docking, the handover
+    outside.ts       what is outside this frame: settling alongside, the port's sound
     cabin.ts  galley.ts  green.ts  radio.ts  dome.ts
   characters/
     an.ts              cups, bread, pears -- props, not people
@@ -88,15 +89,18 @@ src/
   data/
     index.ts         lanes, beacons, tea, seeds, stations, letters
     ports.ts         the four places the round calls at
+    chart.ts         where they are: one geography for the chart and the windows
   state/
     store.ts         the save shape (G) + migration
     save.ts          localStorage + optional cloud save
     time.ts          in-world clock
     runtime.ts       session-only state (S, PR)
     progress.ts      time passage while you are away
+    voyage.ts        where the ship is, the handover clock, what is outside
   ui/                captions, panels, mail, log, ticket, settings, away
     worksheet.ts     which step of the job you are on, and how far into it
     sheet.ts         that, painted as a slip of paper on the wall
+    chart.ts         the sea chart on the course board, and its pencil marks
     paper.ts         the HTML overlays' paper fibre and pen marks, made once
                      from core/pen.ts and handed to game.css as --fiber/--mk-*
     slots.ts         the three saves on the door screen
@@ -108,6 +112,7 @@ src/
     view.ts          viewpoints: head turn, lean, moving between places
     kit.ts           toon materials, grain, glow, small geometry, disposal
     props.ts         the work slip, portholes, the lamp piece (rig)
+    landmarks.ts     the four places as seen from off, for the bridge and the ring
     config/          every tunable number, one file per room + shared.ts
     rooms/           one module per room; each registers over the painted room
 public/fonts/        198 woff2 subsets + fonts.css
@@ -247,7 +252,7 @@ places to lean in:
 | bridge | desk · window (breathe and draw on the glass) · chart table |
 | radio room | room · radio · printer · music box |
 | greenhouse | garden · nursery · work bench (opens here when building is the step) |
-| gangway | bay · doorway (the handover) |
+| gangway | bay · doorway (the handover) · porthole (watch the place, door shut) |
 | galley | galley · sink and stove · board |
 | dome | sitting · lying down (follows `G.lie`, so the bench and the pill move you too) |
 | ring | one view driven by `S.phi`; sitting turns you to the big window |
@@ -367,7 +372,7 @@ carry a job, all on the save:
 |---|---|
 | `G.printed` | the slip in the printer's tray, waiting to be torn off |
 | `G.slips` | the slips in hand, which is what the course board offers |
-| `G.call` | `{ to, eta, docked, gave }` — where the ship is headed and how far along |
+| `G.call` | `{ to, from, dep, eta, docked, gave, wob, shut }` — where the ship is headed, where from, and how far through the call |
 | `G.rig` | the piece on the bench: `{ sp, glass, lit }`, finished when both are true |
 
 Every one of those states is painted on the thing it belongs to — the three
@@ -378,8 +383,63 @@ should never be the only reason a player knows why something will not work yet.
 Arriving is deliberately not something the player can miss. `advance()` in
 [state/progress.ts](src/state/progress.ts) brings the ship alongside on its own
 schedule, whether or not anyone is aboard to see it, and then it holds there
-until the door is opened. Casting off again runs on a clock in the same place, so
-a tab closed between the handover and the parting still ends the call.
+until the door is opened.
+
+### One world outside the hull
+
+[data/chart.ts](src/data/chart.ts) puts the four places at the ends of their
+four lanes on one sheet, with lane lengths in the order of the crossing times.
+[state/voyage.ts](src/state/voyage.ts) reads the save against the clock and
+answers, for everything that shows it, where the ship is on that sheet and
+what is outside: each nearby place with a nearness `k` (0 a speck, 1
+alongside), a phase (approach, docked, parting, wake) and how lit it is by a
+lamp left there. It imports no DOM, so `tools/voyage.test.mjs` runs it under
+Node. Nothing keeps a second clock: the chart, the bridge sky, the ring's
+window band and the gangway porthole all read the same `sights()`, which is
+why the same place is in the same state in each of them.
+
+- **The sea chart** ([ui/chart.ts](src/ui/chart.ts)) is the course board's
+  panel: the lanes and the water they cross, past legs in pencil, the leg
+  under way in red with the ship and its time to go, a glow and the flower's
+  name where a lamp was left, a taped record of deliveries, and one personal
+  mark -- tap a place you have been to, or something you sailed past, and a
+  pencil star goes on it (`G.marks`). The voyage record carries a small copy.
+  It is not `#ringMap`, which is the ship's own corridor.
+- **The far views.** The gangway's far side ([three/rooms/hatch-port.ts](src/three/rooms/hatch-port.ts))
+  splits each place into a sky that stays put and a body that slides in from
+  `HAT.port.far` metres as it approaches and out again as it leaves. The
+  porthole to the right of the door is a real hole in the hull onto that
+  scene. The bridge sky and the ring draw [three/landmarks.ts](src/three/landmarks.ts),
+  the same four shapes as unlit night silhouettes with their own lights; on
+  the ring they stand against the hull at the gangway's own bearing, seen
+  through a window band cut between the gangway and the galley, so the view
+  shifts with the walk. Every place already given a lamp keeps a small light
+  in the bridge sky and the big window.
+- **Alongside**, [rooms/outside.ts](src/rooms/outside.ts) eases the ship's roll
+  down, drops the engines to a murmur and lets the place's own sound through
+  the hull; the gangway lamps blink on the approach in the room and on the ring.
+
+### The handover
+
+Shared by the painted room and the 3D one, in [rooms/hatch.ts](src/rooms/hatch.ts):
+the door runs a timed handle-then-leaves sequence (`DOOR_S`); the one waiting
+comes over at their own pace (`HAND` in state/voyage.ts, per port); the first
+tap holds the lamp out through the doorway, the second lets go, and letting go
+before they have a grip only makes the lamp swing more. From `G.call.gave`
+everything runs off the clock -- they steady it, turn, walk it to where it goes
+and set it down -- so leaving the room or reloading lands on the same moment.
+Each place has its own walk and end (`HAT.port.walk`): the wharf's old lamp
+post, the buoy's sill, the foot of the bell, back through the other ship's
+door. The ship casts off (`castAt`) only once the door is shut -- by the
+player, by walking off, or on its own after they have arrived -- and the
+lamp is set, and the place then falls astern for `PART_MS`, after which
+`G.wake` keeps it as a light behind the ship. A while later dispatch reports
+what the lamp is doing there (`NEWS` in state/progress.ts). The first
+delivery folds the guide away; the next request waits at the radio.
+
+Screenshots of a whole call -- the chart, the ring band and the bridge across
+every phase, the handover, and each of the four places through the porthole --
+are in [docs/voyage/](docs/voyage/).
 
 The three beacon colours in `COL` were already named after three of these places,
 so the lights the player answers with the lantern from the cabin window are the
@@ -429,14 +489,19 @@ look survives a move to WebGL.
 
 ## First-voyage checks
 
-`node --test tools/journey.test.mjs` (Node 24+) checks durable milestones,
-old-save inference and starting the next request.
+`node --test tools/journey.test.mjs tools/voyage.test.mjs` (Node 24+, or 22
+with `--experimental-strip-types`) checks durable milestones, old-save
+inference, starting the next request, and the voyage clock: chart position,
+casting off, what is outside, and saves from before any of it.
 
 `node tools/onboarding-check.mjs` starts Vite and uses Playwright to complete
 the first crossing at normal speed through visible controls, including
 clipping, building, leaving the room, delivery, save/reload and the next
 radio request. It also checks English/Chinese portrait layouts, keyboard
 controls and reduced motion, plus seeded recovery fixtures for dry soil,
-growth, the nursery shelf and all requests completed. `SECTIONS=flow`,
-`portrait` or `recovery` selects a subset. Install Playwright separately when running it;
+growth, the nursery shelf and all requests completed; the order alongside,
+held out, handed over, door shut, cast off; leaving and reloading mid-handover;
+an old save mid-parting; the painted fallback; and the sea chart's marks in
+landscape and portrait. `SECTIONS=flow`, `portrait`, `recovery`, `handover`,
+`oldsave`, `fallback` or `chart` selects a subset. Install Playwright separately when running it;
 see the script header for executable/module overrides and screenshot output.

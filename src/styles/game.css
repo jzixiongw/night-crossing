@@ -261,7 +261,8 @@ body{
 .chart-pin.mark:hover,.chart-pin.mark:focus-visible{background:var(--mk-ring-cream) center/100% 100% no-repeat;filter:brightness(.55)}
 .chart-pin:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 @media (max-aspect-ratio:1/1){
-  .panel.chartpanel{width:auto;left:3cqw;right:3cqw;grid-template-columns:1fr}
+  /* in portrait the menus sit low, under the view tabs; the chart keeps to that */
+  .panel.chartpanel{width:auto;left:3cqw;right:3cqw;grid-template-columns:1fr;top:auto;bottom:16%;max-height:66%}
   .chartpanel #routeList,.seachart,.chart-hint{grid-column:1;grid-row:auto}
 }
 .t-chart{width:min(100%,380px)}

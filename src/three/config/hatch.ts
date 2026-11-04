@@ -50,6 +50,11 @@ export const HAT = {
       bell: { wait: [-.5, -2.25], path: [[0, -1.05], [0, -2.1]], dest: [0, .24, -2.62], bend: .6, lift: -1 },
       ship: { wait: [.25, -1.9], path: [[0, -1.05], [-.25, -1.85], [-.56, -2.46]], dest: null, bend: 0, lift: .2 }
     } as Record<string, { wait: [number, number]; path: [number, number][]; dest: [number, number, number] | null; bend: number; lift: number }>,
+    /* What the porthole view looks at, per place, once it is alongside (x, y,
+       z outward from the hull): a hole in a thick wall only shows a narrow
+       cone, so the eye moves to put the place in it. Far off, it looks
+       straight out. `eyeD` is how far back from the hole the eye stands. */
+    look: { dock: [1.55, 1.25, -3.9], echo: [.7, 1.15, -3.0], bell: [.15, .95, -3.2], ship: [-.2, 1.25, -2.8], far: [2.2, 1.25, -40], eyeD: 1.8, eyeMaxX: 3.85 } as Record<string, any>,
     visZ: 1.05,           // where the visitor stands, past the hull
     visScale: 1.2,        // the 2D creature, a little larger than its design units
     bob: 4                // design units of rise and fall, as the 2D room bobbed it

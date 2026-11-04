@@ -1119,7 +1119,6 @@ export const EN: Record<string, string> = {
 '今晚没有新的委托了。': "There's nothing new tonight.",
 
 /* ---------- the course board ---------- */
-'航向板': 'Course board',
 '还没定': 'not set',
 '这一趟': 'This run',
 '这一趟做完了。电台室会有下一张单子。': "This run is finished. There's another slip waiting at the radio room.",
@@ -1178,7 +1177,6 @@ export const EN: Record<string, string> = {
 '剪下一枝放进花瓶。这盆约五分钟后再开花。': "You cut a stem for the vase. This plant will flower again in about five minutes.",
 '剪下一枝放进花瓶。剩下的花还可以装成灯。': "You cut a stem for the vase. The remaining flowers can still go into a lamp.",
 '点下方的位置按钮，走近种植区或装配台。': "Use the place buttons below to move closer to the garden or workbench.",
-'这一趟已经送到。下一张委托可以去电台室领取。': "This delivery is complete. Pick up your next request in the radio room.",
 '把开花植物移到装配台': "Move a flowering plant to the workbench",
 '玻璃罩已扣好': "The cover is fitted",
 '植物灯已装好': "The plant lamp is ready",

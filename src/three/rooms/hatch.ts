@@ -422,7 +422,10 @@ function build(): Built {
     veilM.opacity = (1 - open)*.92;
     const lampCol = P ? P.look.lamp : '#ffd9a3';
     spill.color.set(pt ? mixHex(lampCol, '#9fb2d6', .55) : '#9fb2d6'); spill.intensity = show ? LT.spill.intensity*open : 0;
-    portAmb.color.set(pt ? pt.amb : '#9fb2d6'); portAmb.intensity = show ? LT.portAmb.intensity*open : 0;
+    /* The place keeps a little light of its own while it is alongside, so the
+       porthole shows it with the door shut; the open door lets the rest in. */
+    const along = !!pt && can && ports[P.id].g.visible;
+    portAmb.color.set(pt ? pt.amb : '#9fb2d6'); portAmb.intensity = along ? LT.portAmb.intensity*(.55 + .45*open) : 0;
     /* the lamp's own light follows it: into their hands, then where it is set */
     const theirs = P && given ? lamps[P.id] : null;
     if (theirs && ports[P.id].g.visible){
@@ -446,10 +449,25 @@ function build(): Built {
     signTex.tick(); slip.redraw();
   }
 
+  /* The porthole view aims through the hole at the place alongside, or
+     straight out when there is nothing near: the eye stands back from the
+     hole on the line from the place through its centre. */
+  const HOLE = new THREE.Vector3(MAP.X(HAT.porthole.x), MAP.Y(HAT.porthole.y), BACK), LK = HAT.port.look;
+  const aimT = new THREE.Vector3(), aimN = new THREE.Vector3(), aimE = new THREE.Vector3(), aimS = new THREE.Vector3().fromArray(LK.far);
+  aimS.z += PZ0;
+  function portholeEye(){
+    const sg = OUT.near || OUT.list[0], k = sg ? Math.max(0, Math.min(1, (sg.k - .5)/.5)) : 0, L = sg && LK[sg.id];
+    aimT.set(LK.far[0], LK.far[1], PZ0 + LK.far[2]);
+    if (L){ aimN.set(L[0], L[1], PZ0 + L[2]); aimT.lerp(aimN, k*k*(3 - 2*k)); }
+    aimS.lerp(aimT, .04);                      // the eye drifts over, it does not jump
+    aimE.copy(HOLE).sub(aimS).normalize().multiplyScalar(LK.eyeD).add(HOLE);
+    aimE.x = Math.min(LK.eyeMaxX, aimE.x);
+    return { eye: [aimE.x, aimE.y, aimE.z] as [number, number, number], look: [aimS.x, aimS.y, aimS.z] as [number, number, number] };
+  }
   const views: View[] = [
     { id: 'bay', label: tr('舷梯'), ...HAT.views.bay },
     { id: 'handover', label: tr('门口'), ...HAT.views.handover },
-    { id: 'porthole', label: tr('舷窗边'), ...HAT.views.porthole }
+    { id: 'porthole', label: tr('舷窗边'), ...HAT.views.porthole, dyn: portholeEye }
   ];
   return {
     scene, views, sync,

@@ -1,4 +1,4 @@
-import { CROSSING, HUB, LANES, LANE_OF, pathAt, routePath, type Pt } from '../data/chart';
+import { CROSSING, HUB, LANES, LANE_OF, pathAt, routePath, type Pt } from '../data/chart.ts';
 
 /* ================= THE VOYAGE, READ OFF THE SAVE =================
    One answer to "where is the ship, and what is outside it", for everything

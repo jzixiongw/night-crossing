@@ -168,9 +168,10 @@ export function gangway(root: THREE.Object3D, st: any, m: Mats): Station {
   pickable(g, { act: 'go:hatch', label: st.label, anchor: new THREE.Vector3(0, Y(520), .1), r: .55 });
   return { st, g, sync(){
     for (const t of ticks) t.tick();
-    const on = docked(), p = .5 + .12*Math.sin(S.T*1.6);
-    lensMat.color.set(on ? '#ffd9a3' : '#4a5570'); lensMat.emissiveIntensity = on ? 1.1 : 0;
-    lampGlow.material.opacity = on ? p : 0;
+    /* steady alongside; blinking while a place is coming in close */
+    const on = docked(), near = OUT.list.some(x => x.phase === 'approach' && x.k > .45), blink = near && Math.sin(S.T*3) > 0, p = .5 + .12*Math.sin(S.T*1.6);
+    lensMat.color.set(on || blink ? '#ffd9a3' : '#4a5570'); lensMat.emissiveIntensity = on ? 1.1 : blink ? .7 : 0;
+    lampGlow.material.opacity = on ? p : blink ? .35 : 0;
   } };
 }
 
