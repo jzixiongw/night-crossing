@@ -44,15 +44,14 @@ export const EN: Record<string, string> = {
   "The rose one's called Evening Bell. The keeper says it only rings when a ship goes past.",
 
 /* ---------- data/index.ts : routes ---------- */
-'近港航道': 'Near-Harbour Lane',
+'近港航道': "Harbour Route",
 '星云浅湾': 'Nebula Shallows',
-'环带慢道': 'Ringbelt Slow Lane',
-'静默段': 'The Quiet Stretch',
+'环带慢道': "Ring Route",
+'静默段': "Quiet Stretch",
 '港口的灯还在身后。航标不多，多半是琥珀色的。':
   "The harbour lights are still behind us. There aren't many beacons out here, and most of them are amber.",
-'船回到了近港航道。': 'The ship is back in Near-Harbour Lane.',
-'回近港我喜欢。港口的灯还认得我们。':
-  "I like going back to Near-Harbour. The harbour lights still know us.",
+'船回到了近港航道。': "The ship returns to the Harbour Route.",
+'回近港我喜欢。港口的灯还认得我们。': "I like coming back to the Harbour Route. I recognise the lights here.",
 '穿过一片粉青色的雾。航标多，三种颜色都有。':
   "The ship goes through a pale blue-green fog. There are plenty of beacons here, in all three colours.",
 '船拐进了星云浅湾。窗外起了一层粉青色的雾。':
@@ -65,8 +64,7 @@ export const EN: Record<string, string> = {
   'The ship runs along the ringbelt. A very large planet comes up slowly on the right.',
 '这颗行星没有名字。我在图上就画了个圈。':
   "This planet doesn't have a name. I just drew a circle for it on the chart.",
-'几乎没有航标。星星最密，适合什么也不做。':
-  "There are almost no beacons here. The stars are at their thickest. It's a good place to do nothing.",
+'几乎没有航标。星星最密，适合什么也不做。': "There are almost no beacons here. The stars are especially bright.",
 '船进了静默段。外面几乎没有灯，星星很密。':
   "The ship enters the Quiet Stretch. There are hardly any lights outside, and the stars are thick.",
 '这一段没什么灯。我一般在这儿睡一会儿。':
@@ -131,7 +129,7 @@ export const EN: Record<string, string> = {
 '三。七。七。一。': 'Three. Seven. Seven. One.',
 '……停顿。': '… a pause.',
 '二。二。九。': 'Two. Two. Nine.',
-'这是一串坐标。没人知道是哪里的。': "These are coordinates. Nobody knows where they point.",
+'这是一串坐标。没人知道是哪里的。': "These are coordinates, but nobody knows where they lead.",
 '（一段很慢的曲子，只有几个音。）': '(A very slow tune. Only a few notes.)',
 '曲子在重复。纸带上浮出几个淡淡的格子。':
   "The tune repeats. A few faint squares come up on the paper tape.",
@@ -192,34 +190,29 @@ export const EN: Record<string, string> = {
   "In the dome, turn the small lamp off first. Then keep your eyes still and wait.\nThe faint stars only come out once your eyes have adjusted.\nA few of them brighten now and then. You can run a line out to one and leave it hanging there, waiting for it to light up.",
 '送了几个星梨过去，酸，配茶正好。\n面团喜欢暖和的地方，刚烧过水的厨房最好。\n发过头的面团，烤出来会胖一点。':
   "I sent over a few star-pears. They're sour, which is just right with tea.\nDough likes a warm place, and a galley is best just after the water has boiled.\nDough that rises too long only bakes up rounder.",
-'这一班没有特别的信。\n附一张空白明信片，背面还没写过字。':
-  "There's nothing particular on this run.\nI've put in a blank postcard. Nothing has been written on the back of it yet.",
+'这一班没有特别的信。\n附一张空白明信片，背面还没写过字。': "There's no news on this mail run.\nI've included a blank postcard in case you need one.",
 '我这边的舷窗朝下，只能看见很远的一片光。\n今天把窗擦了一遍，没擦干净。\n不知道这封信会到谁手里。':
   "My porthole faces down, so all I can see is a patch of light a long way off.\nI wiped the glass today. It didn't come clean.\nI don't know whose hands this will reach.",
-'空着的格子也是一拍。\n发条往一个方向拧，拧多少圈，它就转多少遍。':
-  "An empty square is a beat too.\nThe spring only winds one way. However many turns you give it, that's how many times it plays.",
-'各航道情况如下：\n近港航道，灯多。星云浅湾，三色航标都有。环带慢道，节奏稳。\n静默段夜里最安静，适合不说话。':
-  "Here is how the lanes are tonight.\nNear-Harbour Lane has plenty of lights. Nebula Shallows has beacons in all three colours. Ringbelt Slow Lane keeps a steady rhythm.\nThe Quiet Stretch is quietest at night. It is a good place for not talking.",
+'空着的格子也是一拍。\n发条往一个方向拧，拧多少圈，它就转多少遍。': "An empty square is still a beat.\nThe crank only turns one way. Each full turn plays the tune once.",
+'各航道情况如下：\n近港航道，灯多。星云浅湾，三色航标都有。环带慢道，节奏稳。\n静默段夜里最安静，适合不说话。': "Here are tonight's route conditions.\nThe Harbour Route has plenty of lights. Nebula Shallows has beacons in all three colours. The Ring Route has a steady rhythm.\nThe Quiet Stretch is especially quiet at night.",
 '明日天气：\n无处有雾，局部有星。\n风从左舷来，傍晚转小。':
   "Tomorrow:\nFog at Nowhere, with stars in places.\nWind off the port side, easing towards evening.",
 '如果你在读这封信，说明邮船又绕回来了。\n这一圈和上一圈差不多。窗外的星换了几颗。':
   "If you're reading this, the mail boat has come round again.\nThis time round is much like the last one. A few of the stars outside have changed.",
-'我种的月铃今天响了一声，就一声。\n我站着没动，等了很久，它没再响。\n我猜它要的就是这个。':
-  "My moonbell rang once today. Just the once.\nI stood still and waited a long time, and it didn't ring again.\nMaybe once was all it wanted to do.",
+'我种的月铃今天响了一声，就一声。\n我站着没动，等了很久，它没再响。\n我猜它要的就是这个。': "My moonbell rang once today.\nI stayed for a while, but it didn't ring again.\nI think that's all it was going to do.",
 '（字迹很淡）\n"第一次坐夜航船。灯关掉以后，外面原来有这么多东西。"':
   "(the writing is very faint)\n\"My first time on a night ship. I turned the lamp off, and it turns out there's all this outside.\"",
 '收音机上那只绿色的小眼睛合上，就是调准了。\n有的台只在某些钟点出来，台表会替你记着。':
   "When the little green eye on the radio closes, you're tuned in.\nSome stations only come out at certain hours. The station log remembers them for you.",
-'前几天在舷窗外看见你们的船了。\n你们的窗是暖色的。我们的也是。\n就写这些。':
-  "I saw your ship out of the porthole a few days ago.\nYour windows are a warm colour. So are ours.\nThat's all I wanted to say.",
+'前几天在舷窗外看见你们的船了。\n你们的窗是暖色的。我们的也是。\n就写这些。': "I saw your ship through the window a few days ago.\nYour windows looked warm. Ours do, too.\nThat's all for now.",
 
 /* ---------- rooms/galley.ts : labels ---------- */
 '水壶': 'kettle',
-'水龙头（按住）': 'tap (press and hold)',
+'水龙头（按住）': "tap (hold to fill)",
 '炉子': 'stove',
 '烤箱': 'oven',
-'发酵箱': "rising box",
-'面板': 'board',
+'发酵箱': "dough rising box",
+'面板': "work surface",
 '面粉': 'flour',
 '茶杯': 'cup',
 '茶叶罐': 'tea jars',
@@ -255,12 +248,11 @@ export const EN: Record<string, string> = {
   'The flame catches. The kettle starts to tick quietly.',
 '炉火开着，上面什么也没有。': "The burner is lit, with nothing on it.",
 '火关了。': 'The flame is out.',
-'水开了。蒸汽扑上舷窗，起了一层雾。':
-  'The water boils. Steam hits the porthole and fogs it over.',
+'水开了。蒸汽扑上舷窗，起了一层雾。': "The water boils. Steam fogs up the porthole.",
 '厨房的水壶响了。': 'The kettle is whistling in the galley.',
 '泡了一杯{0}': 'brewed a cup of {0}',
 '倒了一杯热水。': "You pour a cup of hot water.",
-'水倒进去了。': 'The water goes in.',
+'水倒进去了。': "You pour in the water.",
 '按住久一点，才倒得出来。': "Hold it a bit longer to get it pouring.",
 '满了，溢出来一点。你甩了甩手。':
   "It's full, and a little goes over. You shake your hand off.",
@@ -279,8 +271,7 @@ export const EN: Record<string, string> = {
 /* ---------- rooms/galley.ts : bread ---------- */
 '舀两勺面粉，加水，和成一团。':
   "Two scoops of flour, then some water, and you work it into a lump.",
-'在面团上左右来回拖，慢慢揉。':
-  'Drag back and forth across the dough. Knead slowly.',
+'在面团上左右来回拖，慢慢揉。': "Drag back and forth over the dough to knead it.",
 '面团已经在板上了。': 'The dough is already on the board.',
 '面粉袋还有大半袋。': "The sack is still most of the way full.",
 '板上空着。面粉袋在右边。': 'The board is empty. The flour is on the right.',
@@ -289,13 +280,13 @@ export const EN: Record<string, string> = {
 '面团光滑了，按一下会慢慢弹回来。':
   'The dough is smooth. Press it and it comes back slowly.',
 '面团开始不粘手了。': 'The dough stops sticking.',
-'揉好了。挑一个形状。': "That's kneaded. Now pick a shape.",
+'揉好了。挑一个形状。': "The dough is ready. Choose a shape.",
 '团成一个圆面包。': "You round it into a loaf.",
 '搓成长长的一条。': "You roll it out long.",
 '分成三股，编成辫子。': "You split it in three and braid it.",
-'团成圆的': 'round',
-'搓成长的': 'long',
-'编成辫子': 'braided',
+'团成圆的': "Round loaf",
+'搓成长的': "Long loaf",
+'编成辫子': "Braided loaf",
 '再点一下面团，放进发酵箱。': "Tap the dough again to put it in the rising box.",
 '你把面团放进发酵箱，关上小门。它要自己待一阵，大约二十分钟。':
   "You put the dough in the rising box and shut the little door. It needs a while to itself, about twenty minutes.",
@@ -309,20 +300,19 @@ export const EN: Record<string, string> = {
   "The dough has risen, round and full. You move it into the oven.",
 '拧一下烤箱的旋钮。': 'Turn the oven knob.',
 '发酵箱空着，里面暖烘烘的。': "The rising box is empty, and warm inside.",
-'发酵箱里的面团发好了。': "The dough in the rising box has risen.",
+'发酵箱里的面团发好了。': "The dough has finished rising.",
 '烤箱开了。玻璃后面亮起橙色的光。':
   'The oven is on. Orange light comes up behind the glass.',
 '闻到香味了。再等一下。': "You can smell it now. A little longer to go.",
-'刚开始烤。': "It's only just started baking.",
+'刚开始烤。': "The bread has just started baking.",
 '面团还在发酵箱里。': "The dough is still in the rising box.",
 '烤箱是空的。': 'The oven is empty.',
-'烤好一个面包': 'baked a loaf',
+'烤好一个面包': "baked a loaf of bread",
 '叮。面包烤好了，放在左边的架子上晾着。':
   'Ding. The bread is done, cooling on the rack to the left.',
 '厨房那边"叮"了一声。面包烤好了。':
   "There's a ding from the galley. The bread is done.",
-'架子上空着。面团烤好了会放在这里。':
-  "The rack is empty. Bread goes here once it's baked.",
+'架子上空着。面团烤好了会放在这里。': "Fresh bread will go on this rack when it's ready.",
 '盘子空了。': 'The plate is empty.',
 '面包还是温的，外皮脆。': "It's still warm, and the crust is crisp.",
 '面包凉了，嚼起来有麦子的甜。':
@@ -337,7 +327,7 @@ export const EN: Record<string, string> = {
 '吃完了。核放在碟子边上。': "You finish it. The core goes on the edge of the dish.",
 
 /* ---------- rooms/cabin.ts : labels ---------- */
-'舱门（回环廊）': 'cabin door (back to the ring)',
+'舱门（回环廊）': "cabin door (back to the corridor)",
 '舷窗（长按哈气）': 'porthole (hold to breathe on it)',
 '舷窗': 'porthole',
 '灯绳': 'lamp cord',
@@ -352,23 +342,18 @@ export const EN: Record<string, string> = {
    The three lamp settings are the room's quietest rule: the brighter the cabin,
    the less of the outside the glass will give you. The copy states the trade,
    never the feeling. */
-'舱灯开着的时候，窗玻璃上只映得出舱里的东西。':
-  "With the lamp on, the glass only shows the room behind you.",
+'舱灯开着的时候，窗玻璃上只映得出舱里的东西。': "When the cabin light is on, all you can see in the window is its reflection.",
 '左边是舱门。出去是环廊，沿着它能走到别的舱。':
   "The door is on the left. Outside is the ring corridor, with every other room along it.",
 '灯罩下面垂着一根灯绳。': 'A cord hangs under the shade.',
-'灯暗了一档。窗外的星星浮出来一些。':
-  "The lamp goes down one step. Some of the stars outside come up.",
-'灯熄了。窗外的东西一下子清楚了。':
-  'The lamp is out. Everything outside comes clear at once.',
+'灯暗了一档。窗外的星星浮出来一些。': "The lamp dims. You can see more stars outside.",
+'灯熄了。窗外的东西一下子清楚了。': "The lamp goes out. The view outside becomes clearer.",
 '灯熄了。': 'The lamp is out.',
-'灯亮了。倒影又回到玻璃上。':
-  'The lamp is on. The reflection comes back to the glass.',
+'灯亮了。倒影又回到玻璃上。': "The lamp comes on, and its reflection returns to the glass.",
 '灯亮了。': 'The lamp is on.',
 '灯调到中间那档。': "The lamp goes to the middle step.",
 '玻璃上只有舱里的倒影。': "The glass only shows the room.",
-'玻璃上只有舱里的倒影，看不清外面。':
-  "The glass only shows the room. You can't see out.",
+'玻璃上只有舱里的倒影，看不清外面。': "The cabin light is reflected in the glass. Turn it down to see outside.",
 '那里只有星星。航标隔一阵会从右边漂过来。':
   "There are only stars out there. A beacon drifts past on the right every so often.",
 '你对着玻璃哈了一口气。起雾的地方可以画。':
@@ -377,19 +362,15 @@ export const EN: Record<string, string> = {
   'Your fingertip goes through the fog. The stars outside come through where it opens.',
 
 /* ---------- rooms/cabin.ts : beacons and the lantern ---------- */
-'窗外有一盏灯在闪。闪{0}下，停一停。':
-  "A light is blinking outside. It blinks {0}, then stops for a moment.",
-'它每轮闪{0}下。提灯底座上也有刻痕。':
-  'It blinks {0} each round. There are notches on the lantern base too.',
-'提灯转到{0}那一格。底座上有{1}道刻痕。':
-  "The lantern turns to {0}. There are {1} notches on the base.",
+'窗外有一盏灯在闪。闪{0}下，停一停。': "A light is blinking outside. It flashes {0}, then pauses.",
+'它每轮闪{0}下。提灯底座上也有刻痕。': "The light flashes {0}, then pauses. Match the pattern using the notches on the lantern base.",
+'提灯转到{0}那一格。底座上有{1}道刻痕。': "The lantern is set to {0}. It flashes {1} before each pause.",
 '那盏灯亮了一下，回了一声。舱顶的灯串上多了一颗{0}的灯。':
   "The light flares once and answers. There's one more {0} bulb on the string overhead.",
 '那盏灯照着自己的节奏，又闪了几下。':
   'The light keeps its own rhythm and blinks a few more times.',
-'这盏已经回过你了。它的光现在是稳的。':
-  'This one has already answered you. Its light is steady now.',
-'回应了一盏「{0}」': 'answered an {0}',
+'这盏已经回过你了。它的光现在是稳的。': "This light has already answered. It's glowing steadily now.",
+'回应了一盏「{0}」': "answered the light at {0}",
 
 /* ---------- rooms/cabin.ts : route, blanket, vase, plant ---------- */
 '」': '',
@@ -416,7 +397,7 @@ export const EN: Record<string, string> = {
    The greenhouse rule: with the grow lamp off, a plant leans toward a slow hand
    and shuts at a fast one. The copy reports the leaf, not the lesson. */
 '种子盒': 'seed box',
-'花盆': 'pots',
+'花盆': "plant pot",
 '生长灯': 'grow lamp',
 '喷壶': 'watering can',
 '放下喷壶': 'put the can down',
@@ -426,8 +407,7 @@ export const EN: Record<string, string> = {
   "The greenhouse is warmer than the rest of the ship. There's a film of water on the inside of the glass.",
 '盆先空着。': 'The pot stays empty for now.',
 '盆都种上了。': 'Every pot is planted.',
-'温室比你看见的长。按住不放，可以往两边走。':
-  'The greenhouse is longer than what you can see. Hold and drag to walk along it.',
+'温室比你看见的长。按住不放，可以往两边走。': "The greenhouse extends beyond the screen. Drag sideways to see the rest.",
 '育苗架这头冷一些，玻璃上结着一层水。':
   "It's colder at the seedling end. Water beads on the glass there.",
 '台子这头烤得暖，木头有一点香味。':
@@ -435,8 +415,7 @@ export const EN: Record<string, string> = {
 '你把一颗{0}的种子按进土里，盖上一层。':
   'You press a {0} seed into the soil and cover it over.',
 '种下一颗{0}': 'planted a {0}',
-'种在第 {0} 个盆里。它们长得慢。':
-  "Planted in pot {0}. They grow slowly.",
+'种在第 {0} 个盆里。它们长得慢。': "The seed is planted in pot {0}.",
 '它会自己长。土干了就停一停，喷点水又接着长。':
   "It grows on its own. When the soil dries out it stops. Water it and it carries on.",
 '拿起喷壶。拖过哪几盆，就浇哪几盆。':
@@ -445,22 +424,19 @@ export const EN: Record<string, string> = {
 '只喷湿了空盆里的土。': 'You only dampen the soil in an empty pot.',
 '干了的土一下子吸饱了水。': 'The dry soil drinks it straight down.',
 '叶子上挂满了细细的水珠。': 'The leaves hang full of fine beads of water.',
-'土是干的。它停着，在等水。': 'The soil is dry. It has stopped, waiting for water.',
-'有一盆土干了。': 'One pot has dried out.',
-'有 {0} 盆土干了。': '{0} pots have dried out.',
-'生长灯亮了，粉色的光。植物在这种光下长得快一点。':
-  'The grow lamp comes on, pink. Plants grow faster under it.',
+'土是干的。它停着，在等水。': "The soil is dry. Water the plant to help it grow.",
+'有一盆土干了。': "One plant pot needs water.",
+'有 {0} 盆土干了。': "{0} plant pots need water.",
+'生长灯亮了，粉色的光。植物在这种光下长得快一点。': "The grow lamp is on. Plants grow faster under it.",
 '生长灯关了。': 'The grow lamp is off.',
 '生长灯关了。温室暗下来，只剩窗外的光，和你手边一点光。':
   "The grow lamp is off. The greenhouse goes dark. All that's left is the light from outside, and the little bit at your hand.",
 '那盆植物慢慢朝你手边的光歪过来。':
   'The plant leans slowly toward the light at your hand.',
-'叶子一下子合上了。': 'The leaves shut all at once.',
-'它们怕快。手慢一点，它们会再打开。':
-  "They don't like being rushed. Slow your hand down and they'll open again.",
-'你把花盆转了半圈。它原本朝窗那边歪，现在要重新长直。':
-  "You turn the pot half around. It had been leaning toward the window, so now it has to straighten itself again.",
-'花盆转了半圈。': 'The pot is turned half around.',
+'叶子一下子合上了。': "The leaves close as your hand passes.",
+'它们怕快。手慢一点，它们会再打开。': "Move your hand more slowly and the leaves will open again.",
+'你把花盆转了半圈。它原本朝窗那边歪，现在要重新长直。': "The plant was leaning toward the window. It will take some time to straighten out.",
+'花盆转了半圈。': "You turn the pot around.",
 '土里刚冒出一点绿。': 'A little green has just come up out of the soil.',
 '一根细藤，往木棍上绕了半圈。': "A thin vine has gone half a turn round the stake.",
 '藤尖卷住了你的手指一下，又松开。':
@@ -501,11 +477,11 @@ export const EN: Record<string, string> = {
   'The flowers hang under the lowest tier. You have to crouch to see them.',
 
 /* ---------- rooms/radio.ts ---------- */
-'开关': 'power',
+'开关': "power switch",
 '调频旋钮': 'tuning knob',
 '刻度盘': 'dial',
 '台表': 'station log',
-'台 表': 'STATIONS',
+'台 表': "STATION LOG",
 '台灯': 'desk lamp',
 '耳机': 'headphones',
 '八音盒纸带': 'music-box tape',
@@ -519,22 +495,18 @@ export const EN: Record<string, string> = {
 '收音机亮了，先是一阵沙沙声。':
   "The set lights up. There's static first.",
 '旋钮转了，但收音机还没开。': 'The knob turns, but the set is off.',
-'左右拖动右边的大旋钮调频。那只绿色的小眼睛合上，就是调准了。':
-  "Drag the big knob on the right to tune. When the little green eye closes, you're on it.",
+'左右拖动右边的大旋钮调频。那只绿色的小眼睛合上，就是调准了。': "Drag the large knob on the right to change stations. The green indicator closes when you're tuned in.",
 '用鼠标拖动旋钮会快很多。': 'Dragging the knob with a mouse is much quicker.',
-'这个频率上只有很远的沙沙声。也许现在不是时候。':
-  "There's only distant static on this frequency. Maybe it's the wrong hour.",
+'这个频率上只有很远的沙沙声。也许现在不是时候。': "There's only static on this frequency. The station may broadcast later.",
 '「{0}」这会儿不播（{1}）。只有很远的沙沙声。':
   "{0} isn't broadcasting now ({1}). There's only distant static.",
-'收到了：「{0}」。台表上多了一行。':
-  "You're receiving {0}. That's one more line in the log.",
+'收到了：「{0}」。台表上多了一行。': "You're tuned to {0}. It's been added to the station log.",
 '在 {0} 收到「{1}」': 'picked up {1} at {0}',
 '台表还是空的。调到一个台，它会自己记上。':
   'The log is still empty. Tune to a station and it writes itself in.',
-'台表上记了 {0} 个台，一共 {1} 行。有的台只在某些钟点出来。':
-  "You've filled in {0} of {1} lines. Some stations only come out at certain hours.",
+'台表上记了 {0} 个台，一共 {1} 行。有的台只在某些钟点出来。': "You've found {0} of {1} stations. Some only broadcast at certain times.",
 '下一班邮船大约 {0} 靠舷。': 'The next mail boat comes alongside around {0}.',
-'信箱里现在有 {0} 封。': 'There are {0} in the box now.',
+'信箱里现在有 {0} 封。': "There are {0} letters in the mailbox.",
 '台灯亮了。': 'The desk lamp is on.',
 '台灯关了。收音机的刻度盘成了屋里最亮的东西。':
   'The desk lamp is off. The dial is now the brightest thing in the room.',
@@ -554,11 +526,9 @@ export const EN: Record<string, string> = {
 '把「星港夜曲」的一段抄在了八音盒纸带上':
   'copied a passage of Starport Nocturne onto the tape',
 '按住摇柄，绕着它画圈。': 'Hold the crank and draw circles around it.',
-'发条只能往一个方向拧。顺着钟表走的方向转。':
-  'The spring only winds one way. Go the way a clock goes.',
+'发条只能往一个方向拧。顺着钟表走的方向转。': "Turn the crank clockwise to wind the music box.",
 '发条上了一圈。': "That's one turn on the spring.",
-'发条上了 {0} 圈。八音盒开始转。':
-  '{0} turns on the spring. The music box starts.',
+'发条上了 {0} 圈。八音盒开始转。': "You turn the crank {0} times, and the music box starts playing.",
 '发条上满了。': 'The spring is fully wound.',
 '发条走完了，八音盒停下来。': 'The spring runs out and the music box stops.',
 '纸带上还没有孔，只听见齿轮在转。':
@@ -568,22 +538,20 @@ export const EN: Record<string, string> = {
    Dark adaptation is the rule here: hold still with the lamp off and fainter
    stars appear. A line may be left hanging on empty sky, waiting. */
 '小灯': 'small lamp',
-'星空：点星连线': 'the sky: tap stars to join them',
+'星空：点星连线': "Tap stars to connect them",
 '长椅（躺下）': 'bench (lie down)',
 '停笔': 'stop drawing',
 '擦掉最后一笔': 'rub out the last line',
-'给这组起名': 'name this group',
+'给这组起名': "Name this constellation",
 '关掉小灯': 'turn the lamp off',
 '打开小灯': 'turn the lamp on',
 '躺下': 'lie down',
 '坐起来': 'sit up',
-'小灯开着的时候，头顶只看得见最亮的那几颗。':
-  "With the small lamp on, only the brightest few show overhead.",
+'小灯开着的时候，头顶只看得见最亮的那几颗。': "With the lamp on, only the brightest stars are visible.",
 '小灯亮了。玻璃上又有了倒影。':
   'The small lamp is on. The glass has a reflection again.',
 '小灯熄了。': 'The small lamp is out.',
-'小灯熄了。先别急，眼睛要一会儿才适应。':
-  "The small lamp is out. Give it a moment. Your eyes take a while.",
+'小灯熄了。先别急，眼睛要一会儿才适应。': "Your eyes will take a moment to adjust to the dark.",
 '眼睛慢慢适应了。更暗的星浮出来了。':
   'Your eyes adjust. Fainter stars come up.',
 '光标一晃，眼睛就跟着动。停一停试试。':
@@ -595,16 +563,14 @@ export const EN: Record<string, string> = {
 '先点一颗星。': 'Tap a star first.',
 '选中了一颗星。再点另一颗，连一条线。点空处，线就悬在那儿。':
   "You've chosen a star. Tap another to draw a line. Tap empty sky and the line hangs there.",
-'连上了。再点一下这颗星就停笔。':
-  "That's joined. Tap this star again to stop.",
-'线停在了空处，悬着。也许那里以后会亮起一颗星，也许不会。':
-  'The line stops on empty sky and hangs. A star may come up there later. It may not.',
+'连上了。再点一下这颗星就停笔。': "Tap the same star again to stop drawing.",
+'线停在了空处，悬着。也许那里以后会亮起一颗星，也许不会。': "The line ends in empty sky. Another star may appear there later.",
 '从悬着的那一头接着画。': 'Carry on from the hanging end.',
 '这一笔先到这里。': 'That line stops here for now.',
 '这一笔悬在那儿。': 'That line is left hanging.',
 '那根悬着的线，落在了一颗刚亮起来的星上。':
   'The hanging line comes down on a star that has just lit.',
-'一根悬着的星线落在了一颗变星上': 'a hanging line found a variable star',
+'一根悬着的星线落在了一颗变星上': "finished a star line when another star appeared",
 '那里看不见星星。小灯开着，暗的星都藏起来了。':
   "There's no star to see there. With the small lamp on, the faint ones stay hidden.",
 '在穹顶连了第一笔星线': 'drew a first line in the dome',
@@ -618,13 +584,13 @@ export const EN: Record<string, string> = {
 
 /* ---------- rooms/corridor.ts ---------- */
 '信箱': 'mailbox',
-'船钟': "ship\'s bell",
+'船钟': "ship clock",
 '穹顶梯': 'dome ladder',
 '舷窗长椅': 'window bench',
 '那艘船': 'that ship',
 '站起来': 'stand up',
-'环廊 · ': 'Ring corridor · ',
-'本船须知': 'SHIP\'S NOTICES',
+'环廊 · ': "Corridor · ",
+'本船须知': "SHIP NOTICES",
 '航行日志': "SHIP\'S LOG",
 '观景穹顶 ↑': 'OBSERVATION DOME ↑',
 '信': 'MAIL',
@@ -633,22 +599,20 @@ export const EN: Record<string, string> = {
 '<div>还没有记录。</div>': '<div>Nothing is written down yet.</div>',
 '<text x="780" y="480" text-anchor="middle" font-family="ZCOOL XiaoWei, serif" font-size="20" fill="#2a1a10">还没有记录。</text>':
   '<text x="780" y="480" text-anchor="middle" font-family="ZCOOL XiaoWei, serif" font-size="20" fill="#2a1a10">Nothing is written down yet.</text>',
-'航行第 {0} 夜': 'Night {0} of the crossing',
-'船钟指着 {0}。航行第 {1} 夜。': 'The bell reads {0}. Night {1} of the crossing.',
+'航行第 {0} 夜': "Night {0}",
+'船钟指着 {0}。航行第 {1} 夜。': "The ship clock reads {0}. It's night {1} of the voyage.",
 '（{0} 封）': '({0})',
 /* The four notices are set one line each, in a column, on the board. Kept short
    enough to hold the same shape in English. */
-'一　炉子用完关掉。': "1 Mind the stove.",
-'二　夜里走廊扶栏。': "2 Hold the rail.",
-'三　邮船每两钟头': "3 Mail boat every",
+'一　炉子用完关掉。': "1 Turn off the stove.",
+'二　夜里走廊扶栏。': "2 Hold the handrail.",
+'三　邮船每两钟头': "3 Mail arrives every",
 '　　靠一次舷。': "  two hours.",
-'四　穹顶熄灯轻声。': "4 Quiet up top.",
+'四　穹顶熄灯轻声。': "4 Keep quiet in the dome.",
 '你在长椅上坐下。': 'You sit down on the bench.',
-'你在长椅上坐下。星星从窗的一边转到另一边：这艘船在自己转。':
-  "You sit down on the bench. The stars cross from one side of the window to the other. The ship is turning on itself.",
+'你在长椅上坐下。星星从窗的一边转到另一边：这艘船在自己转。': "The stars drift across the window as the ship turns.",
 '你从长椅上站起来。': 'You get up from the bench.',
-'坐着别动，窗外有时会经过别的东西。':
-  'Sit still a while and other things go past the window.',
+'坐着别动，窗外有时会经过别的东西。': "Sometimes another ship passes while you sit here.",
 '窗外远处，有另一艘船的灯慢慢移过来。':
   'Far out, the lights of another ship come slowly across.',
 '你朝那艘船挥了挥手。它的窗灯一盏盏眨了一下。':
@@ -660,17 +624,17 @@ export const EN: Record<string, string> = {
   '<g class="st" data-i="{0}" tabindex="0" role="button" aria-label="walk to {1}"><circle cx="{2}" cy="{3}" r="{4}" fill="{5}"/><circle cx="{6}" cy="{7}" r="12" fill="transparent"/></g>',
 
 /* ---------- rooms/registry.ts : rooms and stations ---------- */
-'环廊': 'Ring corridor',
+'环廊': "Corridor",
 '驾驶舱': 'Bridge',
 '驾驶舱门': 'bridge door',
-'工单板': 'work board',
+'工单板': "Delivery board",
 '小厨房': 'Galley',
 '温室': 'Greenhouse',
 '观景穹顶': 'Observation dome',
 '小厨房门': 'galley door',
 '温室门': 'greenhouse door',
 '电台室门': "radio room door",
-'信箱与船钟': 'mailbox and bell',
+'信箱与船钟': "mailbox and ship clock",
 
 /* ---------- characters/an-lines.ts ----------
    An is a cartographer who is drawing this leg of the route. She offers what she
@@ -704,8 +668,7 @@ export const EN: Record<string, string> = {
 '伞木又摊开了一层': 'the umbrella tree has spread another tier',
 '伞木的伞底下挂出了花': 'the umbrella tree has flowered under its tiers',
 '杯里的茶泡开了。': "The tea in the cup has brewed.",
-'发酵箱里的面团发好了，胖了一圈。':
-  "The dough in the rising box has risen, a size rounder.",
+'发酵箱里的面团发好了，胖了一圈。': "The dough has risen and looks a little bigger.",
 '邻船又送来几个星梨，果盘满了一些。':
   'The next ship over sent more star-pears. The dish is fuller.',
 '{0}的土干了，它停下来等水。':
@@ -720,8 +683,8 @@ export const EN: Record<string, string> = {
 '明信片随邮船寄出': 'postcard went out with the mail boat',
 
 /* ---------- boot.ts : the door screen ---------- */
-'登船': 'Board',
-'再次登船': 'board again',
+'登船': "Board the ship",
+'再次登船': "came back aboard",
 '回到船上': 'Back aboard',
 '回到船上了。': 'Back aboard.',
 '声音 开': 'Sound on',
@@ -739,12 +702,11 @@ export const EN: Record<string, string> = {
 '完整': 'full',
 '减少': 'reduced',
 '清空': 'Clear',
-'再点一次，确认清空': 'Tap again to confirm',
-'这次不会保存': 'not saved this time',
-'存在你的账户里（只有你看得见）': 'in your account (only you can see it)',
-'存在这个浏览器里': 'in this browser',
-'暂时连不上你的账户，先存在这个浏览器里':
-  "can't reach your account right now, so it's kept in this browser",
+'再点一次，确认清空': "Click again to delete this saved game",
+'这次不会保存': "Your progress won't be saved",
+'存在你的账户里（只有你看得见）': "Saved to your account (visible only to you)",
+'存在这个浏览器里': "Saved in this browser",
+'暂时连不上你的账户，先存在这个浏览器里': "Your account is unavailable right now. This voyage is saved in your browser.",
 '时间流速 ×20（测试用）。': 'Time speed ×20 (for testing).',
 '时间流速恢复 ×1。': 'Time speed back to ×1.',
 
@@ -761,61 +723,56 @@ export const EN: Record<string, string> = {
 '首次登船': 'First boarded',
 '这次': 'This time',
 '{0} 登船': 'boarded {0}',
-'航程': 'Crossing',
-'第 {0} 夜 · 共航行 {1}': 'night {0} · {1} sailed in all',
+'航程': "Voyage",
+'第 {0} 夜 · 共航行 {1}': "Night {0} · {1} of sailing",
 '航道': 'Lane',
-'灯串': 'Bulb string',
+'灯串': "Lights answered",
 '厨房': 'Galley',
 '茶 {0} 杯 · 面包 {1} 个': '{0} cups of tea · {1} loaves',
-'读过 {0} 封 · 寄出 {1} 张': '{0} read · {1} sent',
+'读过 {0} 封 · 寄出 {1} 张': "{0} letters read · {1} postcards sent",
 '电台': 'Radio',
-'台表记了 {0} / {1}': '{0} of {1} logged',
+'台表记了 {0} / {1}': "{0} of {1} radio stations found",
 '穹顶': 'Dome',
-'星线 {0} 笔': '{0} star-lines',
+'星线 {0} 笔': "{0} star lines drawn",
 '：': ': ',
 '「{0}」': '"{0}"',
-'留下的': 'Left behind',
-'星线': 'star-lines',
+'留下的': "On your ship",
+'星线': "star lines",
 '卡片背面': 'Back of the card',
 '（空着）': '(empty)',
-'写一件窗外看见的东西。':
-  "One thing you saw out of the window.",
+'写一件窗外看见的东西。': "Write about something you noticed outside.",
 '第{0}夜': 'NIGHT {0}',
-'还没有。窗外的灯会一直经过。':
-  "Nothing yet. The lights outside keep going past.",
+'还没有。窗外的灯会一直经过。': "No lights answered yet.",
 '　你忙的时候，窗外经过了 {0} 盏灯。':
   ' While you were busy, {0} lights went past the window.',
-'今天就到这里': "That's all for today",
-'船会继续航行。': "The ship keeps going. ",
+'今天就到这里': "ended this visit",
+'船会继续航行。': "The ship is still sailing. ",
 '面团在发酵箱里慢慢发着。': "The dough is still rising in its box. ",
 '有 {0} 个盆里的植物还在长。': "Plants are still growing in {0} of the pots. ",
-'有一笔星线还悬着。': "A star-line is still left hanging. ",
+'有一笔星线还悬着。': "A star line still ends in empty sky. ",
 '明信片还在寄出口。': "A postcard is still in the outgoing slot. ",
-'航程已经存好了。下次打开，船还在原处。':
-  "The crossing is saved. Open it again and the ship is where it was.",
+'航程已经存好了。下次打开，船还在原处。': "Your progress has been saved.",
 
 /* ---------- ui/mail.ts ---------- */
 '新到': 'new',
 '{0} 靠舷': 'alongside {0}',
-'空着。下一班邮船大约 {0} 靠舷。':
-  'Empty. The next mail boat comes alongside around {0}.',
+'空着。下一班邮船大约 {0} 靠舷。': "The mailbox is empty. The next mail boat arrives around {0}.",
 '读过的': 'Read',
 '寄出': 'Outgoing',
 '写一张明信片': 'Write a postcard',
-'下一班邮船带走': "the next mail boat takes it",
+'下一班邮船带走': "The next mail boat will collect it",
 '明信片': 'Postcard',
 '已随 {0} 的邮船离开': 'left on the {0} mail boat',
 '在寄出口，等下一班邮船': 'in the slot, waiting for the next boat',
-'寄出口不看收信人。':
-  "The outgoing slot doesn't check who it's for.",
-'窗外今天……': 'Out the window today…',
+'寄出口不看收信人。': "You can post a card without an address.",
+'窗外今天……': "What I saw outside today…",
 '投进寄出口': 'Put it in the slot',
 '写了一张明信片，投进寄出口': 'wrote a postcard and put it in the slot',
 '寄出一张空白明信片': 'sent a blank postcard',
 '明信片投进寄出口了。下一班邮船会带走它。':
   'The postcard is in the slot. The next mail boat will take it.',
 '已寄出<br>{0}': 'sent<br>{0}',
-'待寄': 'to send',
+'待寄': "Waiting to be sent",
 '你的明信片': 'Your postcard',
 '{0} {1} 写': 'written {0} {1}',
 '（空白）': '(blank)',
@@ -840,43 +797,38 @@ export const EN: Record<string, string> = {
 'NIGHT CROSSING · 长航': 'NIGHT CROSSING · LONG HAUL',
 '夜': 'Night',
 '航': 'Crossing',
-'航程存在这艘船上。下次打开，船还在原处。':
-  "The crossing is kept on the ship. Open it again and the ship is where it was.",
-'能碰什么': "What\'s touchable",
+'航程存在这艘船上。下次打开，船还在原处。': "Your progress is saved automatically.",
+'能碰什么': "Controls",
 '设置': 'Settings',
-'‹ 回环廊': '‹ Back to the ring',
+'‹ 回环廊': "‹ Back to the corridor",
 '沿环往左走': 'walk left along the ring',
 '沿环往右走': 'walk right along the ring',
 '环形船的位置图': 'map of your position on the ring',
-'横过来看会更舒服': 'Easier to look at in landscape',
+'横过来看会更舒服': "This works better in landscape mode",
 
 '种点什么': 'Plant something',
-'选一种种子。它们长得慢。':
-  "Pick a seed. They grow slowly.",
-'先空着': 'Leave it empty',
-'给这组星线起个名字': 'Name this group of lines',
-'名字只写在这张星图上。过些天它们转回头顶的时候，名字还在。':
-  "The name goes only on this chart. It'll still be there when they come back overhead.",
+'选一种种子。它们长得慢。': "Choose a seed to plant.",
+'先空着': "Leave empty",
+'给这组星线起个名字': "Name this constellation",
+'名字只写在这张星图上。过些天它们转回头顶的时候，名字还在。': "The name will stay on your chart as the stars move across the sky.",
 '比如：没画完的船': 'for instance: the unfinished ship',
-'写上': 'Write it',
+'写上': "Save the name",
 '就让它没名字': 'Leave it unnamed',
 
 '声音': 'Sound',
 '动态': 'Motion',
-'选"减少"以后，船身的晃动会小很多。':
-  "Reduced makes the ship's roll much smaller.",
+'选"减少"以后，船身的晃动会小很多。': "Choose Reduced to make the ship sway less.",
 '测试用：时间流速': 'Testing: time speed',
-'调到 ×20，船上要等的东西都会走得快一些。正常玩请用 ×1。':
-  "At ×20 everything on the ship that has to wait runs faster. Use ×1 to play.",
-'存档': 'Save',
+'调到 ×20，船上要等的东西都会走得快一些。正常玩请用 ×1。': "At ×20, time passes twenty times faster. Use ×1 for normal play.",
+'存档': "Saved game",
 '关上': 'Close',
 '语言': 'Language',
 
 '合上信箱': 'Close the mailbox',
-'回到环廊': 'Back to the ring',
+'回到环廊': "Back to the corridor",
 '知道了': 'All right',
 '放回桌上': 'Put it back on the table',
-'下船以后': "After you go ashore",
+'下船以后': "After you leave the ship",
 '倒一杯温水': 'Pour a glass of warm water',
 '好。慢慢喝。': "All right. Drink it slowly.",
 '把屋里的灯调暗一点，看一会儿窗外':
@@ -891,7 +843,7 @@ export const EN: Record<string, string> = {
   "All right. Leaning back beats sitting up straight.",
 '什么也不做': 'Do nothing',
 '好。今天就到这里。': "All right. That's all for today.",
-'回船上再待一会儿': 'Stay aboard a little longer',
+'回船上再待一会儿': "Stay aboard",
 
 /* ---------- core/loop.ts : the status line ---------- */
 '第 {0} 夜': 'Night {0}',
@@ -899,8 +851,7 @@ export const EN: Record<string, string> = {
 ' · 时间 ×': ' · time ×',
 
 /* ---------- index.html : the language note ---------- */
-'换语言会重新载入这一页。航程已经存好，不会丢。':
-  "Changing language reloads the page. The crossing is already saved, so nothing will be lost.",
+'换语言会重新载入这一页。航程已经存好，不会丢。': "Changing the language will reload the page. Your voyage is saved.",
 
 /* ---------- the round: ports, the gangway, the work bench ---------- */
 /* The main line. Residents are not people, so nothing here carries a gendered
@@ -915,7 +866,7 @@ export const EN: Record<string, string> = {
 '我在这儿守着。有船经过，我就把那盏灯擦一遍。':
   "I keep this place. When a ship goes past, I wipe the lamp down.",
 '擦了很多年了。它还是那么暗。': "I've been wiping it for years. It's still that dim.",
-'我接着。我手慢，你别松太快。': "I've got it. My hands are slow, so don't let go too fast.",
+'我接着。我手慢，你别松太快。': "I've got it. Just give me a second before you let go.",
 '看码头的把灯举过头顶。木板上落下一圈光，照出一截旧栏杆。':
   "The dock keeper holds the lamp up overhead. A ring of light falls on the boards, and an old railing comes out of the dark.",
 '船退开。那圈光还留在码头上，越来越小。':
@@ -925,10 +876,9 @@ export const EN: Record<string, string> = {
   "It's too quiet out at the echo buoy. The buoy keeper wants something that lights up at night.",
 '船停在浮标边上。你说一句话，过好一会儿它才还给你。':
   "The ship stops beside the buoy. Say something, and it gives the words back a long while later.",
-'我先听见你们，过了很久才看见你们。': "I heard you first, and I didn't see you until much later.",
-'这儿什么都慢。你说的话我也要等一等。': "Everything is slow here. I've got to wait for what you say, too.",
-'我把它放窗台上。那扇窗朝着你们来的方向。':
-  "I'll put it on the windowsill. That window faces the way you came from.",
+'我先听见你们，过了很久才看见你们。': "I heard your ship long before I could see it.",
+'这儿什么都慢。你说的话我也要等一等。': "Even your voice takes a while to reach me out here.",
+'我把它放窗台上。那扇窗朝着你们来的方向。': "I'll put it by the window. It faces the way your ship came in.",
 '守浮标的把灯捧进舱里。浮标的玻璃上多了一个暖色的点。':
   "The buoy keeper carries the lamp inside. A warm point shows on the buoy's glass now.",
 '船开出去。身后传来一声你刚才说过的话。':
@@ -938,24 +888,23 @@ export const EN: Record<string, string> = {
   "The evening bell only rings once a night. The bell ringer asked for some light under it.",
 '船靠上晚钟。这里很冷，钟声在冰面上传得特别远。':
   "The ship comes alongside the evening bell. It's cold here, and the sound carries a long way over the ice.",
-'有船来我才敲。今晚那一下已经敲过了。': "I only ring it when a ship comes. I've rung tonight's already.",
+'有船来我才敲。今晚那一下已经敲过了。': "I only ring the bell when a ship comes in. I've already rung it tonight.",
 '敲完以后这儿就很长时间没有声音。': "After that there's no sound here for a long time.",
-'放钟底下正好。我够不着高的地方。': "Under the bell is right. I can't reach anywhere high.",
+'放钟底下正好。我够不着高的地方。': "Under the bell would be perfect. I can't reach the higher part.",
 '灯放进钟座里。钟的内壁亮起来，上面有许多道旧的划痕。':
   "The lamp goes into the base of the bell. The inside lights up, covered in old scratches.",
 '船绕开冰面。后面的钟响了第二下。':
   "The ship steers clear of the ice. Behind it, the bell rings a second time.",
-'对面那艘船': 'The Ship Across',
+'对面那艘船': "The Other Ship",
 '对面船上的': 'the one on the other ship',
 '静默段里停着另一艘夜航船。他们的温室空了很久。':
   "Another night ship is lying in the quiet stretch. Their greenhouse has been empty a long time.",
 '两艘船并排停住。这一段没有航标，说话的声音听起来很近。':
   "The two ships stop side by side. There are no beacons here, so a voice sounds very close.",
-'前几天我在舷窗外看见你们了。': "I saw you out the porthole a few days ago.",
+'前几天我在舷窗外看见你们了。': "I saw your ship outside my window a few days ago.",
 '你们的窗是暖色的。我们这边的灯坏了一个月。':
   "Your windows are a warm colour. Our lamp has been out for a month.",
-'我端稳了。我们温室里一直空着一个架子。':
-  "I've got it steady. There's a shelf in our greenhouse that's been empty.",
+'我端稳了。我们温室里一直空着一个架子。': "I've got it. There's an empty shelf in our greenhouse.",
 '对面船上的转身走回去。对面船的一扇窗，慢慢变成了暖色。':
   "The one from the other ship turns and goes back. Over there, a window slowly turns a warm colour.",
 '两艘船分开。对面那扇窗还亮着。': "The two ships draw apart. That window is still lit.",
@@ -963,8 +912,8 @@ export const EN: Record<string, string> = {
 /* the gangway */
 '舷梯': 'Gangway',
 '舷门': 'gangway door',
-'开舷门': 'open the door',
-'关上舷门': 'close the door',
+'开舷门': "Open the gangway door",
+'关上舷门': "Close the gangway door",
 '把灯递过去': 'hand the lamp over',
 '那盏灯': 'the lamp',
 '架子': 'the stand',
@@ -972,79 +921,70 @@ export const EN: Record<string, string> = {
 '门还锁着。': 'The door is still locked.',
 '舷门从里面锁着。船在走的时候它打不开。':
   "The door locks from the inside. It won't open while the ship is moving.",
-'舷门锁着。航程单上还没有下一站。':
-  'The door is locked. The run sheet has no next stop on it.',
-'到{0}还有大约 {1} 分钟。': '{0} is about {1} minutes off.',
-'快到{0}了。': '{0} is coming up.',
-'船停住了。门外有脚步声，不快。':
-  "The ship has stopped. There are footsteps outside the door, and they're not quick.",
+'舷门锁着。航程单上还没有下一站。': "The door is locked. Choose a destination on the bridge first.",
+'到{0}还有大约 {1} 分钟。': "The ship will reach {0} in about {1} minutes.",
+'快到{0}了。': "The ship is approaching {0}.",
+'船停住了。门外有脚步声，不快。': "The ship has stopped. You can hear someone walking outside.",
 '门外站着一位。你站在门里，船就停在这儿等。':
   'Someone is standing out there. The ship holds here while you stand in the doorway.',
 '门合上了。外面的声音一下子远了。': 'The door closes. The sound outside goes far away at once.',
-'架子空着。温室的台子上才装得起来。':
-  'The stand is empty. One gets built at the work bench in the greenhouse.',
-'还差一道。装配台上接着做。': 'It needs one more step. Carry on at the work bench.',
+'架子空着。温室的台子上才装得起来。': "Make a plant lamp at the workbench in the greenhouse.",
+'还差一道。装配台上接着做。': "Finish assembling the lamp at the workbench.",
 '玻璃罩里那朵花还开着，灯在它上面一点。':
   'The flower under the glass is still open, and the lamp sits a little above it.',
-'手上空着。温室的台子上装得起来一盏。':
-  'Your hands are empty. One gets built at the work bench in the greenhouse.',
-'那盏灯还差一道。': 'The lamp needs one more step.',
-'温室的台子上还空着。': 'The work bench in the greenhouse is still empty.',
-'船还靠在{0}。舷门那边有人在等。':
-  'The ship is still alongside {0}. Someone is waiting at the gangway door.',
-'船靠上了{0}。舷门那边有人在等。':
-  'The ship has come alongside {0}. Someone is waiting at the gangway door.',
-'船还靠在{0}，门外有人在等。':
-  'The ship is still alongside {0}, and someone is waiting outside the door.',
+'手上空着。温室的台子上装得起来一盏。': "Make a plant lamp at the workbench in the greenhouse.",
+'那盏灯还差一道。': "The lamp still needs its glass cover or light fitting.",
+'温室的台子上还空着。': "There's no plant on the workbench yet.",
+'船还靠在{0}。舷门那边有人在等。': "The ship is still docked at {0}. Someone is waiting by the gangway.",
+'船靠上了{0}。舷门那边有人在等。': "The ship has docked at {0}. Someone is waiting by the gangway.",
+'船还靠在{0}，门外有人在等。': "The ship is still docked at {0}. Someone is waiting outside.",
 '靠上{0}': 'came alongside {0}',
-'在{0}留下一盏灯': 'left a lamp at {0}',
+'在{0}留下一盏灯': "delivered a lamp to {0}",
 
 /* the work bench */
-'装配台': 'work bench',
+'装配台': "workbench",
 '罩子架': 'cover shelf',
 '灯盘': 'lamp tray',
-'订单板': 'order boards',
+'订单板': "delivery board",
 '罩子要扣在一株植物上。': 'A cover goes down over a plant.',
 '罩子已经扣上了。': 'The cover is already down.',
-'灯卡在罩子顶上。先有罩子。': 'The lamp clips into the top of a cover. The cover comes first.',
+'灯卡在罩子顶上。先有罩子。': "Fit the glass cover before attaching the lamp.",
 '灯已经装好了。': 'The lamp is already in.',
-'台子上这一株还没装完。': "The one on the bench isn't finished yet.",
-'那盏装好了，在舷梯的架子上。': "That one's finished. It's on the stand by the gangway.",
+'台子上这一株还没装完。': "Finish assembling the plant lamp on the workbench first.",
+'那盏装好了，在舷梯的架子上。': "The finished lamp is on the stand by the gangway.",
 '送到那儿的是一株{0}。': 'A {0} went out to them.',
-'这一块还空着。调度台还没叫到它。': "This one's still blank. Dispatch hasn't called it yet.",
+'这一块还空着。调度台还没叫到它。': "No delivery request has arrived for this destination yet.",
 '玻璃罩扣下来，里面一下子安静了。': 'The glass cover comes down, and everything inside goes quiet.',
 '小灯卡进罩顶。叶子底下亮起来一点。':
   'The small lamp clicks into the top. Under the leaves it gets a little brighter.',
-'装好一盏灯': 'built a lamp',
-'装好了。它在舷梯的架子上等着。': "It's built. It's waiting on the stand by the gangway.",
+'装好一盏灯': "finished making a plant lamp",
+'装好了。它在舷梯的架子上等着。': "The lamp is ready on the stand by the gangway.",
 
 /* the run sheet, and the line that is always on screen */
-'航程单': 'Run sheet',
+'航程单': "Delivery checklist",
 '下 一 站': 'NEXT STOP',
-'先不挑': 'Not yet',
-'航行记录': 'Record',
-'到访': 'CALLS',
-'还没有送到过。': 'Nothing has been delivered yet.',
-'没有下一站': 'No next stop',
-'下一站': 'Next stop',
-'已靠上': 'Alongside',
-'靠在 {0}': 'Alongside {0}',
-'下一站 {0} · 还有 {1}': 'Next stop {0} · {1} to go',
+'先不挑': "Choose later",
+'航行记录': "Voyage log",
+'到访': "Places visited",
+'还没有送到过。': "You haven't made a delivery yet.",
+'没有下一站': "No destination selected",
+'下一站': "Next destination",
+'已靠上': "Docked",
+'靠在 {0}': "Docked at {0}",
+'下一站 {0} · 还有 {1}': "Sailing to {0} · {1} remaining",
 '船正往{0}去。': 'The ship is on its way to {0}.',
 '船还在往{0}去，剩 {1}。': 'The ship is still on its way to {0}, with {1} to go.',
-'船正靠着。先把舷门那边的事办完。':
-  "The ship is alongside. Finish what's at the gangway door first.",
-'接下{0}这一趟': 'took the run to {0}',
-'<span class="rcur">在路上</span>': '<span class="rcur">under way</span>',
-'<span class="rcur">已靠上</span>': '<span class="rcur">alongside</span>',
-'<span class="rcur">去过 {0} 次</span>': '<span class="rcur">been {0}×</span>',
+'船正靠着。先把舷门那边的事办完。': "Finish handing over the lamp at the gangway before choosing another destination.",
+'接下{0}这一趟': "accepted a delivery request from {0}",
+'<span class="rcur">在路上</span>': "<span class=\"rcur\">Sailing there</span>",
+'<span class="rcur">已靠上</span>': "<span class=\"rcur\">Docked</span>",
+'<span class="rcur">去过 {0} 次</span>': "<span class=\"rcur\">Visited {0} times</span>",
 '<span class="rname">{0}{1}</span><span class="rdots">{2}</span><span class="rdesc">{3}<br>走{4}，大约 {5} 分钟。</span>':
   '<span class="rname">{0}{1}</span><span class="rdots">{2}</span><span class="rdesc">{3}<br>By way of {4}, about {5} minutes.</span>',
 
 /* the door screen and the first night */
 '正在找这艘船…': 'Finding your ship…',
-'你在开一艘夜航船。用鼠标或者触摸点船上的东西；按 Tab 在可以碰的东西之间切换，按回车使用。':
-  "You're running a night ship. Use the mouse or touch to tap things aboard. Press Tab to move between what you can touch, and Enter to use it.",
+'你在开一艘夜航船。用鼠标或者触摸点船上的东西；按 Tab 在可以碰的东西之间切换，按回车使用。': "Click or tap objects on the ship to use them. You can also press Tab to select an object, then Enter to use it.",
 
 /* ---------- the chart table, and the one who ran this ship before ---------- */
 /* There is one crew now. What used to be a person sitting in the cabin is a
@@ -1061,43 +1001,42 @@ export const EN: Record<string, string> = {
 '图上还没有点。窗外的灯回应过一盏，这里就多一个点。':
   'There are no dots yet. Answer a light out the window and one more shows up here.',
 '上一个开这艘船的人': 'the one who ran this ship before',
-'已经下船了': 'gone ashore',
+'已经下船了': "Former crew member",
 '图桌上那张图是我画的，没画完。\n我画图从来不画终点，线走到哪儿算哪儿。\n温室左边第一盆是我种的，开了就端走吧。':
   "I drew the chart on your table and never finished it.\nI don't draw an end to a line. It stops where it stops.\nThe first pot on the left in the greenhouse is mine. Take it when it flowers.",
 '夜深了。外面的灯也少了。': "It's late. There are fewer lights outside now.",
 '船自己走了 {0}。': 'The ship sailed itself for {0}.',
 
 /* ---------- the line: the five things one job is made of ---------- */
-'定航向': 'Set course',
-'电台室：调到调度台，撕一张单子。': 'Radio room: tune to dispatch and tear off a slip.',
-'驾驶舱：点航向板，选择目的地。': 'Bridge: tap the course board and choose a destination.',
-'温室：种一盆，浇上水，等它开花。': 'Greenhouse: water a planted pot and wait for it to flower.',
-'温室：走近装配台。扣上玻璃罩。接着安装灯头。': 'Greenhouse: move closer to the workbench. Fit the glass cover, then the lamp cap.',
-'舷梯：靠上以后开门，把灯递过去。': 'Gangway: open the door once alongside and hand the lamp over.',
-'手上 {0} 张单子': 'slips in hand: {0}',
-'还没有单子': 'No slip yet',
+'定航向': "Choose a destination",
+'电台室：调到调度台，撕一张单子。': "Go to the radio room. Tune to dispatch and take the printed request.",
+'驾驶舱：点航向板，选择目的地。': "Go to the bridge and choose a destination on the chart.",
+'温室：种一盆，浇上水，等它开花。': "Plant a seed in the greenhouse. Water it and wait for it to flower.",
+'温室：走近装配台。扣上玻璃罩。接着安装灯头。': "Go to the workbench in the greenhouse. Fit the glass cover, then attach the lamp.",
+'舷梯：靠上以后开门，把灯递过去。': "Once the ship docks, open the gangway door and hand over the lamp.",
+'手上 {0} 张单子': "Delivery requests: {0}",
+'还没有单子': "No requests yet",
 
 /* ---------- what each of the five is made of, ticked off on the slips ---------- */
-'开电台': 'switch the set on',
-'对上调度台': 'find dispatch',
-'拿着单子': 'hold the slip',
-'选择目的地': 'choose a destination',
-'下一粒种': 'plant a seed',
-'浇上水': 'water it',
-'等它开花': 'wait for the flower',
-'端上转台': 'carry it to the turntable',
-'扣上罩子': 'put the cover on',
-'装上灯': 'fit the lamp',
-'船靠上来': 'the ship comes alongside',
-'递过去': 'hand it over',
+'开电台': "Turn on the radio",
+'对上调度台': "Tune to dispatch",
+'拿着单子': "Request received",
+'选择目的地': "Choose a destination",
+'下一粒种': "Plant a seed",
+'浇上水': "Water the plant",
+'等它开花': "Wait for it to flower",
+'端上转台': "Move to the workbench",
+'扣上罩子': "Put on the glass cover",
+'装上灯': "Attach the lamp",
+'船靠上来': "The ship has docked",
+'递过去': "Hand over the lamp",
 
 /* ---------- the round, as the slip on the cork board reads it ---------- */
-'送到了': 'delivered',
-'在路上': 'on the way',
-'接了': 'taken',
-'还没叫到': 'not called yet',
-'送出 {0} 盏灯': 'lamps sent out: {0}',
-'还没有送出一盏灯': 'No lamps delivered yet',
+'送到了': "Delivered",
+'在路上': "Sailing there",
+'接了': "Request received",
+'还没叫到': "No request yet",
+'送出 {0} 盏灯': "{0} lamps delivered",
 '还有 {0} 个地方在等灯。': '{0} more places are waiting for a lamp.',
 '四个地方的灯都送到了。': 'Every place that asked has its lamp now.',
 
@@ -1105,45 +1044,41 @@ export const EN: Record<string, string> = {
 '调度台': 'Dispatch',
 '调度': 'DISPATCH',
 '调度打印机': 'dispatch printer',
-'撕下单子': 'tear the slip off',
+'撕下单子': "Take the printed request",
 '单': 'JOB',
 '要一盏灯': 'asked for a lamp',
 '打印口响了一下，吐出一张单子。': 'The printer knocks once and feeds out a slip.',
 '你撕下单子。{0}那边要一盏灯。': 'You tear the slip off. {0} has asked for a lamp.',
-'单子带到驾驶舱，选择目的地，船就往那边开。':
-  'Carry the slip to the bridge and put it on the course board, and the ship heads that way.',
-'打印口是空的。收音机调到 {0} 的调度台，委托会从这儿出来。':
-  'The slot is empty. Tune the set to dispatch at {0} and a job comes out here.',
+'单子带到驾驶舱，选择目的地，船就往那边开。': "Go to the bridge and choose the requested destination. The ship will sail there.",
+'打印口是空的。收音机调到 {0} 的调度台，委托会从这儿出来。': "Tune the radio to dispatch at {0} to print a delivery request.",
 '打印口还是空的。': 'The slot is still empty.',
-'打印口空着。手上的单子先送完吧。': 'The slot is empty. Finish the slips in hand first.',
-'今晚没有新的委托了。': "There's nothing new tonight.",
+'打印口空着。手上的单子先送完吧。': "Finish your current deliveries before collecting another request.",
+'今晚没有新的委托了。': "There are no more delivery requests tonight.",
 
 /* ---------- the course board ---------- */
-'还没定': 'not set',
-'这一趟': 'This run',
-'这一趟做完了。电台室会有下一张单子。': "This run is finished. There's another slip waiting at the radio room.",
+'还没定': "No destination selected",
+'这一趟': "Current delivery",
+'这一趟做完了。电台室会有下一张单子。': "You've finished this delivery. Check the radio room for the next request.",
 '选择目的地后，船会自行航行。': 'Choose a destination. The ship will sail there on its own.',
-'板子空着。单子从电台室的调度打印机出来。':
-  'The board is empty. Slips come out of the dispatch printer in the radio room.',
+'板子空着。单子从电台室的调度打印机出来。': "Get a delivery request from the printer in the radio room first.",
 '单子卡上航向板。船转向{0}。': 'The slip clips onto the board. The ship turns toward {0}.',
-'定了航向：{0}': 'set course for {0}',
+'定了航向：{0}': "set a course for {0}",
 
 /* ---------- the door: three ships to choose between ---------- */
-'空位 {0}': 'Berth {0}',
+'空位 {0}': "Empty save slot {0}",
 '新的一艘': 'A new ship',
 '夜航 No.{0}': 'Night Crossing No.{0}',
 '{0}前下的船': 'ashore {0} ago',
-'删掉这一位的航程': 'delete this voyage',
-'再点一次那个叉，{0} 号位就清空了。': 'Click that cross again and berth {0} is cleared.',
-'换一位': 'Another ship',
-'回到门口': 'Back to the door',
-'回到三个存档位那一页。这一位的航程已经存好。':
-  'Back to the page with the three berths. This voyage is already saved.',
-'清空这一位的航程': 'Clear this voyage',
+'删掉这一位的航程': "Delete this saved game",
+'再点一次那个叉，{0} 号位就清空了。': "Click the cross again to delete the saved game in slot {0}.",
+'换一位': "Choose another ship",
+'回到门口': "Back to ship selection",
+'回到三个存档位那一页。这一位的航程已经存好。': "Return to ship selection. Your progress on this ship is saved.",
+'清空这一位的航程': "Delete this saved game",
 /* viewpoints in the 3D rooms (src/three/view.ts) */
-'观察点': 'Places to look from',
-'走近看：{0}': 'go to the {0}',
-'回到{0}': 'back to the {0}',
+'观察点': "Views",
+'走近看：{0}': "Move closer to the {0}",
+'回到{0}': "Back to the {0}",
 '桌前': 'desk',
 '窗边': 'window',
 '收音机': 'radio',
@@ -1157,15 +1092,14 @@ export const EN: Record<string, string> = {
 '躺着': 'lying down',
 
 /* First voyage and visible interaction prompts. */
-'登上一艘夜航船，为沿途的人送去一盏灯。': "Come aboard a night ship and bring a light to someone along the way.",
-'选一个目的地，把开花植物装成灯。第一张委托和一盆月铃已经备好。': "Choose a destination and make a lamp from a flowering plant. Your first request is ready. A moonbell is already in bloom.",
-'静音登船': "Come aboard quietly",
-'第一张委托来自旧码头。点窗间的航向板，选择目的地。': "Your first request is from Old Wharf. Tap the course board between the windows to choose your destination.",
-'领取委托': "Collect a request",
+'登上一艘夜航船，为沿途的人送去一盏灯。': "Come aboard a night ship and deliver a lamp to someone along the way.",
+'选一个目的地，把开花植物装成灯。第一张委托和一盆月铃已经备好。': "Your first delivery is to Old Wharf. You'll make a lamp from the flowering plant in the greenhouse.",
+'静音登船': "Board without sound",
+'第一张委托来自旧码头。点窗间的航向板，选择目的地。': "Your first delivery is to Old Wharf. Choose it on the chart between the windows.",
+'领取委托': "Get a delivery request",
 '培育植物': "Grow a plant",
-'装配植物灯': "Build a plant lamp",
+'装配植物灯': "Make a plant lamp",
 '交付植物灯': "Deliver the lamp",
-'已经备好': "prepared",
 '装配台上已有一株植物。先把这一盏装好。': "There's already a plant on the workbench. Finish this lamp first.",
 '先选一盆开花的植物，再移到装配台。': "Choose a flowering plant and move it to the workbench.",
 '{0}已经移到装配台。接着扣上左边的玻璃罩。': "The {0} is on the workbench. Fit the glass cover from the rack on the left.",
@@ -1178,64 +1112,64 @@ export const EN: Record<string, string> = {
 '剪下一枝放进花瓶。剩下的花还可以装成灯。': "You cut a stem for the vase. The remaining flowers can still go into a lamp.",
 '点下方的位置按钮，走近种植区或装配台。': "Use the place buttons below to move closer to the garden or workbench.",
 '把开花植物移到装配台': "Move a flowering plant to the workbench",
-'玻璃罩已扣好': "The cover is fitted",
+'玻璃罩已扣好': "The glass cover is in place",
 '植物灯已装好': "The plant lamp is ready",
 '选择开花植物': "Choose a flowering plant",
-'设定航向': "Set the course",
-'安装灯头': "Fit the lamp cap",
-'当前步骤': "Current step",
+'设定航向': "Set a course",
+'安装灯头': "Attach the lamp",
+'当前步骤': "Next step",
 '下一步': "Next step",
-'航向': "Course",
-'装灯': "Build",
+'航向': "Choose route",
+'装灯': "Make lamp",
 '交付': "Deliver",
 '第一趟 · {0}': "First delivery · {0}",
-'航程指引': "Voyage guide",
-'委托已备好 · 月铃已开花': "Request ready · Moonbell in bloom",
-'取下打印出的委托': "Collect the printed request",
-'打印机里已有单子。点它取下，再到驾驶舱设定航向。': "There's a request in the printer. Take it to the bridge and set your course.",
+'航程指引': "Delivery guide",
+'委托已备好 · 月铃已开花': "Your moonbell is ready to use",
+'取下打印出的委托': "Pick up the printed request",
+'打印机里已有单子。点它取下，再到驾驶舱设定航向。': "Take the request from the printer, then choose a destination on the bridge.",
 '走近收音机': "Move closer to the radio",
-'取下委托': "Collect the request",
+'取下委托': "Take the request",
 '打开收音机': "Switch on the radio",
-'点收音机左侧开关，再左右拖动右侧旋钮。': "Tap the switch on the left of the radio. Then drag the right-hand tuning knob sideways.",
-'调到调度台': "Tune in to dispatch",
-'左右拖动右侧旋钮，调到 1.09。委托会从打印机出来。': "Drag the right-hand knob sideways to 1.09. A request will come out of the printer.",
-'左右拖动 · 调到 1.09': "Drag sideways · Tune to 1.09",
-'这一趟送到了': "Delivery complete",
-'领取下一张委托': "Collect the next request",
+'点收音机左侧开关，再左右拖动右侧旋钮。': "Turn on the radio, then use the knob on the right to tune.",
+'调到调度台': "Tune to dispatch",
+'左右拖动右侧旋钮，调到 1.09。委托会从打印机出来。': "Turn the right-hand knob to 1.09 to receive the next request.",
+'左右拖动 · 调到 1.09': "Drag the knob to 1.09",
+'这一趟送到了': "The lamp has been delivered",
+'领取下一张委托': "Get another delivery request",
 '{0}的灯亮了。下一张委托在电台室。': "The light at {0} is on. Your next request is in the radio room.",
 '打开收音机，调到 1.09 的调度台。': "Switch on the radio and tune to dispatch at 1.09.",
 '去电台室': "Go to the radio room",
 '选定目的地': "Choose your destination",
-'查看航向板': "Open the course board",
+'查看航向板': "Open the sea chart",
 '先放下喷壶': 'Put the watering can down',
-'植物已经开花。点喷壶原来的位置放下它，再选择植物。': 'The plant has flowered. Tap the can\'s original place to put it down, then choose the plant.',
-'把开花植物装成灯': "Make a lamp from the plant",
-'已有一盆开花植物。点它，选择移到装配台。': "A plant is already in bloom. Tap it and choose to move it to the workbench.",
+'植物已经开花。点喷壶原来的位置放下它，再选择植物。': "Put the watering can back, then select the flowering plant.",
+'把开花植物装成灯': "Make a lamp from the flowering plant",
+'已有一盆开花植物。点它，选择移到装配台。': "Select the flowering plant and choose Move to the workbench.",
 '去温室': "Go to the greenhouse",
 '选择这盆植物': "Choose this plant",
 '植物正在生长': "The plant is growing",
 '种下一盆植物': "Plant a seed",
 '去种植区': "Go to the garden",
 '选择种子': "Choose a seed",
-'植物已经放好。点装配台左边的玻璃罩。': "The plant is in place. Tap the glass cover to the left of the workbench.",
-'走近装配台': "Move closer to the workbench",
-'玻璃罩已经扣好。点右边灯盘上的灯头。': "The cover is fitted. Tap a lamp cap in the tray on the right.",
-'植物灯装好了': "The plant lamp is ready",
-'船正在前往目的地。到港时，这里会亮起提示。': "The ship is on its way. This guide will show you when it arrives.",
-'去厨房坐坐': "Visit the galley",
-'把灯送到门外': "Deliver the lamp",
-'门外有人正在等。点他，把植物灯递过去。': "Someone is waiting outside. Tap them to hand over the plant lamp.",
-'船已经靠好。点舷门把手，打开门。': "The ship has docked. Tap the gangway handle to open the door.",
+'植物已经放好。点装配台左边的玻璃罩。': "Tap the glass cover to the left of the workbench.",
+'走近装配台': "Go to the workbench",
+'玻璃罩已经扣好。点右边灯盘上的灯头。': "Tap the lamp in the tray on the right.",
+'植物灯装好了': "The lamp is ready to deliver",
+'船正在前往目的地。到港时，这里会亮起提示。': "You'll see a prompt here when the ship docks.",
+'去厨房坐坐': "Go to the galley",
+'把灯送到门外': "Hand over the lamp",
+'门外有人正在等。点他，把植物灯递过去。': "Tap the person waiting outside to offer the lamp.",
+'船已经靠好。点舷门把手，打开门。': "Tap the handle to open the gangway door.",
 '去舷梯': "Go to the gangway",
 '打开舷门': "Open the gangway door",
-'自由探索': "Explore freely",
-'重看提示': "Read the hint again",
-'已到港 · {0}': "Docked · {0}",
-'前往{0} · {1}:{2}': "To {0} · {1}:{2}",
-'点按': "Tap",
-'按住 · 拖画': "Hold · Draw",
-'走近': "Move closer",
-'走近查看': "Look closer",
+'自由探索': "Explore the ship",
+'重看提示': "Show the instructions again",
+'已到港 · {0}': "Docked at {0}",
+'前往{0} · {1}:{2}': "Sailing to {0} · {1}:{2} remaining",
+'点按': "Click or tap",
+'按住 · 拖画': "Hold and draw",
+'走近': "Approach",
+'走近查看': "Take a closer look",
 '调节吊灯': "Adjust the hanging lamp",
 '切换提灯颜色': "Change the lantern colour",
 '哈气，再在雾上画画': "Breathe on the glass, then draw in the mist",
@@ -1249,10 +1183,10 @@ export const EN: Record<string, string> = {
 '给八音盒上发条': "Wind the music box",
 '顺时针画圈': "Turn clockwise",
 '在纸带上打孔': "Punch the tape",
-'点按 · 拖动': "Tap · Drag",
+'点按 · 拖动': "Click or tap, then drag",
 '揉面团': "Knead the dough",
 '移动水壶，热水烧好后按住倒水': "Move the kettle; hold to pour when the water is hot",
-'点按 · 按住': "Tap · Hold",
+'点按 · 按住': "Click or tap, then hold",
 '引导': "Guide",
 '开启': "On",
 '关闭': "Off",
@@ -1262,47 +1196,48 @@ export const EN: Record<string, string> = {
 
 '打印机': 'Printer',
 '走近打印机': 'Move closer to the printer',
-'委托已经备好。点窗间的航向板，选择{0}。': 'Your request is ready. Tap the course board between the windows and choose {0}.',
-'四处都亮起灯了': 'All four lights are on',
-'送过的灯都记在航行记录里。船上还有地方可以坐坐。': 'Your deliveries are in the voyage record. There are still places to sit aboard.',
-'看看航行记录': 'Open the voyage record',
+'委托已经备好。点窗间的航向板，选择{0}。': "Open the chart between the windows and select {0}.",
+'四处都亮起灯了': "All four lamps have been delivered",
+'送过的灯都记在航行记录里。船上还有地方可以坐坐。': "You can find your deliveries in the voyage log.",
+'看看航行记录': "Open the voyage log",
 
-'点种子盒，选一种种进空盆。': 'Tap the seed box and choose a seed for an empty pot.',
-'土干了，浇一点水': 'The soil is dry',
+'点种子盒，选一种种进空盆。': "Open the seed box and choose a seed for an empty pot.",
+'土干了，浇一点水': "Water the dry soil",
 '点喷壶拿起来，再点干土的花盆。': 'Pick up the watering can, then tap a pot with dry soil.',
 '给这盆浇水': 'Water this pot',
 '拿起喷壶': 'Pick up the watering can',
 '打开生长灯': 'Switch on the grow lamp',
 '点上方的生长灯，花苞会长得快一些。': 'Switch on the grow lamp above. The buds will grow faster.',
-'花苞正在长大，预计还需约 {0} 分钟。': 'The buds are growing. They should flower in about {0} minutes.',
+'花苞正在长大，预计还需约 {0} 分钟。': "The plant should flower in about {0} minutes.",
 /* ---------- ui/chart.ts : the sea chart ---------- */
 '航海图': 'Sea chart',
-'点一个去过的地方，用铅笔画个记号。': "Tap a place you've been to, and the pencil marks it.",
-'快到了': 'Nearly there',
-'还有 {0} 分钟': '{0} minutes to go',
+'点一个去过的地方，用铅笔画个记号。': "Tap a place you've visited to leave a pencil mark.",
+'快到了': "Arriving soon",
+'还有 {0} 分钟': "{0} minutes remaining",
 '北': 'N',
-'送出去的灯': 'Lamps handed over',
-'航海图上，船靠在{0}。': 'On the sea chart, the ship is alongside {0}.',
-'航海图上，船快到{0}了。': 'On the sea chart, the ship is nearly at {0}.',
-'航海图上，船正往{0}去，还要大约 {1} 分钟。': "On the sea chart, the ship is heading for {0}. It's about {1} minutes away.",
-'航海图上，船停在两段航程之间。': 'On the sea chart, the ship is between crossings.',
-'设定航向：{0}': 'set course for {0}',
-'擦掉{0}的记号': 'rub out the mark at {0}',
-'在{0}画个记号': 'mark {0}',
+'送出去的灯': "Completed deliveries",
+'航海图上，船靠在{0}。': "The ship is docked at {0}.",
+'航海图上，船快到{0}了。': "The ship is approaching {0}.",
+'航海图上，船正往{0}去，还要大约 {1} 分钟。': "The ship is heading to {0}. It should arrive in about {1} minutes.",
+'航海图上，船停在两段航程之间。': "The ship is between deliveries.",
+'设定航向：{0}': "Choose {0} as the next destination",
+'擦掉{0}的记号': "Remove your mark from {0}",
+'在{0}画个记号': "Mark {0} on the chart",
 '粉青色的雾': 'the blue-green fog',
 '那颗带环的行星': 'the ringed planet',
 '最密的那片星': 'the thickest stars',
 /* ---------- rooms/hatch.ts, state/progress.ts : the handover and the parting ---------- */
 '门从里面闩上了。船要离开了。': "The door is bolted from inside. The ship is about to leave.",
-'松手': 'let go',
-'灯已经在{0}手里了。再点一下，松开手。': "The lamp is in the hands of {0} now. Tap again to let go.",
-'舷门右边有一扇舷窗，看得见外面。': "There's a porthole to the right of the gangway door. You can see out through it.",
+'松手': "Let go of the lamp",
+'灯已经在{0}手里了。再点一下，松开手。': "{0} has a grip on the lamp. Tap again to let go.",
+'舷门右边有一扇舷窗，看得见外面。': "You can still see the dock through the porthole beside the door.",
 '走到舷窗边': 'Go to the porthole',
 '船正离开{0}。': 'The ship is leaving {0}.',
 '离开{0}': 'left {0}',
-'旧码头的灯已经换好了。今晚经过的船都看得见。': "The lamp at Old Wharf has been changed. Every ship that passes tonight can see it.",
-'回声浮标的舷窗亮着一盏灯，朝着来船的方向。': "A lamp is lit in the porthole at Echo Buoy. It faces the way the ships come in.",
-'晚钟底下亮着一盏灯。今晚那口钟多响了一下。': "A lamp is lit under the Evening Bell. The bell rang once more tonight.",
-'对面那艘船的温室窗亮了。他们还停在静默段。': "The greenhouse window on the ship across is lit. They're still lying in the Quiet Stretch.",
-'舷窗边': 'Porthole',
+'旧码头的灯已经换好了。今晚经过的船都看得见。': "There's a new lamp at Old Wharf. Ships passing tonight can see it.",
+'回声浮标的舷窗亮着一盏灯，朝着来船的方向。': "The lamp at Echo Buoy is lit. You can see it through the window as you approach.",
+'晚钟底下亮着一盏灯。今晚那口钟多响了一下。': "There's a lamp under Evening Bell now. The bell rang twice tonight.",
+'对面那艘船的温室窗亮了。他们还停在静默段。': "The other ship's greenhouse window is lit. They're still in the Quiet Stretch.",
+'舷窗边': "By the porthole",
+'目的地': 'Destinations',
 };
