@@ -16,6 +16,7 @@ import { SEEDS } from '../data/index';
 import { ACT, ROOMS, setCtx } from './registry';
 import { S } from '../state/runtime';
 import { markDirty } from '../state/save';
+import { syncJourney } from '../state/journey';
 import { G } from '../state/store';
 import { hangSlip } from '../ui/sheet';
 import { now } from '../state/time';
@@ -201,6 +202,7 @@ ACT['hat:give'] = { tap(){
   const sp = G.rig.sp;
   AU.soft(); AU.bell(74, .05); AU.bell(81, .035, .22);
   G.calls.push({ id:P.id, at:now(), sp }); G.rig = null; G.call.gave = now();
+  syncJourney(G, now());
   say(P.take); say(P.after, null, 2600);
   addLog(tr('在{0}留下一盏灯', P.name));
   markDirty(); hatCtx();
@@ -213,7 +215,7 @@ export function leave(P){
   const mine = G.call && G.call.to === P.id;
   S.doorOpen = false; setCtx([]);
   if (mine){ G.call = null; markDirty(); }
-  if (S.room === 'hatch'){ AU.chain(); say(P.part); say(tr('航程单上没有下一站了。客舱的牌子上能挑一个。'), null, 2800); }
+  if (S.room === 'hatch'){ AU.chain(); say(P.part); say(tr('这一趟已经送到。下一张委托可以去电台室领取。'), null, 2800); }
 }
 /* ---- the room ---- */
 ROOMS.hatch = {

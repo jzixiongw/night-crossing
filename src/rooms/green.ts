@@ -16,6 +16,7 @@ import { ACT, ROOMS, setCtx } from './registry';
 import { drawRig } from './hatch';
 import { PR, S } from '../state/runtime';
 import { markDirty } from '../state/save';
+import { syncJourney } from '../state/journey';
 import { G } from '../state/store';
 import { now } from '../state/time';
 import { addLog, once, onceS, say } from '../ui/captions';
@@ -437,23 +438,17 @@ ACT['gh:work'] = { tap(a){
   const part = a[0]; AU.tap();
   if (part === 'plant'){
     if (G.rig){ say(G.rig.lit ? tr('那盏装好了，在舷梯的架子上。') : tr('台子上这一株还没装完。')); return; }
-    const i = bloomedPot();
-    if (i < 0){ say(once('benchEmpty') ? tr('台子上空着。要一株开了花的，才装得起来。') : tr('台子还空着。')); return; }
-    const sp = G.pots[i].sp;
-    G.rig = { sp, glass:false, lit:false }; G.pots[i] = null; G.blooms++;
-    AU.wood(); markDirty();
-    say(tr('你把开着花的{0}连根端上台子。', SEEDS[sp].name));
-    if (once('benchHint')) say(tr('罩子在左手边的架子上。灯在右手边。'), null, 2400);
+    movePlantToBench(bloomedPot());
     return;
   }
   if (part === 'glass'){
     if (!G.rig){ say(tr('罩子要扣在一株植物上。')); return; }
     if (G.rig.glass){ say(tr('罩子已经扣上了。')); return; }
-    G.rig.glass = true; AU.soft(); markDirty(); say(tr('玻璃罩扣下来，里面一下子安静了。')); return;
+    G.rig.glass = true; syncJourney(G, now()); AU.soft(); markDirty(); say(tr('玻璃罩扣下来，里面一下子安静了。')); return;
   }
   if (!G.rig || !G.rig.glass){ say(tr('灯卡在罩子顶上。先有罩子。')); return; }
   if (G.rig.lit){ say(tr('灯已经装好了。')); return; }
-  G.rig.lit = true; AU.chain(); AU.bell(78, .04); markDirty();
+  G.rig.lit = true; syncJourney(G, now()); AU.chain(); AU.bell(78, .04); markDirty();
   say(tr('小灯卡进罩顶。叶子底下亮起来一点。'));
   addLog(tr('装好一盏灯'));
   say(tr('装好了。它在舷梯的架子上等着。'), null, 2600);
@@ -497,10 +492,7 @@ ACT['gh:plant'] = { tap(a, e, pt){
   const i = +a[0], p = G.pots[i];
   if (S.spray){ sprayPot(i); return; }
   if (!p) return;
-  if (bloomReady(p)){
-    G.vase = p.sp; p.bloomAt = now() + 25*MIN; G.blooms++; AU.leaf(); AU.bell(86,.03);
-    say(tr('你剪下一枝{0}，插到客舱桌上的小瓶里。这一株过一阵还会再开。', SEEDS[p.sp].name)); addLog(tr('剪了一枝{0}放进客舱的花瓶', SEEDS[p.sp].name)); markDirty(); return;
-  }
+  if (bloomReady(p)){ openPlant(i); return; }
   S.fold[i] = Math.min(1, S.fold[i] + .5); S.foldPt[i] = pt ? clamp(pt.x/90, -1, 1) : 0; AU.leaf();
   const st = Math.floor(p.g*5);
   const lines = {
@@ -513,6 +505,39 @@ ACT['gh:plant'] = { tap(a, e, pt){
   }[p.sp] || [];
   say(p.water <= 0 ? tr('土是干的。它停着，在等水。') : (lines[Math.min(3, st)] || tr('它在长。')));
 }};
+/* Choosing a flower is deliberate: an exploratory tap never consumes the
+   only prepared plant. The first branch can be clipped while the remaining
+   flowers stay available for the introductory delivery. */
+export function movePlantToBench(i: number){
+  if (G.rig){ say(tr('装配台上已有一株植物。先把这一盏装好。')); return; }
+  if (i < 0 || !bloomReady(G.pots[i])){ say(tr('先选一盆开花的植物，再移到装配台。')); return; }
+  const sp = G.pots[i].sp;
+  G.rig = { sp, glass:false, lit:false }; G.pots[i] = null; G.blooms++;
+  syncJourney(G, now()); closePanels(); GREEN_SPACE.toBench();
+  AU.wood(); markDirty();
+  say(tr('{0}已经移到装配台。接着扣上左边的玻璃罩。', SEEDS[sp].name));
+}
+let selectedPlant = -1;
+function openPlant(i: number){
+  selectedPlant = i; closePanels();
+  $('#plantTitle').textContent = SEEDS[G.pots[i].sp].name;
+  $('#plantSub').textContent = G.rig ? tr('装配台已有植物。先完成台上的那一盏。') : tr('把这盆开花植物装成灯，或剪一枝放进驾驶舱的花瓶。');
+  ($('#plantBuild') as HTMLButtonElement).disabled = !!G.rig;
+  $('#plantPanel').hidden = false; AU.paper();
+  $('#plantBuild').focus();
+}
+$('#plantBuild').onclick = () => movePlantToBench(selectedPlant);
+$('#plantClose').onclick = closePanels;
+$('#plantClip').onclick = () => {
+  const p = G.pots[selectedPlant];
+  if (!bloomReady(p)){ closePanels(); return; }
+  G.vase = p.sp; G.blooms++;
+  // A first-night souvenir must not delay the introductory request.
+  p.bloomAt = G.calls.length ? now() + 5*MIN : 0;
+  closePanels(); AU.leaf(); AU.bell(86,.03); markDirty();
+  say(G.calls.length ? tr('剪下一枝放进花瓶。这盆约五分钟后再开花。') : tr('剪下一枝放进花瓶。剩下的花还可以装成灯。'));
+};
+
 export function cursorPlay(){ // cursor in play-plane coordinates, or null
   const r = cv.getBoundingClientRect(); if (PR.cx < r.left || PR.cx > r.right || PR.cy < r.top || PR.cy > r.bottom) return null;
   const X = (PR.cx - r.left)/r.width*CW, Y = (PR.cy - r.top)/r.height*CH; return inv(mat(1), X, Y);
@@ -653,10 +678,10 @@ ROOMS.green = {
     /* Building happens at the far right, so when that is the step the room opens
        looking at it. Turning your head is how you change jobs in here. */
     const st = STEPS[stepNow()];
-    if (st && st.id === 'build') GREEN_SPACE.toBench();
+    if (st && st.id === 'build' && G.rig) GREEN_SPACE.toBench();
     if (once('greenFirst')) say(tr('温室比船上别处暖，玻璃内侧挂着一层水汽。'));
     else { const dry = G.pots.filter(p => p && p.water <= 0).length; if (dry) say(dry === 1 ? tr('有一盆土干了。') : tr('有 {0} 盆土干了。', dry)); }
-    if (once('ghDrag')) say(tr('温室比你看见的长。按住不放，可以往两边走。'), null, 2600);
+    if (once('ghDrag')) say(ROOMS.green.webgl ? tr('点下方的位置按钮，走近种植区或装配台。') : tr('温室比你看见的长。按住不放，可以往两边走。'), null, 2600);
   },
   exit(){ setSpray(false); setCtx([]); },
   update(dt){
