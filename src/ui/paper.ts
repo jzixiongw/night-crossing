@@ -55,6 +55,9 @@ function svg(w: number, h: number, draw: (c: any) => void, o: { fray?: number; d
     + `<feComposite in="d" in2="m" operator="in"/></filter>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}"${o.fit ? '' : ' preserveAspectRatio="none"'}>${filter}<g filter="url(#f)">${r.parts.join('')}</g></svg>`;
 }
+/* The bare paths of some pen marks, for an SVG that brings its own filter
+   (the sea chart in ui/chart.ts draws its whole sheet this way). */
+export function penPaths(draw: (c: any) => void){ const r = new Rec(); draw(r); return r.parts.join(''); }
 const url = (s: string) => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
 
 /* A highlighter pass: broad, blunt at the ends, laid twice so the overlap

@@ -14,6 +14,8 @@ import { RS } from '../core/surface';
 import { $, D2R, MIN, clamp, hex, lerp, mixHex, mk, mulberry32, pick, rand } from '../core/util';
 import { CN, COL, ORDER, ROUTES } from '../data/index';
 import { PORTS } from '../data/ports';
+import { renderChart } from '../ui/chart';
+import { wakeOf } from '../state/voyage';
 import { callPort, docked, visits } from './hatch';
 import { fx } from './radio';
 import { ACT, ROOMS, setCtx } from './registry';
@@ -232,18 +234,22 @@ export function renderRoutes(){
     b.addEventListener('click', () => takeCall(id));
     list.appendChild(b);
   });
+  renderChart(takeCall);
 }
-export function openRoutes(){ closePanels(); renderRoutes(); $('#routePanel').hidden = false; AU.paper(); }
+export function openRoutes(){ closePanels(); $('#routePanel').hidden = false; renderRoutes(); AU.paper(); }
 export function takeCall(id){
   closePanels();
   const P = PORTS[id];
   if (docked()){ say(tr('船正靠着。先把舷门那边的事办完。')); return; }
   if (G.call && G.call.to === id){ say(tr('照现在这样走。')); return; }
   /* The slip goes onto the board and off your hands. */
+  /* Where it sets out from goes on the call, for the chart and the windows:
+     the last place it left, or the junction if it turns round under way. */
+  const from = G.call ? 'hub' : (wakeOf(G)?.id || 'hub');
   if (G.call && !G.slips.includes(G.call.to)) G.slips.push(G.call.to);
   G.slips = G.slips.filter(x => x !== id);
   beginJourney(G, id, now());
-  G.call = { to:id, eta:now() + P.mins*MIN, docked:0 };
+  G.call = { to:id, eta:now() + P.mins*MIN, docked:0, from, dep:now() };
   syncJourney(G, now());
   setRoute(P.lane);
   AU.paper();

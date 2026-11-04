@@ -34,9 +34,11 @@
 <button class="pill" id="back" type="button" hidden>‹ 回环廊</button>
 <div id="ctx"></div>
 
-<div id="routePanel" class="panel" hidden>
-  <h2>航向板</h2>
+<div id="routePanel" class="panel chartpanel" hidden>
+  <h2>航海图</h2>
   <p class="sub" id="routeSub">选择目的地后，船会自行航行。</p>
+  <figure class="seachart" id="seaChart"></figure>
+  <p class="sub chart-hint" id="chartHint" hidden>点一个去过的地方，用铅笔画个记号。</p>
   <div class="list" id="routeList"></div>
   <button class="later" id="routeLater" type="button">先不挑</button>
 </div>

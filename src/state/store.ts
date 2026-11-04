@@ -15,6 +15,9 @@ export function freshSave(): Save {
        delivered. `eta` of 0 means the first call has not been timed yet; board()
        sets it, so a save made and left unopened does not arrive in the dark. */
     call:null, calls:[], rig:null, slips:['dock'],
+    /* The last place the ship left, kept as a light astern for a while
+       (state/voyage.ts), and the pencil marks on the sea chart (ui/chart.ts). */
+    wake:null, marks:[],
     journey:{ to:'dock', taken:true, course:false, grown:true, built:false, delivered:false, prepared:true },
     guide:{ enabled:true, collapsed:false },
     radioOn:false, freq:.82, printed:null, found:[], strip:new Array(16).fill(0), ghost:false, wind:0, phones:false,

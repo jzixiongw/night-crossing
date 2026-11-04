@@ -13,6 +13,7 @@ import { POT_COL } from '../core/materials';
 import { S } from '../state/runtime';
 import { now } from '../state/time';
 import { closePanels } from './panels';
+import { chartSVG } from './chart';
 
 /* ================= TICKET + ENDING ================= */
 export function miniPots(){
@@ -66,6 +67,7 @@ export function ticketMarkup(stub){
       <dt>${tr('这次')}</dt><dd class="mono">${tr('{0} 登船', hhmm(S.sessionStart || now()))}</dd>
       <dt>${tr('航程')}</dt><dd>${tr('第 {0} 夜 · 共航行 {1}', nights, durText(G.mapLen*HOUR))}</dd>
       <dt>${tr('航道')}</dt><dd>${route}</dd>
+      <dt>${tr('航海图')}</dt><dd class="wide"><div class="seachart t-chart">${chartSVG({ mini:true })}</div></dd>
       <dt>${tr('到访')}</dt><dd class="wide">${calls}</dd>
       <dt>${tr('灯串')}</dt><dd class="wide">${chips ? `<div class="chips">${chips}</div>` : tr('还没有。窗外的灯会一直经过。')}${G.passedLights ? tr('　你忙的时候，窗外经过了 {0} 盏灯。', G.passedLights) : ''}</dd>
       <dt>${tr('厨房')}</dt><dd>${tr('茶 {0} 杯 · 面包 {1} 个', G.cups, G.baked)}</dd>

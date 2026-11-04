@@ -11,6 +11,7 @@
    data/index.ts, so the lights the player answers from the cabin window are
    the places the ship is working toward. */
 import { tr } from '../i18n';
+import { CROSSING } from './chart';
 
 export interface Port {
   id: string; name: string; lane: string; col: string | null; who: string;
@@ -21,7 +22,7 @@ export interface Port {
 
 export const PORTS: Record<string, Port> = {
   dock: {
-    id:'dock', name:tr('旧码头'), lane:'harbor', col:'amber', who:tr('看码头的'), mins:2,
+    id:'dock', name:tr('旧码头'), lane:'harbor', col:'amber', who:tr('看码头的'), mins:CROSSING.dock,
     ask:tr('旧码头只剩一盏灯了。看码头的问，能不能换一盏活的。'),
     near:tr('船贴上旧码头。这里比船上冷，泡过水的木头味道一直飘上来。'),
     meet:[tr('我在这儿守着。有船经过，我就把那盏灯擦一遍。'),
@@ -32,7 +33,7 @@ export const PORTS: Record<string, Port> = {
     look:{ h:250, w:96, arms:2, eyes:2, body:'#8a7f9c', lamp:'#f2a95b' }
   },
   echo: {
-    id:'echo', name:tr('回声浮标'), lane:'nebula', col:'teal', who:tr('守浮标的'), mins:4,
+    id:'echo', name:tr('回声浮标'), lane:'nebula', col:'teal', who:tr('守浮标的'), mins:CROSSING.echo,
     ask:tr('回声浮标那边太静了。守浮标的想要一样晚上会亮的东西。'),
     near:tr('船停在浮标边上。你说一句话，过好一会儿它才还给你。'),
     meet:[tr('我先听见你们，过了很久才看见你们。'),
@@ -43,7 +44,7 @@ export const PORTS: Record<string, Port> = {
     look:{ h:210, w:120, arms:3, eyes:4, body:'#5e8f94', lamp:'#62b0a8' }
   },
   bell: {
-    id:'bell', name:tr('晚钟'), lane:'ring', col:'rose', who:tr('敲钟的'), mins:5,
+    id:'bell', name:tr('晚钟'), lane:'ring', col:'rose', who:tr('敲钟的'), mins:CROSSING.bell,
     ask:tr('晚钟一夜只响一次。敲钟的问，能不能在钟底下放一点光。'),
     near:tr('船靠上晚钟。这里很冷，钟声在冰面上传得特别远。'),
     meet:[tr('有船来我才敲。今晚那一下已经敲过了。'),
@@ -54,7 +55,7 @@ export const PORTS: Record<string, Port> = {
     look:{ h:170, w:150, arms:4, eyes:1, body:'#a8788a', lamp:'#e98f8c' }
   },
   ship: {
-    id:'ship', name:tr('对面那艘船'), lane:'quiet', col:null, who:tr('对面船上的'), mins:6,
+    id:'ship', name:tr('对面那艘船'), lane:'quiet', col:null, who:tr('对面船上的'), mins:CROSSING.ship,
     ask:tr('静默段里停着另一艘夜航船。他们的温室空了很久。'),
     near:tr('两艘船并排停住。这一段没有航标，说话的声音听起来很近。'),
     meet:[tr('前几天我在舷窗外看见你们了。'),
