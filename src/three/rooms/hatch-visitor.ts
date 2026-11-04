@@ -30,9 +30,14 @@ function radiusAt(pr: P2[], y: number){
   return 0;
 }
 
+/* Where the hands are going, in the creature's own units (y up from its
+   feet, z toward whoever it faces), how far it stoops, and how far into a
+   step it is. The gangway passes this every frame; the lamp itself is the
+   room's (props.rig3d), placed at holdWorld(). */
+export interface Pose { handY?: number; handZ?: number; bend?: number; step?: number }
 export interface Visitor3D {
   root: THREE.Group; hit: THREE.Mesh; H: number; W: number;
-  update(t: number, hold: number, a: number): void;
+  update(t: number, hold: number, a: number, o?: Pose): void;
   holdWorld(out: THREE.Vector3): THREE.Vector3;
 }
 
@@ -107,18 +112,22 @@ export function buildVisitor(parent: THREE.Object3D, P: Port, metresPerUnit: num
   const hitM = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }); hitM.colorWrite = false;
   const hit = add(new THREE.Mesh(new THREE.BoxGeometry(W*1.6, H, W*1.1), hitM), root); hit.position.y = H/2;
 
-  function update(t: number, hold: number, a: number){
+  const handPt = new THREE.Vector3(0, H*1.02, W*.04);
+  function update(t: number, hold: number, a: number, o: Pose = {}){
     hold = Math.min(1, Math.max(0, hold));
-    const breath = Math.sin(t*.7)*.018 + 1, lean = Math.sin(t*.19)*.035 + leanOff;
-    leanG.rotation.z = -lean; breathG.scale.set(1/breath, breath, 1/breath);
+    const handY = o.handY ?? H*1.02, handZ = o.handZ ?? W*.04, step = o.step || 0;
+    const breath = Math.sin(t*.7)*.018 + 1, lean = Math.sin(t*.19)*.035 + leanOff + Math.sin(step*Math.PI*2)*.06;
+    leanG.rotation.z = -lean; leanG.rotation.x = o.bend || 0; breathG.scale.set(1/breath, breath, 1/breath);
+    leanG.position.y = Math.abs(Math.sin(step*Math.PI*2))*H*.025;
+    handPt.set(0, handY, handZ);
     headG.rotation.z = -(Math.sin(t*.41)*.06 + tiltOff);
     for (const A of arms){
       const { side, rank, i } = A;
       const sx = side*(W*.42 - rank*10), sy = H*.6 - rank*24, z = W*(rank ? .04 : .1);
       const sw = Math.sin(t*.5 + i*1.7)*12 + Math.sin(t*.23 + i)*7, reach = rank === 0 ? hold : 0;
-      const ex = sx + side*(W*.46)*(1 - reach*.74) + sw*(1 - reach);
-      const ey = -((-H*.06 + rank*14)*(1 - reach) + (-H*1.02)*reach);
-      S0.set(sx, sy, z); C0.set(sx + side*W*.52*(1 - reach*.6), sy - H*(.3 - reach*.5), z + W*.06); E0.set(ex, ey, z + W*.04);
+      const ex = sx + side*(W*.46)*(1 - reach*.8) + sw*(1 - reach);
+      const ey = (H*.06 - rank*14)*(1 - reach) + handY*reach;
+      S0.set(sx, sy, z); C0.set(sx + side*W*.52*(1 - reach*.6), sy - H*.3 + (handY - sy + H*.3)*reach*.5, z + W*.06 + (handZ - z)*reach*.4); E0.set(ex, ey, z + W*.04 + (handZ - z - W*.04)*reach);
       M0.set(0, 0, 0).addScaledVector(S0, .25).addScaledVector(C0, .5).addScaledVector(E0, .25);
       seg(A.up, S0, M0, 12); seg(A.lo, M0, E0, 9.75);
       A.sh.position.copy(S0); A.el.position.copy(M0);
@@ -127,10 +136,11 @@ export function buildVisitor(parent: THREE.Object3D, P: Port, metresPerUnit: num
     }
     const blinkI = Math.floor(t*.5) % Math.max(1, L.eyes), blink = (t*.5 % 1) < .08;
     eyes.forEach((e, i) => { e.m.scale.y = blink && i === blinkI ? .18 : 1; e.halo.material.opacity = .5*a*(blink && i === blinkI ? .3 : 1); });
-    lampG.visible = hold > .02;
+    lampG.visible = false;
     lampG.position.y = H*1.22 + 8*hold;
     brassM.opacity = hold; domeM.opacity = .3*hold; coreM.opacity = hold;
     lampHalo.material.opacity = .55*hold*a;
   }
-  return { root, hit, H, W, update, holdWorld: (out) => { lampG.updateWorldMatrix(true, false); return lampG.localToWorld(out.copy(corePt)); } };
+  void corePt;
+  return { root, hit, H, W, update, holdWorld: (out) => { leanG.updateWorldMatrix(true, false); return leanG.localToWorld(out.copy(handPt)); } };
 }

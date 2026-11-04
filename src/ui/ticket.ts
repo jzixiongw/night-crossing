@@ -102,7 +102,8 @@ export function openEnding(){
   if (G.lines.some(l => l.a.s == null || l.b.s == null || endHidden(l.a) || endHidden(l.b))) waits.push(tr('有一笔星线还悬着。'));
   if (G.mail.out.some(o => !o.sent)) waits.push(tr('明信片还在寄出口。'));
   if (G.call && !G.call.docked && PORTS[G.call.to]) waits.unshift(tr('船正往{0}去。', tr(PORTS[G.call.to].name)));
-  if (G.call && G.call.docked && PORTS[G.call.to]) waits.unshift(tr('船还靠在{0}，门外有人在等。', tr(PORTS[G.call.to].name)));
+  if (G.call && G.call.docked && !G.call.gave && PORTS[G.call.to]) waits.unshift(tr('船还靠在{0}，门外有人在等。', tr(PORTS[G.call.to].name)));
+  if (G.call && G.call.gave && PORTS[G.call.to]) waits.unshift(tr('船正离开{0}。', tr(PORTS[G.call.to].name)));
   /* One wait, not a list of them: naming the dough is a detail, naming all
      four is an inventory the player just walked away from. */
   $('#endNote').textContent = tr('船会继续航行。') + (waits[0] || '') + tr('航程已经存好了。下次打开，船还在原处。');

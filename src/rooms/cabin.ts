@@ -16,6 +16,7 @@ import { CN, COL, ORDER, ROUTES } from '../data/index';
 import { PORTS } from '../data/ports';
 import { renderChart } from '../ui/chart';
 import { wakeOf } from '../state/voyage';
+import { OUT } from './outside';
 import { callPort, docked, visits } from './hatch';
 import { fx } from './radio';
 import { ACT, ROOMS, setCtx } from './registry';
@@ -506,8 +507,10 @@ ROOMS.cabin = {
       if (q >= 1){ const r = S.turn.to; S.turn = null; finishTurn(r); } }
     S.turnX = turnX;
     for (const r in S.rw) S.rw[r] += ((r === S.routeVis ? 1 : 0) - S.rw[r])*(1-Math.exp(-dt*.9));
-    CAM.rot = (Math.sin(S.T*.55)*.35*k + (S.turn ? Math.sin(Math.PI*clamp(S.turn.t/S.turn.dur,0,1))*1.1*k : 0))*D2R;
-    CAM.lift = Math.sin(S.T*.8)*2*k;
+    /* alongside, the roll settles: the ship is tied to something */
+    const sw = k*OUT.sway;
+    CAM.rot = (Math.sin(S.T*.55)*.35*sw + (S.turn ? Math.sin(Math.PI*clamp(S.turn.t/S.turn.dur,0,1))*1.1*k : 0))*D2R;
+    CAM.lift = Math.sin(S.T*.8)*2*sw;
     const visT = [.1,.55,1][G.lamp]; S.vis += (visT - S.vis)*(1-Math.exp(-dt*2.5));
     S.filT = (S.filT ?? 1) + dt; S.lampFil = G.lamp === 0 ? Math.min(1, S.filT/.6) * (S.filT < .25 ? (Math.random() < .5 ? .4 : 1) : 1) : 1;
     S.reading = G.chartLamp;

@@ -2,13 +2,13 @@ import { tr } from '../i18n';
 import { HOUR, MIN } from '../core/util';
 import { LETTERS, SEEDS } from '../data/index';
 import { portById } from '../data/ports';
-import { LINGER } from '../rooms/hatch';
 import { galleyWarm, renderDough, renderPears } from '../rooms/galley';
 import { WATER_MS, bloomReady } from '../rooms/green';
 import { S } from './runtime';
 import { markDirty } from './save';
 import { G } from './store';
 import { now } from './time';
+import { PART_MS, castAt, handOf } from './voyage';
 import { addLog, say } from '../ui/captions';
 import { updateMailbox } from '../ui/mail';
 
@@ -62,10 +62,29 @@ export function advance(ms, mode){
     if (P){ ev.push({ room:'corridor', text:tr('船靠上了{0}。舷门那边有人在等。', P.name), any:true, dock:true });
       addLog(tr('靠上{0}', P.name)); }
   }
-  /* The ship casts off again on a clock, not on the player still being in the
-     room, so a tab closed between the handover and the parting still ends the
-     call instead of leaving the ship tied up at a port it has finished with. */
-  if (G.call && G.call.gave && tnow - G.call.gave > LINGER && S.room !== 'hatch'){ G.call = null; markDirty(); }
+  /* After the handover the ship casts off on a clock, not on the player still
+     being in the room. A door left open while nobody is there counts as shut
+     once the one who took the lamp has got where they were going, so a tab
+     closed mid-parting still ends the call instead of leaving the ship tied
+     up at a port it has finished with. castAt() in state/voyage.ts. */
+  if (G.call && G.call.gave){
+    const h = handOf(G.call.to), auto = G.call.gave + h.auto*1000;
+    if (!G.call.shut && tnow > auto && !(S.room === 'hatch' && S.doorOpen && mode !== 'away')){ G.call.shut = auto; markDirty(); }
+    const cast = castAt(G.call);
+    if (cast && tnow >= cast + PART_MS){
+      const P = portById(G.call.to);
+      G.wake = { id:G.call.to, at:cast };
+      /* a little later, dispatch reports what the lamp is doing over there */
+      G.news = { id:G.call.to, at:cast + PART_MS + NEWS_MS };
+      if (P) addLog(tr('离开{0}', P.name));
+      G.call = null; markDirty();
+    }
+  }
+  if (G.news && tnow >= G.news.at){
+    const line = NEWS[G.news.id];
+    if (line){ ev.push({ room:'corridor', text:line, who:tr('调度台'), any:true }); addLog(line); }
+    G.news = null; markDirty();
+  }
   // mail boat
   let guard = 0;
   while (G.mail.nextAt && tnow >= G.mail.nextAt && guard++ < 60){
@@ -77,8 +96,17 @@ export function advance(ms, mode){
   if (ev.length) markDirty();
   return ev;
 }
+/* What dispatch says once a lamp has been burning somewhere a while. Only
+   ever a report of something that has happened there. */
+const NEWS_MS = 2*MIN;
+export const NEWS = {
+  dock:tr('旧码头的灯已经换好了。今晚经过的船都看得见。'),
+  echo:tr('回声浮标的舷窗亮着一盏灯，朝着来船的方向。'),
+  bell:tr('晚钟底下亮着一盏灯。今晚那口钟多响了一下。'),
+  ship:tr('对面那艘船的温室窗亮了。他们还停在静默段。')
+};
 export function liveEvents(ev){
-  ev.forEach(e => { if (e.room === S.room || e.any) say(e.text); });
+  ev.forEach(e => { if (e.room === S.room || e.any) say(e.text, e.who); });
   if (ev.some(e => e.mail)) updateMailbox();
   if (S.doughDirty) renderDough();
   if (ev.some(e => e.room === 'galley')) renderPears();

@@ -39,16 +39,25 @@ export function slipOnWall(parent: THREE.Object3D, map: DesignMap, o: { dx: numb
 
 /* A wall porthole with a little sky in it: a brass ring, a dark disc of
    space with stars painted on, and a pane catching a streak of light. */
-export function porthole(parent: THREE.Object3D, at: [number, number, number], r: number, o: { brass?: string; sky?: [string, string]; stars?: number; seed?: number; bolts?: number } = {}){
+/* `open: true` leaves the middle clear -- a real hole in a wall, with the
+   world behind it -- and puts only a faint pane and its streak in it. */
+export function porthole(parent: THREE.Object3D, at: [number, number, number], r: number, o: { brass?: string; sky?: [string, string]; stars?: number; seed?: number; bolts?: number; open?: boolean } = {}){
   const g = new THREE.Group(); g.position.set(...at); parent.add(g);
-  const c = mk(256, 256), x = c.getContext('2d');
-  const gr = x.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, (o.sky || ['#0a1226', '#1a2b4d'])[0]); gr.addColorStop(1, (o.sky || ['#0a1226', '#1a2b4d'])[1]);
-  x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
-  let s = o.seed ?? 7; const rnd = () => (s = (s*16807) % 2147483647)/2147483647;
-  for (let i = 0; i < (o.stars ?? 40); i++){ x.globalAlpha = .5 + rnd()*.5; x.fillStyle = rnd() < .15 ? '#ffd9a3' : '#e2ecf5'; const rr = .8 + rnd()*1.8; x.beginPath(); x.arc(rnd()*256, rnd()*256, rr, 0, Math.PI*2); x.fill(); }
-  x.globalAlpha = .08; x.fillStyle = '#fff'; x.beginPath(); x.moveTo(70, 256); x.lineTo(110, 256); x.lineTo(170, 0); x.lineTo(130, 0); x.closePath(); x.fill();
-  const t = texOf(c);
-  add(mesh(new THREE.CircleGeometry(r, 40), new THREE.MeshBasicMaterial({ map: t, toneMapped: false }), [0, 0, -.01], { cast: false, receive: false }), g);
+  if (o.open){
+    const c = mk(128, 128), x = c.getContext('2d');
+    x.fillStyle = 'rgba(255,255,255,.07)'; x.beginPath(); x.moveTo(35, 128); x.lineTo(55, 128); x.lineTo(85, 0); x.lineTo(65, 0); x.closePath(); x.fill();
+    add(mesh(new THREE.CircleGeometry(r, 40), new THREE.MeshBasicMaterial({ map: texOf(c), color: '#cfe0f0', transparent: true, opacity: 1, depthWrite: false, toneMapped: false }), [0, 0, -.01], { cast: false, receive: false }), g).raycast = () => {};
+    add(mesh(new THREE.CircleGeometry(r, 40), new THREE.MeshBasicMaterial({ color: '#9fb8d6', transparent: true, opacity: .05, depthWrite: false, toneMapped: false }), [0, 0, -.012], { cast: false, receive: false }), g).raycast = () => {};
+  } else {
+    const c = mk(256, 256), x = c.getContext('2d');
+    const gr = x.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, (o.sky || ['#0a1226', '#1a2b4d'])[0]); gr.addColorStop(1, (o.sky || ['#0a1226', '#1a2b4d'])[1]);
+    x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
+    let s = o.seed ?? 7; const rnd = () => (s = (s*16807) % 2147483647)/2147483647;
+    for (let i = 0; i < (o.stars ?? 40); i++){ x.globalAlpha = .5 + rnd()*.5; x.fillStyle = rnd() < .15 ? '#ffd9a3' : '#e2ecf5'; const rr = .8 + rnd()*1.8; x.beginPath(); x.arc(rnd()*256, rnd()*256, rr, 0, Math.PI*2); x.fill(); }
+    x.globalAlpha = .08; x.fillStyle = '#fff'; x.beginPath(); x.moveTo(70, 256); x.lineTo(110, 256); x.lineTo(170, 0); x.lineTo(130, 0); x.closePath(); x.fill();
+    const t = texOf(c);
+    add(mesh(new THREE.CircleGeometry(r, 40), new THREE.MeshBasicMaterial({ map: t, toneMapped: false }), [0, 0, -.01], { cast: false, receive: false }), g);
+  }
   add(mesh(new THREE.TorusGeometry(r*1.06, r*.14, 12, 40), M('brass', o.brass || '#d69d58'), [0, 0, 0]), g);
   const nb = o.bolts ?? 8, bm = M('metal', '#7489a8'), bg = new THREE.SphereGeometry(r*.05, 8, 6);
   for (let k = 0; k < nb; k++){ const a = k/nb*Math.PI*2; add(mesh(bg, bm, [Math.cos(a)*r*1.32, Math.sin(a)*r*1.32, .01], { cast: false }), g); }

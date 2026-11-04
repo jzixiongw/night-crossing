@@ -17,6 +17,7 @@ import { ACT, ROOMS, setCtx } from './registry';
 import { S } from '../state/runtime';
 import { markDirty } from '../state/save';
 import { syncJourney } from '../state/journey';
+import { DOOR_S, aftermath, castAt, handOf } from '../state/voyage';
 import { G } from '../state/store';
 import { hangSlip } from '../ui/sheet';
 import { now } from '../state/time';
@@ -46,10 +47,6 @@ export function callPort(){ return G.call ? portById(G.call.to) : null; }
 export function docked(){ return !!(G.call && G.call.docked); }
 export function rigDone(){ return !!(G.rig && G.rig.glass && G.rig.lit); }
 export function gave(){ return !!(G.call && G.call.gave); }
-/* How long the ship stays alongside after the lamp changes hands. The room runs
-   the parting on a timer; advance() clears the call on the same clock, so a tab
-   closed in those few seconds does not leave the ship docked for ever. */
-export const LINGER = 20000;
 export function visits(id){ return G.calls.filter(c => c.id === id).length; }
 export function etaLeft(){ return G.call && G.call.eta ? Math.max(0, G.call.eta - now()) : 0; }
 
@@ -169,24 +166,49 @@ export function drawRig(c, x, y, rig, s = 1){
   }
   c.restore();
 }
-/* ---- actions ---- */
+/* ---- the handover ----
+   Five beats, shared by the painted room and the 3D one:
+     1. the door opens (a few seconds of handle, dogs and leaves) and the one
+        waiting comes over at their own pace (HAND.wait, HAND.come);
+     2. the first tap holds the lamp out through the doorway: S.offer;
+     3. they get their hands round it (HAND.ready); the second tap lets go,
+        and a hand that lets go too early only makes the lamp swing more;
+     4. G.call.gave: from here everything runs off the clock -- they steady
+        it, turn, walk it to where it goes and set it there -- so leaving the
+        room or reloading lands on the same moment of it;
+     5. the door is closed (by the player, by walking off, or on its own once
+        they have arrived: G.call.shut) and the ship casts off when both are
+        true (castAt in state/voyage.ts).
+   Nothing here can fail. The only thing the player decides is when. */
+const doorTime = (open: boolean) => open ? 2.4 : DOOR_S;
+export function doorLocked(){ return !!(G.call && G.call.shut); }
 export function openDoor(){
   const P = callPort();
   if (!docked() || !P){ say(tr('门锁着。船还在走。')); return; }
   if (S.doorOpen){ closeDoor(); return; }
-  S.doorOpen = true; AU.chain(); AU.soft();
-  say(P.near);
-  if (once('gangFirst')) say(tr('门外站着一位。你站在门里，船就停在这儿等。'), null, 2600);
-  setCtx([{ label:tr('关上舷门'), fn:closeDoor }]);
+  if (doorLocked()){ say(tr('门从里面闩上了。船要离开了。')); return; }
+  S.doorOpen = true; S.comeT = 0; AU.door(true);
+  say(P.near, null, 900);
+  if (once('gangFirst')) say(tr('门外站着一位。你站在门里，船就停在这儿等。'), null, 3400);
   hatCtx();
 }
-export function closeDoor(){ if (!S.doorOpen) return; S.doorOpen = false; AU.chain(); setCtx([]); say(tr('门合上了。外面的声音一下子远了。')); }
+export function closeDoor(auto = false){
+  if (!S.doorOpen) return;
+  S.doorOpen = false; S.offer = null; AU.door(false); hatCtx();
+  if (gave() && G.call && !G.call.shut){ G.call.shut = now(); markDirty(); }
+  if (!auto) say(tr('门合上了。外面的声音一下子远了。'), null, 2600);
+}
 export function hatCtx(){
   if (!S.doorOpen){ setCtx([]); return; }
-  const acts = [{ label:tr('关上舷门'), fn:closeDoor }];
-  if (rigDone()) acts.unshift({ label:tr('把灯递过去'), fn:() => ACT['hat:give'].tap() });
+  const acts = [{ label:tr('关上舷门'), fn:() => closeDoor() }];
+  if (S.offer && !S.offer.letGo) acts.unshift({ label:tr('松手'), fn:() => ACT['hat:give'].tap() });
+  else if (rigDone() && !gave() && !S.offer) acts.unshift({ label:tr('把灯递过去'), fn:() => ACT['hat:give'].tap() });
   setCtx(acts);
 }
+/* When the one at the door will have a grip on a lamp held out at S.offer.t0. */
+function readyAt(){ const h = handOf(callPort().id); return S.offer.t0 + Math.max(1.1, (1 - (S.come || 0))*h.come) + h.ready; }
+export function offered(){ return !!S.offer; }
+export function gripped(){ return !!S.offer && S.run >= readyAt(); }
 ACT['hat:door'] = { tap(){ openDoor(); } };
 ACT['hat:rig'] = { tap(){
   AU.tap();
@@ -197,35 +219,69 @@ ACT['hat:rig'] = { tap(){
 ACT['hat:give'] = { tap(){
   const P = callPort();
   if (!P || !docked()){ say(tr('门锁着。船还在走。')); return; }
+  if (gave()) return;
   if (!S.doorOpen){ openDoor(); return; }
   if (!rigDone()){ say(G.rig ? tr('还差一道。装配台上接着做。') : tr('手上空着。温室的台子上装得起来一盏。')); return; }
-  const sp = G.rig.sp;
+  if (!S.offer){
+    /* hold it out; they take a moment */
+    S.offer = { t0:S.run, letGo:0 }; AU.soft();
+    say(P.take, null, 500);
+    hatCtx(); return;
+  }
+  if (S.offer.letGo) return;
+  /* let go: if their hands are not round it yet, it is let go anyway and they
+     catch it late, so it swings more */
+  S.offer.letGo = S.run; S.offer.early = !gripped();
+  hatCtx();
+}};
+/* The moment it changes hands. Durable from here on. */
+function handOver(P){
+  const sp = G.rig.sp, h = handOf(P.id);
   AU.soft(); AU.bell(74, .05); AU.bell(81, .035, .22);
-  G.calls.push({ id:P.id, at:now(), sp }); G.rig = null; G.call.gave = now();
+  G.calls.push({ id:P.id, at:now(), sp }); G.rig = null;
+  G.call.gave = now(); G.call.wob = +(h.wobble*(S.offer && S.offer.early ? 2.4 : 1)).toFixed(3);
+  S.offer = null;
   syncJourney(G, now());
-  say(P.take); say(P.after, null, 2600);
+  /* the first delivery folds the guide away; the next request can wait */
+  if (G.calls.length === 1 && G.guide) G.guide.collapsed = true;
   addLog(tr('在{0}留下一盏灯', P.name));
   markDirty(); hatCtx();
-  setTimeout(() => leave(P), 6400);
-}};
-/* The parting always tidies the room, even when the call has already been
-   cleared from under it -- the clock that clears it runs on in-world time,
-   which the dev speed control can run twenty times faster than this timer. */
-export function leave(P){
-  const mine = G.call && G.call.to === P.id;
-  S.doorOpen = false; setCtx([]);
-  if (mine){ G.call = null; markDirty(); }
-  if (S.room === 'hatch'){ AU.chain(); say(P.part); say(tr('这一趟已经送到。下一张委托可以去电台室领取。'), null, 2800); }
+}
+/* What the painted room and the 3D room both draw, read off the clock. */
+export interface HandView { come: number; reach: number; out: number; lamp: 'none' | 'stand' | 'out' | 'theirs' | 'set'; wob: number; steady: number; turn: number; walk: number; place: number; s: number }
+export function handView(): HandView {
+  const v: HandView = { come:0, reach:0, out:0, lamp:G.rig ? 'stand' : 'none', wob:0, steady:0, turn:0, walk:0, place:0, s:0 };
+  const P = callPort(); if (!P) return v;
+  const a = aftermath(G.call, now());
+  if (a){
+    const amp = G.call.wob || handOf(P.id).wobble;
+    Object.assign(v, { come:1, reach:1, out:1, lamp:a.place >= 1 ? 'set' : 'theirs', steady:a.steady, turn:a.turn, walk:a.walk, place:a.place, s:a.s,
+      wob:amp*Math.exp(-a.s/1.1)*Math.sin(a.s*7.5) });
+    return v;
+  }
+  v.come = Math.min(1, S.come || 0);
+  if (S.offer){
+    const t = S.run - S.offer.t0, h = handOf(P.id);
+    v.lamp = 'out'; v.out = Math.min(1, t/1.1);
+    v.reach = v.come > .9 ? Math.min(1, Math.max(0, (S.run - (readyAt() - h.ready))/h.ready)) : 0;
+    if (S.offer.letGo) v.wob = Math.sin((S.run - S.offer.letGo)*9)*.05;
+  }
+  return v;
+}
+/* The ship casting off, heard from wherever you are on board. */
+function castOff(P){
+  if (S.room === 'hatch') say(P.part);
+  AU.castOff();
 }
 /* ---- the room ---- */
 ROOMS.hatch = {
   zc:[800, 470],
   enter(){
-    setCtx([]); S.doorOpen = false; S.doorK = 0; S.holdK = gave() ? 1 : 0;
+    setCtx([]); S.doorOpen = false; S.doorK = 0; S.offer = null; S.come = gave() ? 1 : 0; S.comeT = 0;
     const P = callPort();
-    /* Walked back in on a call that was already handed over: the ship finishes
-       casting off now rather than staying tied to a port it is done with. */
-    if (P && gave()){ leave(P); return; }
+    /* Back in after the handover: the door was shut behind you. Whoever took
+       the lamp is still out there, as far along as the clock says. */
+    if (P && gave()){ if (!G.call.shut){ G.call.shut = now(); markDirty(); } return; }
     if (!docked()){
       if (P){ const m = Math.ceil(etaLeft()/MIN);
         say(once('gangWait') ? tr('舷门从里面锁着。船在走的时候它打不开。') : tr('门还锁着。'));
@@ -236,11 +292,32 @@ ROOMS.hatch = {
     say(tr('船停住了。门外有脚步声，不快。'));
     if (!rigDone()) say(G.rig ? tr('那盏灯还差一道。') : tr('温室的台子上还空着。'), null, 2600);
   },
-  exit(){ S.doorOpen = false; setCtx([]); },
+  exit(){
+    /* walking off shuts the door behind you; after the handover that is the
+       door the ship waits for before it casts off */
+    if (S.doorOpen && gave() && G.call && !G.call.shut){ G.call.shut = now(); markDirty(); }
+    S.doorOpen = false; S.doorK = 0; S.offer = null; setCtx([]);
+  },
   update(dt){
-    S.doorK += ((S.doorOpen ? 1 : 0) - S.doorK)*(1 - Math.exp(-dt*2.6));
+    const P = callPort();
+    /* the door moves at its own pace, not eased toward a target: handle,
+       then the leaves, then the seal */
+    const dk = dt/doorTime(!!S.doorOpen);
+    S.doorK = S.doorOpen ? Math.min(1, S.doorK + dk) : Math.max(0, S.doorK - dk);
     S.portK += ((docked() ? 1 : 0) - S.portK)*(1 - Math.exp(-dt*1.4));
-    S.holdK += ((gave() ? 1 : 0) - S.holdK)*(1 - Math.exp(-dt*1.1));
+    if (P && docked() && !gave()){
+      if (S.doorOpen && S.doorK > .5){ S.comeT = (S.comeT || 0) + dt; if (S.comeT > handOf(P.id).wait) S.come = Math.min(1, (S.come || 0) + dt/handOf(P.id).come); }
+      if (S.offer && S.offer.letGo && S.run >= Math.max(readyAt(), S.offer.letGo + .15)) handOver(P);
+    }
+    if (P && gave()){
+      const a = aftermath(G.call, now()), key = String(G.call.gave);
+      /* closed on its own once they are where they were going, unless the player already did */
+      if (S.doorOpen && a && a.s > a.h.auto) closeDoor(true);
+      if (a && a.place > .55 && S.saidAfter !== key){ S.saidAfter = key; say(P.after); if (P.id === 'bell') AU.bell(62, .045, .3); }
+      const cast = castAt(G.call);
+      if (cast && now() >= cast && S.castFor !== key){ S.castFor = key; castOff(P); }
+    }
+    S.holdK = handView().reach;
     S.hatMotes.forEach(m => { m.y -= m.v*dt*.3; if (m.y < 230) m.y = 660; });
   },
   back(c){
@@ -261,13 +338,19 @@ ROOMS.hatch = {
     if (P && open > .01){
       setL(c, K_WL*.8);
       c.save(); c.beginPath(); rr(c, DOOR.x0+8, DOOR.y0+8, DOOR.x1-DOOR.x0-16, DOOR.y1-DOOR.y0-16, 20); c.clip();
-      portBack(c, P, S.holdK);
-      const bob = Math.sin(S.T*.6)*4, vy = DOOR.y1 - 60 + bob;
-      drawVisitor(c, 800, vy, P.look, { s:1, hold:S.holdK });
-      hit(c, 'hat:give', ['r', 800 - P.look.w*.8, vy - P.look.h, P.look.w*1.6, P.look.h], { label:tr(P.who), key:'visitor' });
+      const hv = handView();
+      portBack(c, P, hv.place);
+      /* further back while they come over, and again as they carry it off:
+         smaller and higher in the doorway, then gone into the dark */
+      const away = Math.max(1 - hv.come, hv.walk), sc = 1 - .5*away;
+      const bob = Math.sin(S.T*.6)*4*(1 - away), vy = DOOR.y1 - 60 - away*150 + bob, vx = 800 + hv.walk*110;
+      c.globalAlpha = 1 - hv.place*.85;
+      drawVisitor(c, vx, vy, P.look, { s:sc, hold:S.holdK });
+      c.globalAlpha = 1;
+      if (!gave()) hit(c, 'hat:give', ['r', vx - P.look.w*.8*sc, vy - P.look.h*sc, P.look.w*1.6*sc, P.look.h*sc], { label:tr(P.who), key:'visitor' });
       c.globalAlpha = (1 - open)*.92; c.fillStyle = '#05080f'; c.fillRect(540, 100, 520, 700); c.globalAlpha = 1;
       c.restore();
-      S.visPt = [800, vy];
+      S.visPt = [vx, vy];
     }
     /* the two leaves, sliding into the collar */
     setL(c, K_WL);

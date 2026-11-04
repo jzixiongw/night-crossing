@@ -7,6 +7,11 @@ import { S } from '../../state/runtime';
 import { beaconIntensity, ROUTE_SKY } from '../../rooms/cabin';
 import { C3, U, designX, designY, wallX, wallY } from '../config/cabin';
 import { canvasTex, glow, spriteTex } from '../kit';
+import { spr } from '../../core/paint';
+import { PORTS } from '../../data/ports';
+import { G } from '../../state/store';
+import { OUT } from '../../rooms/outside';
+import { buildLandmark } from '../landmarks';
 
 /* ================= THE SKY BEYOND THE GLASS =================
    A backdrop C3.sky.depth metres behind the back wall. Everything the game
@@ -143,6 +148,35 @@ export function buildSky(){
     group.add(g); return g;
   }
 
+  /* The place the ship is going to, or has just left, in the right-hand
+     window -- the gangway side of the ship. A speck on the horizon under way,
+     life size alongside (the sky is 30 m off and the landmark is in metres,
+     so scale 1 is simply the place itself at that distance), falling away to
+     the right as the ship leaves. Every place already given a lamp keeps a
+     small light low in the sky in its own direction. */
+  const LM = Object.fromEntries(Object.keys(PORTS).map(id => { const l = buildLandmark(id); l.g.visible = false; group.add(l.g); return [id, l]; }));
+  const TRACE: Record<string, [number, number]> = { dock: [330, 500], echo: [560, 318], bell: [1360, 486], ship: [1010, 236] };
+  const traces = Object.fromEntries(Object.keys(PORTS).map(id => { const g = glow(spr(PORTS[id].look.lamp), SU(26), 0); g.position.copy(skyLocal(TRACE[id][0], TRACE[id][1], ZS + 1.5)); group.add(g); return [id, g]; }));
+  const fogCol = new THREE.Color();
+  function places(){
+    fogCol.copy(bgU.uBot.value);
+    const seen = new Set<string>();
+    for (const sg of OUT.list){
+      const L = LM[sg.id]; if (!L) continue; seen.add(sg.id);
+      const p = 1/(1 + 28*(1 - sg.k)), q = (p - 1/29)/(1 - 1/29), d = Math.min(1, sg.drift);
+      /* alongside it is nearer than the sky plane, so it is drawn larger than life there */
+      const x = 1310 + (1150 - 1310)*q + d*130, y = 452 + (482 - 452)*q, sc = p*(1 + .55*q);
+      L.g.visible = sg.vis > .01;
+      L.g.position.copy(skyLocal(x, y, ZS + 3)); L.g.scale.setScalar(sc); L.g.rotation.y = -.38;
+      L.sync({ fog: 1 - q, sky: fogCol, lit: sg.lit, t: S.T, vis: sg.vis*(.35 + .65*S.vis), shrink: p });
+    }
+    for (const id of Object.keys(LM)) if (!seen.has(id)) LM[id].g.visible = false;
+    for (const id of Object.keys(traces)){
+      const lit = !seen.has(id) && G.calls.some(c => c.id === id);
+      traces[id].material.opacity = lit ? .55 + .2*Math.sin(S.T*1.7 + id.length) : 0;
+    }
+  }
+
   function update(dt: number){
     const w = S.rw, vis = .2 + S.vis*.8;
     group.position.x = SU(S.turnX || 0);
@@ -152,6 +186,7 @@ export function buildSky(){
     neb.forEach(s => { s.material.opacity = w.nebula*s.userData.a; s.position.x = skyLocal(s.userData.x + nx, 0).x; s.visible = w.nebula > .01; });
     farMat.uniforms.uA.value = w.nebula > .5 ? .45 : 1;
     ring.visible = w.ring > .01; if (ring.visible){ ring.position.copy(skyLocal(S.ringX, 400, ZS + 3)); ringMat.uniforms.uA.value = w.ring; ringBandMat.opacity = w.ring; }
+    places();
     harbor.visible = w.harbor > .01;
     if (harbor.visible){ const a = w.harbor*Math.max(.08, 1 - S.harborT/180); harbor.position.x = SU(-Math.min(S.harborT, 180)*.4); hMat.opacity = a;
       hLights.forEach(g => { g.material.opacity = a*.8; }); hBeam.material.opacity = S.T % 4 < .5 ? a : 0; }

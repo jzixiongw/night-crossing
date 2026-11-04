@@ -41,7 +41,18 @@ export const RING3 = {
   },
 
   /* The wall's trims (design y), and the band of the big window cut out of it. */
-  wall: { top: 190, railH: 26, base: 59, hole: { a: 13, y0: 238, y1: 586 } },
+  /* `hole` is the big window, opened up from the first 13 degrees; `band` is
+     the run of glass beside the gangway door (between the gangway at 160 and
+     the galley at 200), where the place alongside can be seen from the ring.
+     The ribs at 170 and 190 stay and stand across it as mullions. */
+  wall: { top: 190, railH: 26, base: 59, hole: { a: 16, y0: 226, y1: 604 }, band: { ang: 180, a: 11.6, y0: 232, y1: 646 } },
+  /* the outside the band looks onto: a backdrop this far out, and where the
+     place alongside lies (ring angle, and its distance alongside and far off) */
+  outside: { r: 78, from: 128, to: 232,
+    /* alongside, the place lies against the hull at the gangway itself, as it
+       does through the gangway door; coming in and falling astern it swings
+       out ahead of the gangway by up to `swing` degrees, into the band */
+    place: { ang: 160, swing: 24, near: 13, far: 320, cap: 60, y: [1.3, 0] as const } },
 
   floor: { runner: [4.35, 5.75] as const, seamDeg: 5 },
   ceiling: { strip: [6.25, 6.6] as const, beamFrom: 2.4 },

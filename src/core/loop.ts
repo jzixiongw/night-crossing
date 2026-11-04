@@ -7,6 +7,7 @@ import { QUAL, resize, setQual } from './surface';
 import { $, hhmm } from './util';
 import { galleyTick } from '../rooms/galley';
 import { radioTick } from '../rooms/radio';
+import { outsideTick } from '../rooms/outside';
 import { ROOMS } from '../rooms/registry';
 import { advance, liveEvents } from '../state/progress';
 import { PR, S } from '../state/runtime';
@@ -32,7 +33,7 @@ export function frame(tnow){
     if (G.speed > 1) G.skew += dt*1000*(G.speed - 1);
     try {
       liveEvents(advance(dt*1000*G.speed, PR.focused ? 'here' : 'companion'));
-      galleyTick(dt); S.lastRadio = radioTick(dt);
+      galleyTick(dt); S.lastRadio = radioTick(dt); outsideTick(dt);
       R && R.update && R.update(dt);
     } catch(err){ console.error(err); }
     statusT -= dt; if (statusT <= 0){ statusT = 1;

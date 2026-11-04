@@ -1294,4 +1294,17 @@ export const EN: Record<string, string> = {
 '粉青色的雾': 'the blue-green fog',
 '那颗带环的行星': 'the ringed planet',
 '最密的那片星': 'the thickest stars',
+/* ---------- rooms/hatch.ts, state/progress.ts : the handover and the parting ---------- */
+'门从里面闩上了。船要离开了。': "The door is bolted from inside. The ship is about to leave.",
+'松手': 'let go',
+'灯已经在{0}手里了。再点一下，松开手。': "The lamp is in the hands of {0} now. Tap again to let go.",
+'舷门右边有一扇舷窗，看得见外面。': "There's a porthole to the right of the gangway door. You can see out through it.",
+'走到舷窗边': 'Go to the porthole',
+'船正离开{0}。': 'The ship is leaving {0}.',
+'离开{0}': 'left {0}',
+'旧码头的灯已经换好了。今晚经过的船都看得见。': "The lamp at Old Wharf has been changed. Every ship that passes tonight can see it.",
+'回声浮标的舷窗亮着一盏灯，朝着来船的方向。': "A lamp is lit in the porthole at Echo Buoy. It faces the way the ships come in.",
+'晚钟底下亮着一盏灯。今晚那口钟多响了一下。': "A lamp is lit under the Evening Bell. The bell rang once more tonight.",
+'对面那艘船的温室窗亮了。他们还停在静默段。': "The greenhouse window on the ship across is lit. They're still lying in the Quiet Stretch.",
+'舷窗边': 'Porthole',
 };

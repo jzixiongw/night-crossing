@@ -47,6 +47,11 @@ export const AU: AudioBus = {
     // music box bus
     this.box = c.createGain(); this.box.gain.value = .5; this.box.connect(this.out);
     const bxs = c.createGain(); bxs.gain.value = .5; this.box.connect(bxs); bxs.connect(this.verb);
+    // the place alongside: one filtered bed, retuned per port by rooms/outside.ts
+    const ps = c.createBufferSource(); ps.buffer = this.noise; ps.loop = true;
+    this.portF = c.createBiquadFilter(); this.portF.type = 'lowpass'; this.portF.frequency.value = 380; this.portF.Q.value = .6;
+    this.portG = c.createGain(); this.portG.gain.value = 0; ps.connect(this.portF); this.portF.connect(this.portG); this.portG.connect(this.out);
+    const pvs = c.createGain(); pvs.gain.value = .25; this.portG.connect(pvs); pvs.connect(this.verb); ps.start();
     this.ready = true; this.setOn(this.on);
   },
   ir(sec){ const c=this.ctx, n=Math.floor(c.sampleRate*sec), b=c.createBuffer(2,n,c.sampleRate);
@@ -108,6 +113,22 @@ export const AU: AudioBus = {
     const lfo = setInterval(() => { if (kind!=='flame') fl.frequency.setTargetAtTime(rand(700,1500), c.currentTime, .05); }, 90);
     return { stop(){ g.gain.setTargetAtTime(0, c.currentTime, .08); clearInterval(lfo); s.stop(c.currentTime+.4); } };
   },
+  /* The gangway door: the handle and the dogs coming off, the two leaves
+     running in their tracks, and on closing the seal going home. About as
+     long as the door takes on screen (DOOR_S). */
+  door(open){
+    if (!this.ready) return;
+    for (let i=0;i<3;i++) this.nz(.04,{f:3800,q:7,vol:.07,delay:i*.12});
+    this.tone(180,.25,{type:'triangle',vol:.05,f2:120,delay:.38});
+    this.nz(open ? 1.6 : 2.1,{type:'lowpass',f:240,f2:open ? 420 : 180,q:.7,vol:.09,att:.35,delay:.55});
+    this.nz(open ? 1.5 : 2.0,{f:1600,q:5,vol:.012,att:.4,delay:.6});
+    if (open) this.nz(.9,{type:'highpass',f:1800,f2:600,q:.4,vol:.035,att:.05,delay:.45});
+    else { this.tone(70,.5,{vol:.2,f2:42,delay:2.75}); this.nz(.25,{type:'lowpass',f:380,q:.5,vol:.12,delay:2.75}); this.nz(.6,{type:'highpass',f:2600,q:.4,vol:.03,att:.05,delay:2.95}); }
+  },
+  /* coming alongside: one long soft bump, and the fenders taking the weight */
+  berth(){ if (!this.ready) return; this.tone(60,.9,{vol:.16,f2:40}); this.nz(.7,{type:'lowpass',f:300,q:.6,vol:.08,att:.1}); this.nz(1.4,{f:520,f2:380,q:9,vol:.012,att:.4,delay:.5}); },
+  /* casting off: the engines taking up again, and the lines coming in */
+  castOff(){ if (!this.ready) return; this.tone(55,3.6,{vol:.07,f2:82,att:1.2}); this.tone(110,3.2,{vol:.025,f2:164,att:1.4,delay:.2}); this.chain(); this.ratchet(); },
   chain(){ this.nz(.05,{f:3200,q:6,vol:.1}); this.tone(1700,.06,{vol:.025,delay:.06}); this.nz(.05,{f:2500,q:6,vol:.06,delay:.13}); },
   whistle(){ this.tone(1480,1.9,{vol:.022,att:.45,vib:7}); this.tone(1487,1.9,{vol:.016,att:.5,vib:6}); this.nz(2.2,{type:'highpass',f:2500,q:.5,vol:.03,att:.2}); },
   sip(){ this.nz(.16,{f:520,q:2,vol:.06}); this.tone(230,.12,{vol:.025,f2:170,delay:.1}); },

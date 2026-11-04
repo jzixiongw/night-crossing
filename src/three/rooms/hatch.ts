@@ -5,12 +5,15 @@ import { BRUSH, SOFT, SWARM, rr, txt, txtFit, vol } from '../../core/paint';
 import { K_WL } from '../../core/depth';
 import { mixHex } from '../../core/util';
 import { PORTS } from '../../data/ports';
-import { DOOR, STAND, callPort, docked, gave } from '../../rooms/hatch';
+import { DOOR, STAND, callPort, docked, gave, handView } from '../../rooms/hatch';
+import { ROUTE_SKY } from '../../rooms/cabin';
+import { OUT } from '../../rooms/outside';
 import { S } from '../../state/runtime';
 import { G } from '../../state/store';
 import { HAT } from '../config/hatch';
 import { FONT_GEN, designMap, pickable, register3D, type Built } from '../engine';
 import { M, add as addTo, blot, canvasTex, flatMat, glow, group, lathe, liveTex, mesh, noRay, rbox, rrPath, rrShape, slab, spriteTex, toon } from '../kit';
+import { mulberry32 } from '../../core/util';
 import { porthole, rig3d, slipOnWall } from '../props';
 import type { View } from '../view';
 import { buildPort, type Port3D } from './hatch-port';
@@ -72,6 +75,8 @@ function build(): Built {
   {
     const shape = rrShape(-HW, 0, HW*2, H, .001);
     shape.holes.push(rrPath(new THREE.Path(), DX0, DY0, DX1 - DX0, DY1 - DY0, U(26)));
+    /* the porthole to the right of the door goes right through */
+    shape.holes.push(new THREE.Path().absarc(MAP.X(HAT.porthole.x), MAP.Y(HAT.porthole.y), U(HAT.porthole.r), 0, Math.PI*2, true));
     const geo = new THREE.ExtrudeGeometry(shape, { depth: WT, bevelEnabled: false, curveSegments: 14 });
     const t = wallTex.t; t.repeat.set(1/(HW*2), 1/H); t.offset.set(.5, 0);
     add(mesh(geo, [toon('#ffffff', { map: t, rim: 0, hl: 0, ramp: 'soft' }), M('metal', PAL.metalDD, { grain: 1, hl: .2 })], [0, 0, PZ0], { cast: false }));
@@ -225,7 +230,7 @@ function build(): Built {
       c.scale.set(1, 1.05, 1);
     }
   }
-  porthole(root, [MAP.X(HAT.porthole.x), MAP.Y(HAT.porthole.y), BACK + .03], U(HAT.porthole.r), { seed: 9, stars: 44 });
+  porthole(root, [MAP.X(HAT.porthole.x), MAP.Y(HAT.porthole.y), BACK + .03], U(HAT.porthole.r), { open: true, bolts: 10 });
   const slip = slipOnWall(root, MAP, { ...HAT.slip });
 
   /* ================= THE STAND, AND THE PIECE ON IT ================= */
@@ -239,6 +244,13 @@ function build(): Built {
   }
   const rigSpot = group(standG, [0, ST.h, 0]);
   const rig = rig3d(rigSpot);
+  /* The same lamp held out through the doorway: it leaves the stand on the
+     first tap and travels to where the one outside can get their hands on it.
+     A tap on it while it is held out is the second tap: let go. */
+  const carryG = group(root), carry = rig3d(carryG); carryG.name = 'carry';
+  const HP = new THREE.Vector3(0, 1.0, PZ0 - .32);            // where it changes hands
+  const standTop = new THREE.Vector3(MAP.X(STAND.x), ST.h, BACK + ST.z);
+  pickable(carryG, { act: 'hat:give', label: () => tr('松手'), key: 'carried', on: () => !!S.offer && !S.offer.letGo, anchor: new THREE.Vector3(0, .15, 0), r: .22 });
   {
     const hitM = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }); hitM.colorWrite = false;
     add(new THREE.Mesh(new THREE.BoxGeometry(ST.w + .06, .5, ST.d), hitM), standG).position.y = ST.h + .25;
@@ -247,17 +259,32 @@ function build(): Built {
 
   /* ================= THE FAR SIDE ================= */
   const far = group(root);
-  const ports: Record<string, Port3D> = {}, visitors: Record<string, Visitor3D> = {};
+  const ports: Record<string, Port3D> = {}, visitors: Record<string, Visitor3D> = {}, lamps: Record<string, ReturnType<typeof rig3d>> = {}, farGlow: Record<string, THREE.Sprite> = {};
   const VS = HAT.port.visScale/HAT.map.unit;
   for (const id of Object.keys(PORTS)){
     const P = PORTS[id], pt = buildPort(far, P, PZ0);
-    const v = buildVisitor(pt.g, P, VS);
+    const v = buildVisitor(pt.body, P, VS);
     v.root.position.set(0, 0, PZ0 - HAT.port.visZ);
-    pickable(v.root, { act: 'hat:give', label: tr(P.who), key: 'visitor', on: () => S.doorK > .01,
+    pickable(v.root, { act: 'hat:give', label: tr(P.who), key: 'visitor', on: () => S.doorK > .5 && !gave(),
       anchor: new THREE.Vector3(0, P.look.h*.55, 0), r: P.look.h*.45*VS });
     pt.g.visible = false;
     ports[id] = pt; visitors[id] = v;
+    /* the lamp once it is theirs, which leaves with the place, and the glow
+       that keeps it a point of light once the place is far off */
+    lamps[id] = rig3d(pt.body);
+    farGlow[id] = addTo(glow(SWARM, 1, 0), pt.body);
   }
+  /* Under way, or with nothing alongside, the porthole shows the lane the
+     ship is on: its sky colours (ROUTE_SKY, as the bridge has them) and stars. */
+  const voidTex = liveTex(256, 192, () => G.route, (g, w, h) => {
+    const [top, bot] = ROUTE_SKY[G.route] || ROUTE_SKY.harbor;
+    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    const R = mulberry32(31); for (let i = 0; i < 90; i++){ g.globalAlpha = .3 + R()*.6; g.fillStyle = R() < .1 ? '#ffe3b8' : '#dfe9f3'; const s2 = .6 + R()*1.1; g.fillRect(R()*w, R()*h*.8, s2, s2); }
+  });
+  const voidMat = flatMat('#ffffff', { map: voidTex.t, opacity: 1 });
+  const SKC = HAT.port.sky;
+  const voidSky = add(noRay(mesh(new THREE.PlaneGeometry(SKC.w, SKC.h), voidMat, [0, SKC.y, PZ0 - SKC.z + 1], { cast: false, receive: false })));
+  voidSky.renderOrder = -6;
   /* the dark the eye has not adjusted to yet: a veil just past the opening */
   const veilM = flatMat('#05080f', { opacity: 0 });
   add(noRay(mesh(new THREE.PlaneGeometry(DX1 - DX0, DY1 - DY0), veilM, [0, (DY0 + DY1)/2, PZ0 - .03], { cast: false, receive: false })));
@@ -282,34 +309,128 @@ function build(): Built {
   portAmb.position.set(0, 2.4, PZ0 - 1.6);
   /* the lamp in the visitor's hands */
   const holdLight = add(new THREE.PointLight('#ffffff', 0, LT.hold.distance, LT.hold.decay));
-  const holdPt = new THREE.Vector3();
+  const holdPt = new THREE.Vector3(), tmp = new THREE.Vector3();
+  const ease = (x: number) => { x = Math.max(0, Math.min(1, x)); return x*x*(3 - 2*x); };
 
   /* ================= PER FRAME ================= */
   let curId = '';
   function sync(_dt: number){
-    const P = callPort(), open = S.doorK || 0, hold = S.holdK || 0, can = docked(), given = gave();
-    /* the leaves */
-    const slide = U(open*(half - 10));
+    const P = callPort(), open = S.doorK || 0, can = docked(), given = gave();
+    /* The door, from S.doorK, which runs at the door's own pace: for the
+       first fifth the handle turns and the dogs come off, then the leaves run
+       apart; closing is the same backwards, ending on the seal. */
+    const u = open, slideK = (x => x*x*(3 - 2*x))(Math.max(0, Math.min(1, (u - .2)/.8)));
+    const moving = u > 0 && u < 1, judder = moving && slideK > 0 && slideK < 1 ? U(Math.sin(S.T*38)*1.2) : 0;
+    const slide = U(slideK*(half - 10)) + judder;
     leaves[0].position.x = -slide; leaves[1].position.x = slide;
-    handle.rotation.z = can ? 0 : -Math.PI/2;
+    handle.rotation.z = can ? Math.min(1, u/.2)*Math.PI/2 : -Math.PI/2;
     /* the three lamps */
     const lit = [can && !given, !can, given];
     ind.forEach((l, i) => { l.mat.emissiveIntensity = lit[i] ? .5 : 0; l.mat.color.set(lit[i] ? l.on : PAL.lampOff); l.halo.material.opacity = lit[i] ? .75 : 0; });
-    /* the far side */
-    const id = P ? P.id : '';
-    if (id !== curId){ for (const k of Object.keys(ports)) ports[k].g.visible = false; curId = id; }
-    const pt = P ? ports[P.id] : null, v = P ? visitors[P.id] : null, show = !!pt && open > .01;
-    if (pt){
-      pt.g.visible = show;
-      pt.g.position.y = -U(Math.sin(S.T*.6)*HAT.port.bob);
-      if (show){ pt.sync(hold); v.update(S.T, hold, open); }
+    /* while it comes alongside, the amber lamp blinks: something is out there */
+    const near = OUT.list.find(x => x.phase === 'approach');
+    if (near && near.k > .45){ const b = Math.sin(S.T*3) > 0 ? .9 : .15; ind[0].mat.emissiveIntensity = .5*b; ind[0].mat.color.set(ind[0].on); ind[0].halo.material.opacity = .75*b; }
+
+    /* ---- what is outside: every place near enough, from state/voyage.ts ---- */
+    const hv = handView(), id = P ? P.id : '';
+    if (id !== curId){ curId = id; }
+    let portSkyK = 0;
+    for (const k of Object.keys(ports)){
+      const pt = ports[k], sight = OUT.list.find(x => x.id === k), v = visitors[k], W = HAT.port.walk[k];
+      pt.g.visible = !!sight && sight.vis > .01;
+      if (!pt.g.visible){ lamps[k].sync(null); continue; }
+      /* in from the distance, out to the side as it falls astern */
+      const away = 1 - sight.k;
+      pt.body.position.set(sight.phase === 'parting' || sight.phase === 'wake' ? Math.min(1, sight.drift)*HAT.port.drift : 0,
+        -U(Math.sin(S.T*.6)*HAT.port.bob)*OUT.sway, -away*HAT.port.far);
+      const sk = sight.phase === 'docked' || sight.phase === 'parting' ? Math.max(0, Math.min(1, (sight.k - .55)/.4)) : 0;
+      pt.skyMat.opacity = sk; pt.sky.visible = sk > .01; portSkyK = Math.max(portSkyK, sk);
+      pt.sync({ lit: sight.lit, t: S.T, vis: sight.vis });
+      const here = k === id && docked();
+      /* the one who came to the door: waiting, coming over, taking it, carrying it off */
+      const showV = here && !(k === 'ship' && hv.place > .55);
+      v.root.visible = showV;
+      if (showV) farGlow[k].material.opacity = 0;
+      const sp = (G.calls.filter(c => c.id === k).pop() || {}).sp;
+      if (!showV){
+        const set = sight.lit > .5 && W.dest;
+        lamps[k].sync(set ? { sp: sp || 'bell', glass: true, lit: true } : null);
+        if (set){ lamps[k].g.position.set(W.dest[0], W.dest[1] - .03, PZ0 + W.dest[2]); lamps[k].g.rotation.set(0, 0, 0); }
+        farGlow[k].material.opacity = set || (k === 'ship' && sight.lit > .5) ? .8*sight.vis : 0;
+        if (set) farGlow[k].position.set(W.dest[0], W.dest[1] + .2, PZ0 + W.dest[2]);
+        else if (k === 'ship') farGlow[k].position.set(.95, 1.5, PZ0 - 2.4);
+        farGlow[k].scale.setScalar(.5 + away*4);
+        continue;
+      }
+      const Hh = P.look.h, Ww = P.look.w, path = W.path.map(([x, z]) => new THREE.Vector2(x, PZ0 + z));
+      let x = 0, z = 0, face = 0, step = 0, reach = hv.reach, bend = 0;
+      let handY = Hh*.55, handZ = Ww*.62;
+      if (!given){
+        const c = ease(hv.come);
+        x = W.wait[0] + (path[0].x - W.wait[0])*c; z = PZ0 + W.wait[1] + (path[0].y - PZ0 - W.wait[1])*c;
+        step = hv.come*3.2; face = 0;
+        /* hands out to the lamp where it is held, as far as the arms go */
+        tmp.copy(HP); v.root.worldToLocal(tmp);
+        handY = tmp.y; handZ = Math.min(Ww*1.7, tmp.z);
+      } else {
+        /* steady -> turn -> walk -> set it down */
+        const L = path.reduce((acc, p2, i) => i ? acc + p2.distanceTo(path[i - 1]) : 0, 0);
+        let d = ease(hv.walk)*L, at = path[0].clone(), dir = new THREE.Vector2(0, -1);
+        for (let i = 1; i < path.length; i++){ const seg = path[i].distanceTo(path[i - 1]); if (d <= seg || i === path.length - 1){ dir = path[i].clone().sub(path[i - 1]).normalize(); at = path[i - 1].clone().add(dir.clone().multiplyScalar(Math.min(d, seg))); break; } d -= seg; }
+        x = at.x; z = at.y; step = hv.walk*L/.32;
+        const head = Math.atan2(dir.x, dir.y);
+        face = head*ease(hv.turn);
+        if (W.dest && hv.place > 0){ const toD = Math.atan2(W.dest[0] - x, PZ0 + W.dest[2] - z); face = face + (toD - face)*ease(Math.min(1, hv.place*3)); }
+        tmp.copy(HP); v.root.worldToLocal(tmp);
+        const carryY = Hh*.58, carryZ = Ww*.62, st = ease(hv.steady);
+        handY = tmp.y + (carryY - tmp.y)*st; handZ = Math.min(Ww*1.7, tmp.z) + (carryZ - Math.min(Ww*1.7, tmp.z))*st;
+        if (hv.place > 0){
+          const pl = ease(hv.place);
+          if (W.lift > 0) handY += (Hh*1.25 - handY)*Math.min(1, pl*1.8)*W.lift;
+          if (W.lift < 0){ handY += (Hh*.12 - handY)*pl; }
+          bend = W.bend*Math.sin(Math.PI*Math.min(1, hv.place*1.15));
+          if (k === 'ship') z -= pl*.5;                         // in through their own door
+          /* once it is set down, the hands come back to their sides */
+          if (hv.place > .8) reach = 1 - (hv.place - .8)/.2;
+        }
+      }
+      v.root.position.set(x, 0, z); v.root.rotation.y = face;
+      v.update(S.T, reach, open > .01 || given ? 1 : .6, { handY, handZ, bend, step });
+      /* the lamp: in their hands, swinging a little, then where it goes */
+      if (given){
+        v.holdWorld(tmp); pt.body.worldToLocal(tmp);
+        if (W.dest){ const q = W.lift > 0 ? Math.max(0, (hv.place - .45)/.55) : Math.max(0, (hv.place - .25)/.75), e = ease(q);
+          tmp.set(tmp.x + (W.dest[0] - tmp.x)*e, tmp.y + (W.dest[1] - .03 - tmp.y)*e, tmp.z + (PZ0 + W.dest[2] - tmp.z)*e); }
+        lamps[k].g.position.copy(tmp); lamps[k].g.position.y -= .14*(1 - (W.dest ? ease(Math.max(0, (hv.place - .45)/.55)) : 0));
+        lamps[k].g.rotation.set(hv.wob*.5, face, hv.wob);
+        lamps[k].sync({ sp: sp || 'bell', glass: true, lit: true });
+      } else lamps[k].sync(null);
+      if (k === 'ship' && pt.door) pt.door.position.x = -.56 - .48*Math.sin(Math.PI*Math.min(1, Math.max(0, (hv.place - .1)/.8)));
     }
+    voidMat.opacity = 1 - portSkyK; voidSky.visible = portSkyK < .99; voidTex.tick();
+
+    /* the lamp being held out, between the stand and the doorway */
+    const out = hv.lamp === 'out';
+    carryG.visible = out;
+    if (out){
+      const e = ease(hv.out); tmp.copy(standTop).lerp(HP, e); tmp.y += Math.sin(Math.PI*e)*.35 - .14*e;
+      carryG.position.copy(tmp); carryG.rotation.set(0, 0, hv.wob);
+      carry.sync(G.rig);
+    } else carry.sync(null);
+
+    const pt = P ? ports[P.id] : null, show = !!pt && open > .01;
     veilM.opacity = (1 - open)*.92;
     const lampCol = P ? P.look.lamp : '#ffd9a3';
     spill.color.set(pt ? mixHex(lampCol, '#9fb2d6', .55) : '#9fb2d6'); spill.intensity = show ? LT.spill.intensity*open : 0;
     portAmb.color.set(pt ? pt.amb : '#9fb2d6'); portAmb.intensity = show ? LT.portAmb.intensity*open : 0;
-    if (show && hold > .02){ v.holdWorld(holdPt); holdLight.position.copy(holdPt); holdLight.position.y += .12; holdLight.position.z += .5; holdLight.color.set(lampCol); holdLight.intensity = LT.hold.intensity*hold*open; }
-    else holdLight.intensity = 0;
+    /* the lamp's own light follows it: into their hands, then where it is set */
+    const theirs = P && given ? lamps[P.id] : null;
+    if (theirs && ports[P.id].g.visible){
+      theirs.g.updateWorldMatrix(true, false); theirs.g.getWorldPosition(holdPt); holdLight.position.copy(holdPt); holdLight.position.y += .22;
+      const setK = hv.place;
+      holdLight.color.set(lampCol); holdLight.distance = LT.hold.distance + (LT.set.distance - LT.hold.distance)*setK;
+      holdLight.intensity = LT.hold.intensity + (LT.set.intensity - LT.hold.intensity)*setK;
+    } else holdLight.intensity = 0;
     /* the piece on the stand */
     rig.sync(G.rig);
     /* the motes: faint in the lamp's pool, brighter once the door lets the port in */
@@ -327,7 +448,8 @@ function build(): Built {
 
   const views: View[] = [
     { id: 'bay', label: tr('舷梯'), ...HAT.views.bay },
-    { id: 'handover', label: tr('门口'), ...HAT.views.handover }
+    { id: 'handover', label: tr('门口'), ...HAT.views.handover },
+    { id: 'porthole', label: tr('舷窗边'), ...HAT.views.porthole }
   ];
   return {
     scene, views, sync,
@@ -335,7 +457,7 @@ function build(): Built {
       if (k < K_WL - .05) return [MAP.at(x, y, PZ0 - HAT.port.visZ), 1/HAT.map.unit];
       return [MAP.at(x, y, BACK + .3), 1/HAT.map.unit];
     },
-    enter(){ curId = '\u0000'; signTex.reset(); }
+    enter(){ curId = '\u0000'; signTex.reset(); voidTex.reset(); }
   };
 }
 

@@ -14,7 +14,7 @@ import { camera, pickable, register3D, type Built } from '../engine';
 import { M, canvasTex, flatMat, glow, lathe, mesh, noRay, rbox, toon } from '../kit';
 import type { View } from '../view';
 import { D2R, L, X, Y, dirOf, ringPt, wallFrame } from './corridor-kit';
-import { bigWindow, board, door, dome, gangway, mail, type Mats, type Station } from './corridor-stations';
+import { bigWindow, board, buildOutside, door, dome, gangway, mail, windowBand, type Mats, type Station } from './corridor-stations';
 
 /* ================= THE RING CORRIDOR, IN THREE.JS =================
    rooms/corridor.ts still walks the ring: its update() eases S.phi toward
@@ -138,12 +138,16 @@ function build(): Built {
   wallTex.t.wrapS = THREE.RepeatWrapping;
   const wallMat = toon('#ffffff', { map: wallTex.t, ramp: 'soft', rim: 0, hl: 0 });
   /* the outer wall, open where the big window is */
-  const HO = RING3.wall.hole, hy0 = Y(HO.y1), hy1 = Y(HO.y0);
-  const inHole = (a: number) => Math.abs(angDiff(a, WINDOW_ANG)) < HO.a;
+  /* The wall goes up in horizontal bands split at every opening's top and
+     bottom; a band leaves out the columns an opening covers top to bottom. */
+  const HO = RING3.wall.hole, BD = RING3.wall.band;
+  const OPEN = [{ ang: WINDOW_ANG, a: HO.a, y0: Y(HO.y1), y1: Y(HO.y0) }, { ang: BD.ang, a: BD.a, y0: Y(BD.y1), y1: Y(BD.y0) }];
   const WU = 512/H/32;
-  add(mesh(wallBand(RO, 0, hy0, true, undefined, WU), wallMat, undefined, { cast: false }));
-  add(mesh(wallBand(RO, hy0, hy1, true, inHole, WU), wallMat, undefined, { cast: false }));
-  add(mesh(wallBand(RO, hy1, H, true, undefined, WU), wallMat, undefined, { cast: false }));
+  const cuts = [...new Set([0, H, ...OPEN.flatMap(o => [o.y0, o.y1])])].sort((a, b) => a - b);
+  for (let i = 1; i < cuts.length; i++){
+    const ya = cuts[i - 1], yb = cuts[i], over = OPEN.filter(o => o.y0 <= ya + 1e-6 && o.y1 >= yb - 1e-6);
+    add(mesh(wallBand(RO, ya, yb, true, over.length ? (a => over.some(o => Math.abs(angDiff(a, o.ang)) < o.a)) : undefined, WU), wallMat, undefined, { cast: false }));
+  }
   /* the trims as real rails: the top rail and the kick plate */
   add(mesh(wallBand(RO - .025, Y(RING3.wall.top + RING3.wall.railH + 7), Y(RING3.wall.top), true), M('metal', PAL.rail, { side: THREE.DoubleSide, hl: .2 }), undefined, { cast: false }));
   add(mesh(wallBand(RO - .018, 0, L(RING3.wall.base), true), M('wall', PAL.base, { grain: 1, rep: [1, H], side: THREE.DoubleSide }), undefined, { cast: false }));
@@ -208,7 +212,9 @@ function build(): Built {
   const pillarGeo = { col: rbox(PW, H, PW, .07, 2), foot: rbox(PW + .12, .3, PW + .12, .05, 2), cap: rbox(PW + .12, .26, PW + .12, .05, 2) };
   const portGlass: { mat: THREE.MeshBasicMaterial; k: number }[] = [];
   for (let k = 0; k < 9; k++){
-    const ang = STEP/2 + k*STEP, f = wallFrame(temp, ang);
+    const ang = STEP/2 + k*STEP;
+    if (ang === BD.ang) continue;        // the window band: no porthole, lamp or pillar in front of it
+    const f = wallFrame(temp, ang);
     const ring = new THREE.Group(); ring.position.set(0, Y(P.y), .02); f.add(ring);
     ring.add(mesh(torus, m.frame));
     for (let b = 0; b < 8; b++){ const a = b*Math.PI/4; ring.add(mesh(bolt, m.metal, [Math.cos(a)*L(P.r), Math.sin(a)*L(P.r), L(6)])); }
@@ -237,6 +243,8 @@ function build(): Built {
     g.beginPath(); g.moveTo(520, 556); g.lineTo(560, 556); g.lineTo(680, 268); g.lineTo(640, 268); g.closePath(); g.fill();
     g.beginPath(); g.moveTo(590, 556); g.lineTo(604, 556); g.lineTo(724, 268); g.lineTo(710, 268); g.closePath(); g.fill();
   });
+  const band = windowBand(root, m);
+  const outside = buildOutside(root);
   const stations: Station[] = RING.map(st => {
     if (st.id === 'gang') return gangway(root, st, m);
     if (st.id === 'window') return bigWindow(root, st, m, glintTex.t);
@@ -250,7 +258,7 @@ function build(): Built {
      rather than entered. A box in front of it takes the tap while it is off
      centre and is hidden (so the ray passes) once it is straight ahead. */
   const PROXY: Record<string, [number, number, number, number, number]> = {
-    door: [664, 200, 272, 590, .5], gang: [648, 200, 304, 590, .5], window: [404, 236, 792, 554, RING3.bench.z + .45],
+    door: [664, 200, 272, 590, .5], gang: [648, 200, 304, 590, .5], window: [300, 206, 1000, 580, RING3.bench.z + .45],
     board: [520, 252, 724, 360, .3], mail: [690, 196, 240, 594, .55], dome: [700, 196, 390, 594, .6]
   };
   const offCentre = (st: any) => Math.abs(angDiff(st.ang, S.phi)) > C.offCentre;
@@ -316,6 +324,7 @@ function build(): Built {
     setPPD(clamp(f*(RO - 1)/D*D2R, 8, 120));
 
     for (const s of stations) if (Math.abs(angDiff(s.st.ang, phi)) < 75) s.sync(dt);
+    if (Math.abs(angDiff(BD.ang, phi)) < 80){ outside.sync(); band.sync(); }
     for (const p of proxies){
       const near = offCentre(p.st) && Math.abs(angDiff(p.st.ang, phi)) < 60;
       p.b.visible = near;
@@ -325,7 +334,7 @@ function build(): Built {
     for (const p of portGlass) p.mat.map.offset.x = ((S.T*spin*.6 + p.k*31) % 120)/120;
 
     /* the lamp pool: the n lamps nearest straight ahead, each fading out before it is handed on */
-    const lampAngs = Array.from({ length: 9 }, (_, k) => STEP/2 + k*STEP).sort((a, b) => Math.abs(angDiff(a, phi)) - Math.abs(angDiff(b, phi)));
+    const lampAngs = Array.from({ length: 9 }, (_, k) => STEP/2 + k*STEP).filter(a => a !== BD.ang).sort((a, b) => Math.abs(angDiff(a, phi)) - Math.abs(angDiff(b, phi)));
     lamps.forEach((l, i) => { const a = lampAngs[i], d = Math.abs(angDiff(a, phi));
       ringPt(a, RO - LT.lamp.out, LT.lamp.y, l.position); l.intensity = LT.lamp.intensity*smooth(LT.lamp.reach, LT.lamp.reach - 26, d); });
     const near = [...RING].sort((a, b) => Math.abs(angDiff(a.ang, phi)) - Math.abs(angDiff(b.ang, phi)));

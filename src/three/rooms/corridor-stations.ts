@@ -4,6 +4,14 @@ import { SAMBER, SIND, SOFT, SPINK, SROSE, STEAL, SWARM, shadow, txt, txtFit, vo
 import { MAT } from '../../core/materials';
 import { hhmm, mixHex, ymd } from '../../core/util';
 import { callPort, docked } from '../../rooms/hatch';
+import { spr } from '../../core/paint';
+import { PORTS } from '../../data/ports';
+import { ROUTE_SKY } from '../../rooms/cabin';
+import { OUT } from '../../rooms/outside';
+import { buildLandmark } from '../landmarks';
+import { liveTex } from '../kit';
+import { dirOf } from './corridor-kit';
+import { mulberry32 } from '../../core/util';
 import { S } from '../../state/runtime';
 import { G } from '../../state/store';
 import { now } from '../../state/time';
@@ -170,13 +178,16 @@ export function gangway(root: THREE.Object3D, st: any, m: Mats): Station {
 export function bigWindow(root: THREE.Object3D, st: any, m: Mats, glintTex: THREE.Texture): Station & { space: THREE.Group } {
   const g = wallFrame(root, st.ang), SP = RING3.space, SIT = RING3.cam.sit;
   /* the frame and the sill, bent round the wall */
-  const fr = dRR(404, 236, 792, 352, 98); fr.holes.push(dRR(438, 268, 724, 288, 76));
+  /* opened up from the first build (404/438 wide frame/glass): it takes in
+     nearly a third more of the outside, and the frame still covers the
+     stepped edge of the wall's one-degree columns */
+  const fr = dRR(300, 204, 1000, 424, 112); fr.holes.push(dRR(336, 238, 928, 356, 90));
   g.add(mesh(bend(slab(fr, .26, .02, 14).translate(0, 0, -.2), 0, .2), m.frame));
-  g.add(mesh(bend(rbox(L(760), L(26), .2, .02).translate(0, Y(593), .1), 0, .25), m.metalD));
-  addTo(blot(L(420), .3, .4), g).position.set(0, .003, .5);
+  g.add(mesh(bend(rbox(L(960), L(26), .2, .02).translate(0, Y(612), .1), 0, .25), m.metalD));
+  addTo(blot(L(520), .3, .4), g).position.set(0, .003, .5);
   /* the glass: a faint pane and two glints, and the tap that sits you down */
   const pane = (dz: number, mat: THREE.Material) => {
-    const geo = bend(new THREE.PlaneGeometry(L(724), L(288), 24, 1).translate(0, Y(412), dz), 0, 1);
+    const geo = bend(new THREE.PlaneGeometry(L(928), L(356), 28, 1).translate(0, Y(416), dz), 0, 1);
     return mesh(geo, mat, undefined, { cast: false, receive: false });
   };
   g.add(noRay(pane(-.12, flatMat('#9fb8d6', { opacity: .05 }))));
@@ -204,7 +215,7 @@ export function bigWindow(root: THREE.Object3D, st: any, m: Mats, glintTex: THRE
   const sp = (dx: number, dy: number, out = new THREE.Vector3()) => out.set(X(dx), Y(dy), 0).sub(E).multiplyScalar(s).add(E);
   const space = new THREE.Group(); g.add(space); noRay(space);
   const bgTex = canvasTex(8, 256, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#080f20'); gr.addColorStop(.6, '#111d38'); gr.addColorStop(1, '#1d2e52'); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
-  const bgW = L(900)*s, bgH = L(420)*s, bgC = sp(800, 412);
+  const bgW = L(1160)*s, bgH = L(540)*s, bgC = sp(800, 416);
   const bgM = mesh(new THREE.PlaneGeometry(bgW, bgH), new THREE.MeshBasicMaterial({ map: bgTex.t, toneMapped: false, depthWrite: false }), [bgC.x, bgC.y, bgC.z - .2], { cast: false, receive: false });
   bgM.renderOrder = -3; space.add(noRay(bgM));
   const neb = (spr: HTMLCanvasElement, x: number, y: number, w: number, h: number, a: number) => {
@@ -246,8 +257,13 @@ export function bigWindow(root: THREE.Object3D, st: any, m: Mats, glintTex: THRE
   space.raycast = () => {};
   pickable(ship, { act: 'ring:ship', label: tr('那艘船'), on: () => !!S.otherShip, anchor: new THREE.Vector3(0, 0, 0), r: .5 });
 
+  /* every place already given a lamp, as a small warm light in its own
+     direction, low over the horizon */
+  const TR: Record<string, [number, number]> = { dock: [470, 540], echo: [690, 372], bell: [1050, 520], ship: [1170, 318] };
+  const traces = Object.keys(TR).map(id => { const gl = glow(spr(PORTS[id].look.lamp), L(30)*s, 0); sp(TR[id][0], TR[id][1], gl.position); space.add(noRay(gl)); return { id, gl }; });
   return { st, g, space, sync(){
     sitPad.visible = !S.sitting;
+    for (const t of traces) t.gl.material.opacity = G.calls.some(c => c.id === t.id) ? .6 + .25*Math.sin(S.T*1.4 + t.id.length) : 0;
     for (const set of stars){
       const p = set.geo.attributes.position as THREE.BufferAttribute, c = set.geo.attributes.color as THREE.BufferAttribute;
       set.list.forEach((b, i) => {
@@ -425,3 +441,60 @@ export function dome(root: THREE.Object3D, st: any, m: Mats): Station & { hatchG
   } };
 }
 
+
+/* ---------------- the window band beside the gangway door ----------------
+   A run of glass in the outer wall between the gangway (160) and the galley
+   (200), cut where a porthole, its lamp and a near pillar used to be. The
+   ribs at 170 and 190 still stand across it, as mullions. It looks onto the
+   outside built by buildOutside() below, which is in real ring space, so the
+   view through it moves with the walk the way a real window's does. */
+export function windowBand(root: THREE.Object3D, m: Mats){
+  const BD = RING3.wall.band, g = wallFrame(root, BD.ang), hw = BD.a*RING3.ring.ppd;
+  const gx0 = 800 - hw + 10, gw = 2*(hw - 10), gy0 = BD.y0 + 4, gh = BD.y1 - BD.y0 - 8;
+  const fr = dRR(gx0 - 38, gy0 - 30, gw + 76, gh + 60, 40); fr.holes.push(dRR(gx0, gy0, gw, gh, 24));
+  g.add(mesh(bend(slab(fr, .22, .02, 12).translate(0, 0, -.17), 0, .2), m.frame));
+  g.add(mesh(bend(rbox(L(gw + 40), L(24), .18, .02).translate(0, Y(gy0 + gh + 14), .09), 0, .25), m.metalD));
+  addTo(blot(L(gw*.55), .28, .35), g).position.set(0, .003, .45);
+  const glint = canvasTex(256, 128, (c, w, h) => { c.fillStyle = 'rgba(255,255,255,.06)';
+    for (const [a, b] of [[40, 70], [150, 162]]){ c.beginPath(); c.moveTo(a, h); c.lineTo(b, h); c.lineTo(b + 60, 0); c.lineTo(a + 60, 0); c.closePath(); c.fill(); } });
+  const pane = (dz: number, mat: THREE.Material) => noRay(mesh(bend(new THREE.PlaneGeometry(L(gw), L(gh), 24, 1).translate(0, Y(gy0 + gh/2), dz), 0, 1), mat, undefined, { cast: false, receive: false }));
+  g.add(pane(-.11, flatMat('#9fb8d6', { opacity: .05 }))); g.add(pane(-.105, flatMat('#ffffff', { map: glint.t, opacity: 1 })));
+  return { g, sync(){} };
+}
+
+/* ---------------- what is outside the band ----------------
+   A backdrop far out (the lane's sky, as the bridge colours it), and the
+   place itself from three/landmarks.ts, set where state/voyage.ts says it is:
+   against the hull at the gangway when alongside, swung out ahead and far off
+   while coming in, sliding away astern when leaving. */
+export function buildOutside(root: THREE.Object3D){
+  const O = RING3.outside, PL = O.place, g = new THREE.Group(); g.name = 'outside'; root.add(g);
+  const tex = liveTex(512, 256, () => G.route, (c, w, h) => {
+    const [top, bot] = ROUTE_SKY[G.route] || ROUTE_SKY.harbor;
+    const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, top); gr.addColorStop(.62, bot); gr.addColorStop(.64, mixHex(bot, '#000000', .45)); gr.addColorStop(1, mixHex(top, '#000000', .6));
+    c.fillStyle = gr; c.fillRect(0, 0, w, h);
+    const R = mulberry32(57); for (let i = 0; i < 260; i++){ c.globalAlpha = .3 + R()*.6; c.fillStyle = R() < .1 ? '#ffe3b8' : '#dfe9f3'; const sz = .6 + R()*1.2; c.fillRect(R()*w, R()*h*.6, sz, sz); }
+  });
+  const a0 = O.from*D2R, a1 = O.to*D2R;
+  const cyl = new THREE.Mesh(new THREE.CylinderGeometry(O.r, O.r, 44, 48, 1, true, Math.PI - a1, a1 - a0),
+    new THREE.MeshBasicMaterial({ map: tex.t, side: THREE.BackSide, toneMapped: false, depthWrite: false }));
+  cyl.position.y = 1.5 + 44*(.5 - .62) + 0; cyl.renderOrder = -4; g.add(noRay(cyl));
+  const LM = Object.fromEntries(Object.keys(PORTS).map(id => { const l = buildLandmark(id); l.g.visible = false; g.add(noRay(l.g)); return [id, l]; }));
+  const fog = new THREE.Color(), d = new THREE.Vector3();
+  return { g, sync(){
+    tex.tick();
+    fog.set((ROUTE_SKY[G.route] || ROUTE_SKY.harbor)[1]);
+    const seen = new Set<string>();
+    for (const sg of OUT.list){
+      const L2 = LM[sg.id]; if (!L2) continue; seen.add(sg.id);
+      const p = 1/(1 + 24*(1 - sg.k)), q = (p - 1/25)/(1 - 1/25);
+      const swing = sg.phase === 'approach' ? (1 - q)*PL.swing : Math.min(1, sg.drift)*PL.swing + (1 - q)*PL.swing*.3;
+      const ang = PL.ang + swing, dist = (RING3.ring.ro + .32) + (PL.near/p - PL.near), r = Math.min(dist, PL.cap), sc = r/dist;
+      dirOf(ang, d); L2.g.position.set(d.x*r, PL.y[0] + (PL.y[1] - PL.y[0])*q, d.z*r);
+      L2.g.rotation.y = -ang*D2R; L2.g.scale.setScalar(sc);
+      L2.g.visible = sg.vis > .01;
+      L2.sync({ fog: 1 - q, sky: fog, lit: sg.lit, t: S.T, vis: sg.vis, shrink: sc*p });
+    }
+    for (const id of Object.keys(LM)) if (!seen.has(id)) LM[id].g.visible = false;
+  } };
+}

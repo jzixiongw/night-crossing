@@ -32,6 +32,11 @@ export function nextStep(): Next {
     if (!G.radioOn) return step({ id:'radio', room:'radio', view:'radio', act:'r:power', title:tr('打开收音机'), detail:tr('点收音机左侧开关，再左右拖动右侧旋钮。'), button:tr('走近收音机'), action:tr('打开收音机') });
     return step({ id:'tune', room:'radio', view:'radio', act:'r:tune', title:tr('调到调度台'), detail:tr('左右拖动右侧旋钮，调到 1.09。委托会从打印机出来。'), button:tr('走近收音机'), action:tr('左右拖动 · 调到 1.09') });
   }
+  /* Handed over and still alongside: the next request can wait. The guide
+     points at the porthole by the door, where the parting can be watched. */
+  if (j?.delivered && G.call?.gave && G.call.to === j.to)
+    return step({ id: 'parting', phase: 3, room: 'hatch', act: '', view: 'porthole', complete: true,
+      title: tr('这一趟送到了'), detail: tr('舷门右边有一扇舷窗，看得见外面。'), button: tr('走到舷窗边'), action: '' });
   if (!j || j.delivered) {
     return step({ id: 'complete', phase: 3, room: 'radio', act: 'r:power', view: 'radio', complete: true,
       title: j ? tr('这一趟送到了') : tr('领取下一张委托'),
@@ -71,6 +76,9 @@ export function nextStep(): Next {
   if (!G.call?.docked) return step({ id: 'sailing', phase: 2, room: 'galley', act: '', view: '', waiting: true,
     title: tr('植物灯装好了'), detail: tr('船正在前往目的地。到港时，这里会亮起提示。'),
     button: tr('去厨房坐坐'), action: '' });
+  if (S.offer && S.room === 'hatch') return step({ id: 'let-go', phase: 2, room: 'hatch', view: 'handover', act: 'hat:give',
+    title: tr('松手'), detail: tr('灯已经在{0}手里了。再点一下，松开手。', PORTS[G.call.to]?.who || ''),
+    button: tr('去舷梯'), action: tr('松手') });
   return step({ id: S.doorOpen ? 'give' : 'door', phase: 2, room: 'hatch', view: 'handover',
     act: S.doorOpen ? 'hat:give' : 'hat:door', title: tr('把灯送到门外'),
     detail: S.doorOpen ? tr('门外有人正在等。点他，把植物灯递过去。') : tr('船已经靠好。点舷门把手，打开门。'),
