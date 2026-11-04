@@ -2,6 +2,7 @@ import { tr } from '../i18n';
 import { durText } from '../core/util';
 import { PORT_ORDER, portById } from '../data/ports';
 import { S } from '../state/runtime';
+import { journeyDone } from '../state/journey';
 import { G } from '../state/store';
 
 /* ================= THE LINE =================
@@ -21,8 +22,8 @@ export interface Step { id: string; name: string; where: string; at: string; par
 
 const call = () => G.call;
 export const STEPS: Step[] = [
-  { id:'take', name:tr('接单'), where:'radio', at:tr('电台室'),
-    done: () => G.slips.length > 0 || !!G.call,
+  { id:'take', name:tr('领取委托'), where:'radio', at:tr('电台室'),
+    done: () => journeyDone(G, 'take'),
     parts: [
       { name:tr('开电台'),    done: () => G.radioOn || !!G.printed || G.slips.length > 0 || !!G.call },
       { name:tr('对上调度台'), done: () => !!G.printed || G.slips.length > 0 || !!G.call },
@@ -30,30 +31,30 @@ export const STEPS: Step[] = [
     ],
     todo: () => tr('电台室：调到调度台，撕一张单子。') },
   { id:'course', name:tr('定航向'), where:'cabin', at:tr('驾驶舱'),
-    done: () => !!G.call,
+    done: () => journeyDone(G, 'course'),
     parts: [
       { name:tr('拿着单子'),   done: () => G.slips.length > 0 || !!G.call },
-      { name:tr('放上航向板'), done: () => !!G.call }
+      { name:tr('选择目的地'), done: () => !!G.call }
     ],
-    todo: () => tr('驾驶舱：把单子放上航向板。') },
-  { id:'grow', name:tr('种'), where:'green', at:tr('温室'),
-    done: () => !!G.rig || G.pots.some(p => p && p.g >= 1),
+    todo: () => tr('驾驶舱：点航向板，选择目的地。') },
+  { id:'grow', name:tr('培育植物'), where:'green', at:tr('温室'),
+    done: () => journeyDone(G, 'grow'),
     parts: [
       { name:tr('下一粒种'), done: () => !!G.rig || G.pots.some(p => p) },
       { name:tr('浇上水'),   done: () => !!G.rig || G.pots.some(p => p && (p.water > 0 || p.g >= 1)) },
       { name:tr('等它开花'), done: () => !!G.rig || G.pots.some(p => p && p.g >= 1) }
     ],
     todo: () => tr('温室：种一盆，浇上水，等它开花。') },
-  { id:'build', name:tr('装'), where:'green', at:tr('温室'),
-    done: () => !!(G.rig && G.rig.glass && G.rig.lit),
+  { id:'build', name:tr('装配植物灯'), where:'green', at:tr('温室'),
+    done: () => journeyDone(G, 'build'),
     parts: [
       { name:tr('端上转台'), done: () => !!G.rig },
       { name:tr('扣上罩子'), done: () => !!(G.rig && G.rig.glass) },
       { name:tr('装上灯'),   done: () => !!(G.rig && G.rig.lit) }
     ],
-    todo: () => tr('温室右边的装配台：扣罩子，装灯。') },
-  { id:'give', name:tr('送'), where:'hatch', at:tr('舷梯'),
-    done: () => false,
+    todo: () => tr('温室：走近装配台。扣上玻璃罩。接着安装灯头。') },
+  { id:'give', name:tr('交付植物灯'), where:'hatch', at:tr('舷梯'),
+    done: () => journeyDone(G, 'give'),
     parts: [
       { name:tr('船靠上来'), done: () => !!(call() && call().docked) },
       { name:tr('开舷门'),   done: () => !!S.doorOpen || !!(call() && call().gave) },
@@ -98,5 +99,5 @@ export function voyageLine(){
 /* The next place that has asked and has not been taken on yet. Dispatch reads
    these out in order and stops when there is nothing left to give out. */
 export function openRequest(){
-  return PORT_ORDER.find(id => !G.slips.includes(id) && G.printed !== id && !(G.call && G.call.to === id)) || null;
+  return PORT_ORDER.find(id => !G.calls.some(c => c.id === id) && !G.slips.includes(id) && G.printed !== id && !(G.call && G.call.to === id)) || null;
 }

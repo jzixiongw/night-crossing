@@ -22,6 +22,7 @@ export function renderSettings(){
   $('#sSound').textContent = AU.on ? tr('开') : tr('关'); $('#sMotion').textContent = G.reduced ? tr('减少') : tr('完整');
   $('#sSpeed').textContent = '×' + G.speed; $('#sSpeed').classList.toggle('on', G.speed > 1);
   $('#sSave').textContent = saveText();
+  $('#sGuide').textContent = G.guide?.enabled !== false ? tr('开启') : tr('关闭');
 }
 export function openSettings(){ closePanels(); renderSettings(); $('#settingsPanel').hidden = false; AU.paper(); }
 $('#bSettings').onclick = () => { if (!$('#settingsPanel').hidden) closePanels(); else openSettings(); };
@@ -30,6 +31,7 @@ export function setSound(v){ G.sound = v; AU.setOn(v); $('#bSound').textContent 
 $('#bSound').onclick = () => setSound(!AU.on);
 $('#sSound').onclick = () => setSound(!AU.on);
 $('#sMotion').onclick = () => { G.reduced = !G.reduced; document.body.classList.toggle('reduced', G.reduced); renderSettings(); markDirty(); };
+$('#sGuide').onclick = () => { G.guide ||= { enabled:true, collapsed:false }; G.guide.enabled = !G.guide.enabled; G.guide.collapsed = false; renderSettings(); markDirty(); };
 $('#sSpeed').onclick = () => { G.speed = G.speed > 1 ? 1 : 20; renderSettings(); markDirty(); say(G.speed > 1 ? tr('时间流速 ×20（测试用）。') : tr('时间流速恢复 ×1。')); };
 $('#sReset').onclick = () => {
   const b = $('#sReset');
