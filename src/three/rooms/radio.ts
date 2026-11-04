@@ -349,6 +349,7 @@ function build(): Built {
   const views: View[] = [
     { id: 'room', label: tr('电台室'), ...RAD.views.room },
     { id: 'radio', label: tr('收音机'), ...RAD.views.radio },
+    { id: 'printer', label: tr('打印机'), ...RAD.views.printer },
     { id: 'tape', label: tr('八音盒'), ...RAD.views.tape }
   ];
   return {

@@ -415,7 +415,7 @@ function build(): Built {
     add(mesh(new THREE.CylinderGeometry(GU(62), GU(62), GU(3), 40), M('wood', '#6b4a2a'), [0, GU(13), 0]), turn).scale.z = .9;
     /* a generous grip over the turntable, so the empty table is easy to hit */
     add(new THREE.Mesh(new THREE.CylinderGeometry(GU(88), GU(88), GU(150), 16), new THREE.MeshBasicMaterial({ visible: false })), turn).position.y = GU(80);
-    pickable(turn, { act: 'gh:work:plant', label: tr('装配台'), anchor: new THREE.Vector3(0, GU(40), 0), r: GU(80) });
+    pickable(turn, { act: 'gh:work:plant', label: () => G.rig ? tr('装配台') : tr('把开花植物移到装配台'), anchor: new THREE.Vector3(0, GU(40), 0), r: GU(80) });
   }
   const rigHold = grp(turn, [0, GU(14), 0]); rigHold.scale.setScalar(1.45);
   const rig = rig3d(rigHold);
@@ -427,13 +427,13 @@ function build(): Built {
       add(mesh(dome, MT.glassDome, [GU(dx), GU(10), dx < 0 ? -.04 : .03], { cast: false }), sh);
       add(mesh(new THREE.TorusGeometry(GU(38)*sc, .006, 8, 24), MT.brass, [GU(dx), GU(11), dx < 0 ? -.04 : .03], { rot: [Math.PI/2, 0, 0], cast: false }), sh);
     }
-    pickable(sh, { act: 'gh:work:glass', label: tr('罩子架'), anchor: new THREE.Vector3(0, GU(36), 0), r: GU(56) });
+    pickable(sh, { act: 'gh:work:glass', label: () => G.rig?.glass ? tr('玻璃罩已扣好') : tr('扣上玻璃罩'), anchor: new THREE.Vector3(0, GU(36), 0), r: GU(56) });
     const tr2 = grp(root, [W(146), wTop, WZ + .04]);
     add(mesh(rbox(GU(96), GU(20), .2, .015), MT.metalD, [0, GU(10), 0]), tr2);
     for (let k = 0; k < 3; k++){ const x = GU(-30 + k*30);
       add(mesh(new THREE.CylinderGeometry(GU(9), GU(11), GU(14), 16), MT.brass, [x, GU(26), 0]), tr2);
       add(mesh(new THREE.SphereGeometry(GU(6), 10, 8), toon('#ffe7bd', { grain: -1, emissive: '#ffd59a', ei: .5 }), [x, GU(19), 0], { cast: false }), tr2); }
-    pickable(tr2, { act: 'gh:work:lamp', label: tr('灯盘'), anchor: new THREE.Vector3(0, GU(20), 0), r: GU(54) });
+    pickable(tr2, { act: 'gh:work:lamp', label: () => G.rig?.lit ? tr('植物灯已装好') : tr('安装灯头'), anchor: new THREE.Vector3(0, GU(20), 0), r: GU(54) });
   }
   /* the bench lamp on its arm, always burning */
   const benchLamp = (() => {
@@ -556,7 +556,7 @@ function build(): Built {
       for (const it of tmp){ if (!it.uv) continue; const mx = Math.min(MW - 1, Math.floor(it.uv.x*MW)), my = Math.min(MH - 1, Math.floor((1 - it.uv.y)*MH)); if (mask[my*MW + mx]) out.push(it); } };
     const cardPlane = () => { card.updateWorldMatrix(true, false); const n = new THREE.Vector3(0, 0, 1).transformDirection(card.matrixWorld), o = new THREE.Vector3().setFromMatrixPosition(frame.matrixWorld); return new THREE.Plane().setFromNormalAndCoplanarPoint(n, o); };
     const toFrame = (pt: THREE.Vector3) => { const l = frame.worldToLocal(pt.clone()); return { x: l.x, y: -l.y }; };
-    pickable(card, { act: 'gh:plant:' + i, key: 'plant' + i, label: i === 0 ? tr('植物') : null, plane: cardPlane, toLocal: toFrame,
+    pickable(card, { act: 'gh:plant:' + i, key: 'plant' + i, label: () => G.pots[i] && bloomReady(G.pots[i]) ? tr('选择开花植物') : (i === 0 ? tr('植物') : null), plane: cardPlane, toLocal: toFrame,
       cur: () => S.spray ? 'crosshair' : 'pointer', anchor: new THREE.Vector3(0, 115, 0), r: .16*s });
     /* the pot's own pick: a plane through its axis facing the room */
     const potHit = add(new THREE.Mesh(new THREE.CylinderGeometry(50, 40, 84, 12), new THREE.MeshBasicMaterial({ visible: false })), wig);
@@ -694,6 +694,7 @@ function build(): Built {
   /* ================= PER FRAME ================= */
   const tmpV = new THREE.Vector3(), tmpW = new THREE.Vector3();
   function sync(dt: number){
+    if (wantBench && !S.trans && !S.camMove) { wantBench = false; goView('bench'); }
     const L = S.lampK ?? (G.growLamp ? 1 : 0), red = !!G.reduced;
     hemi.intensity = LT.hemi[0] + (LT.hemi[1] - LT.hemi[0])*L;
     moon.intensity = LT.moon.intensity[0] + (LT.moon.intensity[1] - LT.moon.intensity[0])*L;
