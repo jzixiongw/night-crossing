@@ -11,7 +11,12 @@ import './core/presence';
 
 import './boot';
 
-/* ?cabin=3d swaps the Canvas2D cabin for the experimental Three.js one in
-   src/three/. It is its own chunk, so the default game never downloads three;
-   it replaces ROOMS.cabin when it arrives and the loop picks it up next frame. */
-if (new URLSearchParams(location.search).get('cabin') === '3d') import('./three/cabin3d').catch(err => console.error(err));
+/* The ship is drawn in 3D (src/three/), loaded as its own chunk; until it
+   arrives -- and for good if WebGL is missing or ?render=2d asks -- the
+   painted Canvas2D rooms draw it, which are still what every room's logic
+   lives in. The 3D rooms replace only how a room is drawn and how a pointer
+   finds things in it, so switching mid-voyage changes nothing in the save. */
+function webglOK(){
+  try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch(e){ return false; }
+}
+if (new URLSearchParams(location.search).get('render') !== '2d' && webglOK()) import('./three/index').catch(err => console.error(err));

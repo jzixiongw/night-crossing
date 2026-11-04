@@ -30,7 +30,12 @@ import { openMail, updateMailbox } from '../ui/mail';
    shear as the camera drifts. */
 export const WINDOW_ANG = RING.find(s => s.id === 'window').ang;
 export const K_RW = .62, K_RN = 1.32;        // the far wall, and the near pillars
-export const PPD = 30;                        // design units of wall per degree walked
+export let PPD = 30;                          // design units of wall per degree walked
+/* The drag in core/input.ts turns pixels into degrees with PPD. The 3D ring
+   (src/three/rooms/corridor.ts) sets it from its own camera so the floor stays
+   under the finger, and puts it back when the room is left; the painted ring
+   lays itself out with the same 30. */
+export function setPPD(v = 30){ PPD = v; }
 export const WT = 190, WB = 790;              // the wall's top rail, and its foot
 export const FN = 1020, CN = -330;            // the near edge of the floor, and of the ceiling
 export const SPREAD = 1.86;                   // how far the floor has fanned out by its near edge

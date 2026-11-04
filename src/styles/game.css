@@ -70,6 +70,14 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
 #navLabel{font:400 clamp(12px,1.4cqw,18px)/1 var(--f-display);letter-spacing:.08em;min-width:6.5em;text-align:center;color:#eef3f8}
 #back{position:absolute;left:2.2cqw;bottom:2.6%;}
 #ctx{position:absolute;right:2cqw;bottom:2.6%;display:flex;gap:.5em;flex-wrap:wrap;justify-content:flex-end;max-width:46%}
+/* the places in a 3D room you can move to (src/three/view.ts) */
+#views{position:absolute;left:50%;bottom:2.6%;transform:translateX(-50%);display:flex;gap:.4em;padding:.3em;border-radius:999px;background:rgba(9,15,29,.42);border:1px solid var(--ui-line);backdrop-filter:blur(6px)}
+#views .pill{background:transparent;border-color:transparent;padding:.5em .95em}
+#views .pill.on{background:rgba(255,217,163,.1);border-color:rgba(255,217,163,.45)}
+#stage.ring #views{display:none}
+/* reading a notice up close: one way back, where the view bar was */
+#inspectBack{position:absolute;left:50%;bottom:2.6%;transform:translateX(-50%);padding:.7em 1.4em;border-color:rgba(255,217,163,.55);color:var(--amber-lt)}
+#stage.ring #inspectBack{bottom:13%}
 
 /* caption */
 #caption{
@@ -253,6 +261,8 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
   #nav{bottom:9%}
   #back{bottom:9.4%;left:3cqw}
   #ctx{right:3cqw;bottom:9.4%;max-width:60%}
+  #views{bottom:auto;top:calc(1.6cqw + clamp(44px,9cqw,64px))}
+  #inspectBack{bottom:auto;top:calc(1.6cqw + clamp(44px,9cqw,64px))}
   .panel{right:3cqw;left:3cqw;width:auto;top:auto;bottom:16%;max-height:58%}
   .sheet-inner{width:min(92cqw,780px)}
   .mailwrap{grid-template-columns:1fr;width:min(92cqw,860px)}
@@ -264,3 +274,4 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px soli
   .intro-body p{max-width:none}
 }
 @media (prefers-reduced-motion:reduce){.hint i{animation:none}}
+#views .pill::first-letter{text-transform:uppercase}

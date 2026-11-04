@@ -1,8 +1,10 @@
 # Night Crossing · 夜航
 
-An atmospheric 2D web game, painted at runtime onto a canvas.
-[README.md](README.md) has the rendering architecture, the layer order and the
-camera. Read it before touching `src/core/` or `src/rooms/`.
+An atmospheric web game, drawn at runtime in 3D with three.js (`src/three/`)
+over the painted Canvas2D rooms, which still hold every room's logic.
+[README.md](README.md) has the rendering architecture, the 3D seams, the
+viewpoints and the camera. Read it before touching `src/core/`, `src/rooms/`
+or `src/three/`.
 
 ## Commands
 
@@ -10,6 +12,7 @@ camera. Read it before touching `src/core/` or `src/rooms/`.
 npm run dev
 npm run typecheck
 npm run build
+node tools/three-check.mjs   # browser check of the 3D ship; see its header
 ```
 
 ## If you change a string

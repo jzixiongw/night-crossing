@@ -28,9 +28,12 @@ export const PAN_X = 300, PAN_Y = 150;
    the garden fills the frame, and the nursery and the work bench are off either
    edge, so the drag is how you get to them. `max` caps what zooming in buys
    back, which is what keeps a zoomed-in swing inside the painted room. */
-export const PAN = { x:PAN_X, y:PAN_Y, max:Infinity };
-export function setPanRange(x = PAN_X, y = PAN_Y, max = Infinity){ PAN.x = x; PAN.y = y; PAN.max = max; clampPan(); }
-export function panLimit(){ const g = 1 + (CAM.user - 1)*1.25; return [Math.min(PAN.x*g, PAN.max), PAN.y*g]; }
+/* `grow` is how much of the zoom-in is bought back as extra swing. The painted
+   rooms need it (a zoomed window shows less of the room); the 3D rooms turn
+   the head instead, and keep it small so a close look stays composed. */
+export const PAN = { x:PAN_X, y:PAN_Y, max:Infinity, grow:1.25 };
+export function setPanRange(x = PAN_X, y = PAN_Y, max = Infinity, grow = 1.25){ PAN.x = x; PAN.y = y; PAN.max = max; PAN.grow = grow; clampPan(); }
+export function panLimit(){ const g = 1 + (CAM.user - 1)*PAN.grow; return [Math.min(PAN.x*g, PAN.max), PAN.y*g]; }
 export function clampPan(){
   const [lx, ly] = panLimit();
   CAM.tpanX = Math.max(-lx, Math.min(lx, CAM.tpanX));
@@ -39,6 +42,10 @@ export function clampPan(){
 export const USER_MIN = 1, USER_MAX = 1.9;
 export function setUserZoom(z){ CAM.tuser = Math.max(USER_MIN, Math.min(USER_MAX, z)); clampPan(); }
 export function resetView(){ CAM.tpanX = 0; CAM.tpanY = 0; CAM.tuser = 1; }
+/* Viewpoints belong to the 3D rooms (src/three/view.ts). Input only needs to
+   ask whether the player has moved away from a room's main view and to send
+   them back, so the 3D side fills these in and the painted rooms never do. */
+export const VIEW = { away: () => false, back: () => {} };
 export function viewMoved(){ return Math.abs(CAM.tpanX) > 2 || Math.abs(CAM.tpanY) > 2 || CAM.tuser > 1.02; }
 
 /* The pan is damped by depth rather than multiplied by it. True parallax would

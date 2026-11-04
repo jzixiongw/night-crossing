@@ -1165,4 +1165,19 @@ export const EN: Record<string, string> = {
 '回到三个存档位那一页。这一位的航程已经存好。':
   'Back to the page with the three berths. This voyage is already saved.',
 '清空这一位的航程': 'Clear this voyage',
+/* viewpoints in the 3D rooms (src/three/view.ts) */
+'观察点': 'Places to look from',
+'走近看：{0}': 'go to the {0}',
+'回到{0}': 'back to the {0}',
+'桌前': 'desk',
+'窗边': 'window',
+'收音机': 'radio',
+'八音盒': 'music box',
+'门口': 'doorway',
+'水槽和炉子': 'sink and stove',
+'种植区': 'garden',
+'育苗区': 'nursery',
+'‹ 返回': '‹ Back',
+'坐着': 'sitting',
+'躺着': 'lying down',
 };

@@ -517,6 +517,16 @@ export function cursorPlay(){ // cursor in play-plane coordinates, or null
   const r = cv.getBoundingClientRect(); if (PR.cx < r.left || PR.cx > r.right || PR.cy < r.top || PR.cy > r.bottom) return null;
   const X = (PR.cx - r.left)/r.width*CW, Y = (PR.cy - r.top)/r.height*CH; return inv(mat(1), X, Y);
 }
+/* What the room's logic asks the camera: where the hand is over the plants (in
+   play-plane design units), which end of the house the player has walked to,
+   and how the room turns to the bench when building is the job. The 3D
+   greenhouse (three/rooms/green.ts) swaps these for answers from its own
+   camera and puts these back when it is left. */
+export const GREEN_SPACE = {
+  cursor: (): { x: number; y: number } | null => cursorPlay(),
+  end: (): 'nursery' | 'bench' | null => CAM.panX > 560 ? 'nursery' : CAM.panX < -560 ? 'bench' : null,
+  toBench: () => { CAM.tpanX = -880; }
+};
 
 /* ---- static art ----
    The room is three times as wide as the window, so each cached layer is cut
@@ -643,7 +653,7 @@ ROOMS.green = {
     /* Building happens at the far right, so when that is the step the room opens
        looking at it. Turning your head is how you change jobs in here. */
     const st = STEPS[stepNow()];
-    if (st && st.id === 'build') CAM.tpanX = -880;
+    if (st && st.id === 'build') GREEN_SPACE.toBench();
     if (once('greenFirst')) say(tr('温室比船上别处暖，玻璃内侧挂着一层水汽。'));
     else { const dry = G.pots.filter(p => p && p.water <= 0).length; if (dry) say(dry === 1 ? tr('有一盆土干了。') : tr('有 {0} 盆土干了。', dry)); }
     if (once('ghDrag')) say(tr('温室比你看见的长。按住不放，可以往两边走。'), null, 2600);
@@ -651,11 +661,12 @@ ROOMS.green = {
   exit(){ setSpray(false); setCtx([]); },
   update(dt){
     S.lampK += ((G.growLamp ? 1 : 0) - S.lampK)*(1-Math.exp(-dt*3));
-    const dark = !G.growLamp, cp = cursorPlay(); S.ghCursor = cp;
+    const dark = !G.growLamp, cp = GREEN_SPACE.cursor(); S.ghCursor = cp;
     if (S.bellSwing){ S.bellSwing.t += dt; if (S.bellSwing.t > 2.4) S.bellSwing = null; }
     /* The two ends of the room, found by walking to them. */
-    if (CAM.panX > 560 && once('ghNursery')) say(tr('育苗架这头冷一些，玻璃上结着一层水。'));
-    if (CAM.panX < -560 && once('ghWork')) say(tr('台子这头烤得暖，木头有一点香味。'));
+    const end = GREEN_SPACE.end();
+    if (end === 'nursery' && once('ghNursery')) say(tr('育苗架这头冷一些，玻璃上结着一层水。'));
+    if (end === 'bench' && once('ghWork')) say(tr('台子这头烤得暖，木头有一点香味。'));
     POTS.forEach((pot,i) => {
       const p = G.pots[i];
       if (p && cp && p.g > .1){ const d = Math.hypot(cp.x - pot.x, cp.y - (pot.y - 170*pot.s));

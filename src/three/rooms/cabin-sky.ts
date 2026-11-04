@@ -1,12 +1,12 @@
 import * as THREE from 'three';
-import { SIND, SPR_OF, SROSE, STEAL, SWARM } from '../core/paint';
-import { RS } from '../core/surface';
-import { hex } from '../core/util';
-import { COL } from '../data/index';
-import { S } from '../state/runtime';
-import { beaconIntensity, ROUTE_SKY } from '../rooms/cabin';
-import { C3, U, designX, designY, wallX, wallY } from './config';
-import { canvasTex, glow, texOf } from './kit';
+import { SIND, SPR_OF, SROSE, STEAL, SWARM } from '../../core/paint';
+import { RS } from '../../core/surface';
+import { hex } from '../../core/util';
+import { COL } from '../../data/index';
+import { S } from '../../state/runtime';
+import { beaconIntensity, ROUTE_SKY } from '../../rooms/cabin';
+import { C3, U, designX, designY, wallX, wallY } from '../config/cabin';
+import { canvasTex, glow, spriteTex } from '../kit';
 
 /* ================= THE SKY BEYOND THE GLASS =================
    A backdrop C3.sky.depth metres behind the back wall. Everything the game
@@ -16,7 +16,7 @@ import { canvasTex, glow, texOf } from './kit';
    2D cabin painted it. Moving the camera then gives real parallax against the
    window frames, and windowOf() asks the real question: is the line from the
    eye to this beacon passing through glass? */
-const EYE = C3.camera.eye, ZW = C3.room.back, ZS = C3.room.back - C3.sky.depth;
+const EYE = C3.skyEye, ZW = C3.room.back, ZS = C3.room.back - C3.sky.depth;
 export const SKY_R = (EYE[2] - ZS)/(EYE[2] - ZW);
 export const SKY_Z = ZS;
 export const skyLocal = (x: number, y: number, z = ZS) => new THREE.Vector3(EYE[0] + (wallX(x) - EYE[0])*SKY_R, EYE[1] + (wallY(y) - EYE[1])*SKY_R, z);
@@ -88,7 +88,7 @@ export function buildSky(){
 
   /* nebula, the far planet, the ring planet, the harbour */
   const neb = [[SROSE, 580, 330, 760, 420, .55], [STEAL, 1170, 370, 820, 380, .55], [SIND, 850, 320, 900, 520, .4]].map(([cv, x, y, w, h, a]: any) => {
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texOf(cv), transparent: true, depthWrite: false, opacity: 0, toneMapped: false }));
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: spriteTex(cv), transparent: true, depthWrite: false, opacity: 0, toneMapped: false }));
     s.position.copy(skyLocal(x, y, ZS + .5)); s.scale.set(SU(w), SU(h), 1); s.userData = { x, a }; group.add(s); return s;
   });
   const farMat = planetMat({ l: '#a9c7e6', b: '#5f80ad', d: '#2b4068', r: '#8fb0d4' }, '#dfe9f3');

@@ -1,5 +1,5 @@
 import { tr } from '../i18n';
-import { CAM, clampPan, cpt, resetView, scaleAt, setUserZoom, viewMoved } from './camera';
+import { CAM, VIEW, clampPan, cpt, resetView, scaleAt, setUserZoom, viewMoved } from './camera';
 import { HITS_PREV, focusables, hitAt, localPt, shapeCenter } from './hits';
 import { P } from './shell';
 import { CH, CW, cv } from './surface';
@@ -29,7 +29,7 @@ let pinch = null;
 
 export function startViewDrag(e){
   const p = cpt(e);
-  S.drag = { view:true, ring:S.room === 'corridor' && !S.sitting,
+  S.drag = { view:true, ring:S.room === 'corridor' && !S.sitting && !S.inspecting,
     x0:e.clientX, y0:e.clientY, lcx:e.clientX, lX:p.X, lY:p.Y,
     lt:performance.now(), moved:false, id:e.pointerId };
   if (S.drag.ring){ S.phiTarget = null; S.phiV = 0; }
@@ -75,7 +75,9 @@ cv.addEventListener('pointerdown', e => {
     if (S.drag && S.drag.ctrl && S.drag.ctrl.up) S.drag.ctrl.up(e, true, true, null);
     S.drag = null; pinch = null; pinchStep(); return;
   }
-  if (S.trans || S.drag) return;
+  /* S.camMove: the 3D camera is between viewpoints; nothing under the pointer
+     is where it will be when the move ends. */
+  if (S.trans || S.drag || S.camMove) return;
   if (e.button !== undefined && e.button !== 0) return;
   PR.idleT = 0; S.lastTouch = S.T; S.focusKey = null;
   const p = cpt(e), f = hitAt(p.X, p.Y);
@@ -102,7 +104,7 @@ cv.addEventListener('pointermove', e => {
      of its own, becomes a view drag rather than nothing at all. */
   if (!d.view && !d.ctrl && d.moved){
     const p = cpt(e);
-    S.drag = { view:true, ring:S.room === 'corridor' && !S.sitting, x0:d.x0, y0:d.y0,
+    S.drag = { view:true, ring:S.room === 'corridor' && !S.sitting && !S.inspecting, x0:d.x0, y0:d.y0,
       lcx:e.clientX, lX:p.X, lY:p.Y, lt:performance.now(), moved:true, id:d.id };
     if (S.drag.ring){ S.phiTarget = null; S.phiV = 0; }
     cv.style.cursor = 'grabbing';
@@ -138,7 +140,7 @@ cv.addEventListener('pointercancel', e => { liftPointer(e); endDrag(e, true); })
 cv.addEventListener('lostpointercapture', e => { if (S.drag && S.drag.id === e.pointerId) endDrag(e, true); });
 cv.addEventListener('pointerleave', () => { CAM.tx = 0; CAM.ty = 0; });
 /* Double-click puts the view back where the room composed it. */
-cv.addEventListener('dblclick', () => { if (S.started) resetView(); });
+cv.addEventListener('dblclick', () => { if (!S.started) return; if (S.inspecting || (!viewMoved() && VIEW.away())) VIEW.back(); else resetView(); });
 stage.addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') return; const r = stage.getBoundingClientRect(); CAM.tx = ((e.clientX - r.left)/r.width - .5)*2; CAM.ty = ((e.clientY - r.top)/r.height - .5)*2; CAM.last = S.T; });
 
 /* keyboard: Tab walks the touchable things in the current view, Enter uses them */
@@ -149,17 +151,17 @@ cv.addEventListener('keydown', e => {
     S.focusKey = list[i].h.key; return; }
   if ((e.key === 'Enter' || e.key === ' ') && S.focusKey){ e.preventDefault();
     const h = HITS_PREV.find(x => x.key === S.focusKey); if (!h) return; const r = resolveAct(h.act); if (!r) return;
-    const c0 = shapeCenter(h.shape); if (r.h.key) r.h.key(r.args); else if (r.h.tap) r.h.tap(r.args, null, { x:c0[0], y:c0[1] }, h); }
+    const c0 = shapeCenter(h.shape); if (r.h.key) r.h.key(r.args); else if (r.h.tap) r.h.tap(r.args, null, h.keyPt ? h.keyPt() : { x:c0[0], y:c0[1] }, h); }
 });
 cv.addEventListener('blur', () => { S.focusKey = null; });
 document.addEventListener('keydown', e => {
   if (!S.started) return;
   const tag = ((e.target as HTMLElement)?.tagName || '').toLowerCase(); if (tag === 'textarea' || tag === 'input') return;
-  if (e.key === 'Escape'){ if (anyOpen()) closePanels(); else if (S.spray) setSpray(false); else if (S.pick){ S.pick = null; domeCtx(); } else if (viewMoved()) resetView(); else if (S.sitting) standUp(); return; }
+  if (e.key === 'Escape'){ if (anyOpen()) closePanels(); else if (S.spray) setSpray(false); else if (S.pick){ S.pick = null; domeCtx(); } else if (S.inspecting) VIEW.back(); else if (viewMoved()) resetView(); else if (VIEW.away()) VIEW.back(); else if (S.sitting) standUp(); return; }
   if (anyOpen()) return;
   /* Arrow keys walk the ring where walking is the thing, and swing the view
      everywhere else, so the free camera is reachable without a pointer. */
-  if (S.room === 'corridor'){
+  if (S.room === 'corridor' && !S.inspecting){
     if (e.key === 'ArrowLeft'){ e.preventDefault(); walkStep(-1); return; }
     if (e.key === 'ArrowRight'){ e.preventDefault(); walkStep(1); return; }
   } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
@@ -173,6 +175,9 @@ document.addEventListener('keydown', e => {
 stage.addEventListener('wheel', e => {
   if (!S.started || anyOpen()) return;
   e.preventDefault();
+  /* a wheel turned mid-drag on a dial or the dough would move the camera
+     out from under the hand */
+  if (S.drag && S.drag.ctrl) return;
   const dv = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY);
   setUserZoom(CAM.tuser * Math.exp(-dv*(e.ctrlKey ? .006 : .0017)));
 }, { passive:false });

@@ -1,8 +1,11 @@
 # 夜航 · Night Crossing
 
-An atmospheric 2D web game: a ring-shaped night ship with six rooms, painted
-entirely at runtime onto a 2D canvas. No sprite sheets, no texture atlases —
-every object is drawn from path commands each frame.
+An atmospheric web game: a ring-shaped night ship with six rooms and the ring
+corridor between them. Every room is built at runtime -- no models, no sprite
+sheets, no texture atlases. The ship is drawn in 3D with three.js
+([The 3D ship](#the-3d-ship)); underneath it, the original painted Canvas2D
+rooms still hold all of the game's logic, and still draw the ship when WebGL
+is missing or `?render=2d` asks for them.
 
 ## Running it
 
@@ -18,7 +21,9 @@ npm run typecheck  # tsc --noEmit on its own
 
 ## How the rendering works
 
-Three ideas carry the whole look. They are worth knowing before changing anything.
+This section is about the painted Canvas2D rooms, which are still where every
+room's logic lives and what `?render=2d` shows; the 3D renderer is described
+in [The 3D ship](#the-3d-ship). Three ideas carry the whole look. They are worth knowing before changing anything.
 
 **Depth layers.** Design space is a fixed 1600×900 window onto a room that is
 wider than it. Every draw call names a depth
@@ -47,8 +52,7 @@ the one each object paints for itself.
 at each light source with `destination-out`, re-applied with `source-atop`. Lamps
 carve warm pools out of a cold room. Additive glows go on afterwards.
 
-The pipeline that runs these in order is [core/render.ts](src/core/render.ts), all
-15 lines of it.
+The pipeline that runs these in order is [core/render.ts](src/core/render.ts).
 
 ## Layout
 
@@ -97,7 +101,13 @@ src/
   i18n/              tr(), the language choice, and the English table
   audio/             Web Audio graph + the music director
   platform/          host.d.ts: the optional `window.claude` runtime
-  three/             the experimental Three.js cabin (?cabin=3d)
+  three/             the 3D ship: engine, viewpoints, kit, one module per room
+    engine.ts        renderer, room lifecycle, picking, hit regions, FX
+    view.ts          viewpoints: head turn, lean, moving between places
+    kit.ts           toon materials, grain, glow, small geometry, disposal
+    props.ts         the work slip, portholes, the lamp piece (rig)
+    config/          every tunable number, one file per room + shared.ts
+    rooms/           one module per room; each registers over the painted room
 public/fonts/        198 woff2 subsets + fonts.css
 ```
 
@@ -191,39 +201,104 @@ will allocate -- so it calls `cacheGet` itself for a strip of tiles and blits
 only the ones on screen. [rooms/green.ts](src/rooms/green.ts) has that in
 `wideLayer()`, which is about ten lines.
 
-## The Three.js cabin (experimental)
+## The 3D ship
 
-`?cabin=3d` swaps the cabin's Canvas2D picture for a lit 3D room built with
-three.js; everything else stays Canvas2D. It loads as its own chunk, so the
-default game never downloads three. Screenshots are in
-[docs/cabin3d/](docs/cabin3d/).
+`main.ts` loads [three/index.ts](src/three/index.ts) as its own chunk unless
+WebGL is missing or the URL says `?render=2d`. Until it arrives (and for good
+in those two cases) the painted rooms draw the ship. Each module in
+`src/three/rooms/` registers itself over the painted room of the same name, so
+a room that fails to load stays painted rather than taking the others with it;
+`?rooms=cabin,radio` loads only the rooms named, which is handy when working
+on one.
 
-Only how the cabin is **drawn** and how a pointer **finds** things changes.
-`ROOMS.cabin.update/enter/exit` and every `ACT['cab:*']` handler still run from
-[rooms/cabin.ts](src/rooms/cabin.ts), through the same loop, with the same save.
+Only how a room is **drawn** and how a pointer **finds** things changes. Every
+room's `update/enter/exit` and every `ACT[...]` handler still run from
+`src/rooms/<room>.ts`, through the same loop, with the same save; the loop
+calls `update(dt)` once per frame and the 3D room's `sync(dt)` only reads that
+state (anything the painted rooms advanced while drawing -- particles,
+meteors -- the 3D room advances instead, never both).
 
-| Seam | Where | What the 3D room does with it |
+| Seam | Where | What the 3D rooms do with it |
 |---|---|---|
-| `Room.webgl` | [core/render.ts](src/core/render.ts) | renders onto its own canvas under `#scene`; the 2D canvas keeps only the post pass and the focus ring |
-| `setPicker()` | [core/hits.ts](src/core/hits.ts) | `hitAt()` asks the room first, which raycasts; the first solid thing hit decides, so things occlude each other |
-| `localPt(h, e)` | [core/hits.ts](src/core/hits.ts) | a raycast hit carries `local(e)`, so the glass drag gets a point on the glass plane in `WIN`'s design units from wherever the camera is |
-| `CABIN_SPACE` | [rooms/cabin.ts](src/rooms/cabin.ts) | answers "which window is this beacon behind" and "where in the sky/on the glass did I tap" from the 3D camera instead of `lp()`/`mat()` |
-| `CAM.*` | [core/camera.ts](src/core/camera.ts) | the existing drag, wheel, pinch, arrow keys and reset write `panX/panY/user`; the 3D camera turns them into yaw/pitch/step/dolly, and `rot`/`lift`/`px`/`py` into roll, bob and parallax (halved under reduced motion) |
-| every frame | `HITS` | each pickable is pushed as a screen-space circle, so Tab, Enter, the focus ring and "what's touchable" work unchanged |
+| `register3D()` | [three/engine.ts](src/three/engine.ts) | wraps `ROOMS[id]`: builds the room's scene on enter, disposes all of it on exit (geometry, materials, textures, shadow maps), so walking the ring never piles up GPU memory |
+| `Room.webgl` | [core/render.ts](src/core/render.ts) | the scene renders onto its own canvas under `#scene`; the 2D canvas keeps only the post pass and the focus ring |
+| `setPicker()` | [core/hits.ts](src/core/hits.ts) | `hitAt()` asks the 3D room first, which raycasts; the first solid thing hit decides, so things occlude each other |
+| `localPt(h, e)` | [core/hits.ts](src/core/hits.ts) | a raycast hit carries `local(e)`, so a drag keeps getting a point on the thing it started on, in that handler's own design units, from wherever the camera is |
+| `HITS` | every frame | each pickable on screen, and not hidden behind something solid, is pushed as a screen-space circle, so Tab, Enter, the focus ring and "what's touchable" work unchanged |
+| `CAM.*`, `VIEW` | [core/camera.ts](src/core/camera.ts) | the existing drag, wheel, pinch, arrow keys and reset write `panX/panY/user`; [three/view.ts](src/three/view.ts) turns them into a head turn and a lean, and `rot`/`lift`/`px`/`py` into roll, bob and parallax (halved under reduced motion) |
+| `CABIN_SPACE` and kin | the room's 2D module | where a room's *logic* asked the 2D camera a question (which window is this beacon behind, where is the hand), it asks a hook the 3D room answers |
 
-The back wall is laid out from the 2D numbers through `wallX/wallY` in
-[three/config.ts](src/three/config.ts), so the windows *are* `WIN`, the bulbs
-hang at `S.slots`, and `S.breaths`/`S.strokes` draw onto a canvas mapped across
-the glass by UV. The sky is a backdrop placed so a beacon seen from the resting
-eye sits where the 2D cabin painted it. Every tunable — camera limits, room
-size, layout, palette, lights, toon ramp — is in that config file.
+**Units.** Metres stay inside `src/three/`. Every ACT handler still receives
+the design units it was written for, and every pickable says how it gets there:
+`designMap()` lays a wall out from the 2D numbers (the cabin's windows *are*
+`WIN`); `faceMap()` maps a face of an object -- the radio dial, the music-box
+tape, the crank -- onto the design rect its handler expects; `screen: true`
+is for a control turned by a sideways drag (the tuning knob, the dough), whose
+handler only uses differences, so a full sweep is the same movement of the hand
+from any viewpoint.
 
-The look: `MeshToonMaterial` on a three-band ramp with soft steps, the game's
-own brush tiles from `core/paint.ts` as a multiply grain, a cold fresnel rim on
-props, no outlines (as in the 2D rooms), one shadow-casting spot under the lamp
-plus soft contact blots, and the 2D glow sprites as additive halos.
-`node tools/cabin3d-check.mjs` drives it in Chrome and checks the interactions;
-its header says what it needs.
+**Viewpoints.** You do not walk a room. Each has a main view and one or two
+places to lean in:
+
+| Room | Views (first is where you arrive) |
+|---|---|
+| bridge | desk · window (breathe and draw on the glass) · chart table |
+| radio room | room · radio · music box |
+| greenhouse | garden · nursery · work bench (opens here when building is the step) |
+| gangway | bay · doorway (the handover) |
+| galley | galley · sink and stove · board |
+| dome | sitting · lying down (follows `G.lie`, so the bench and the pill move you too) |
+| ring | one view driven by `S.phi`; sitting turns you to the big window |
+ A view allows a small
+head turn and a lean (wheel, pinch); a marker in the room, the bar under the
+picture or Tab + Enter on a marker moves you, and Escape or a double-click goes
+back. A short move flies, a long one (and every move under reduced motion)
+fades through black, and the pointer is ignored while moving. While a hand is
+on something -- the glass, a dial, the dough -- the camera holds completely
+still, so a stroke cannot drift under the finger. The ring corridor's single
+view is driven by `S.phi`: dragging, the arrow keys and the map dots walk a
+fixed circular path, and tapping a station well off centre walks to it
+(`ring3d:walk`) instead of going in. The 3D ring sets `PPD` from the camera
+every frame (`setPPD` in rooms/corridor.ts), so the wall under the finger moves
+with the finger; walking right moves you right, which the painted ring had the
+other way round.
+
+**Notices up close.** Anything pinned to a wall with something to read on it
+-- the work slip in every room, the bridge's course sign, the radio's station
+table, the greenhouse order boards, the gangway sign, and on the ring the work
+and voyage slips, the log, the ship's notices and the clock -- is a pickable
+with `inspect: true`. The first tap brings the camera square on to it
+(`inspect()` in [three/view.ts](src/three/view.ts) works the framing out from
+the thing's own size and facing), a tap on it while you are there does what it
+always did, and the back button, Escape or a double-click put the camera back
+exactly where it was, head turn included. While reading, the ring's drag and
+arrow keys turn the head instead of walking; the map and the nav buttons walk,
+and put the notice down.
+
+Where a room's logic asked the 2D camera something, it now asks a hook the 3D
+room answers and restores on exit: `CABIN_SPACE` (beacons, glass, sky),
+`GREEN_SPACE` (where the hand is, which end of the greenhouse you are at).
+
+Screenshots of every room and view are in [docs/three/](docs/three/).
+
+**Look.** `MeshToonMaterial` on three ramps (soft for cloth and paper,
+standard for wood and walls, crisp for metal, ceramic and glass), the game's
+own brush tiles from `core/paint.ts` as a multiply grain, a cold fresnel rim,
+a painted highlight blob from the upper left of the frame (the `hl` of
+`vol()`), soft contact blots under things, the 2D glow sprites as additive
+halos, no outlines. `M(kind, colour)` in [three/kit.ts](src/three/kit.ts)
+names the combinations. One light per room casts shadows. Paper, dials and
+signs are painted with the 2D kit onto canvases that redraw only when what
+they say changes.
+
+**Tuning.** Every number -- layout, palette, lights, viewpoints, limits --
+is in [three/config/](src/three/config/), one file per room plus `shared.ts`
+for the renderer, the ramps, the camera feel and the markers.
+
+**Checking.** `node tools/three-check.mjs [dir]` drives the ship in Chrome
+with real pointer, wheel, touch and keyboard input and checks the state after
+each step, including the exact distance between the pointer and a stroke drawn
+on the cabin glass. Its header says what it needs.
 
 ## The round
 
