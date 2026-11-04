@@ -69,7 +69,7 @@ function pinchStep(){
 }
 
 cv.addEventListener('pointerdown', e => {
-  if (!S.started) return;
+  if (!S.started || anyOpen()) return;
   PTS.set(e.pointerId, cpt(e));
   if (PTS.size === 2){ // a second finger turns whatever is happening into a pinch
     if (S.drag && S.drag.ctrl && S.drag.ctrl.up) S.drag.ctrl.up(e, true, true, null);
@@ -77,7 +77,7 @@ cv.addEventListener('pointerdown', e => {
   }
   /* S.camMove: the 3D camera is between viewpoints; nothing under the pointer
      is where it will be when the move ends. */
-  if (S.trans || S.drag || S.camMove) return;
+  if (S.trans || S.drag || S.camMove || S.guideNavigating) return;
   if (e.button !== undefined && e.button !== 0) return;
   PR.idleT = 0; S.lastTouch = S.T; S.focusKey = null;
   const p = cpt(e), f = hitAt(p.X, p.Y);
@@ -145,9 +145,11 @@ stage.addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') retu
 
 /* keyboard: Tab walks the touchable things in the current view, Enter uses them */
 cv.addEventListener('keydown', e => {
-  if (!S.started) return;
-  if (e.key === 'Tab'){ const list = focusables(); if (!list.length) return; e.preventDefault();
-    let i = list.findIndex(f => f.h.key === S.focusKey); i = i < 0 ? (e.shiftKey ? list.length-1 : 0) : mod(i + (e.shiftKey ? -1 : 1), list.length);
+  if (!S.started || anyOpen() || S.trans || S.camMove || S.guideNavigating) return;
+  if (e.key === 'Tab'){ const list = focusables(); if (!list.length) return;
+    let i = list.findIndex(f => f.h.key === S.focusKey);
+    if ((!e.shiftKey && i === list.length - 1) || (e.shiftKey && i === 0)) { S.focusKey = null; return; }
+    e.preventDefault(); i = i < 0 ? (e.shiftKey ? list.length-1 : 0) : i + (e.shiftKey ? -1 : 1);
     S.focusKey = list[i].h.key; return; }
   if ((e.key === 'Enter' || e.key === ' ') && S.focusKey){ e.preventDefault();
     const h = HITS_PREV.find(x => x.key === S.focusKey); if (!h) return; const r = resolveAct(h.act); if (!r) return;

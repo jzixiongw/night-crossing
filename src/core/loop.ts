@@ -1,3 +1,5 @@
+import { updateGuide } from '../ui/guide';
+import { syncJourney } from '../state/journey';
 import { tr } from '../i18n';
 import { updateMusic } from '../audio/music';
 import { render } from './render';
@@ -24,6 +26,7 @@ export function frame(tnow){
     if (PERF.t > 2.5){ const avg = PERF.acc/PERF.n; PERF.acc = PERF.n = PERF.t = 0; PERF.cool -= 1;
       if (avg > .028 && QUAL > .5 && PERF.cool <= 0){ setQual(Math.max(.5, QUAL*.84)); PERF.cool = 2; resize(true); } } }
   const R = ROOMS[S.room];
+  if (S.started && syncJourney(G, now())) SV.dirty = true;
   if (S.started){
     S.run += dt;
     if (G.speed > 1) G.skew += dt*1000*(G.speed - 1);
@@ -54,6 +57,6 @@ export function frame(tnow){
   CAM.user += (CAM.tuser - CAM.user)*(1 - Math.exp(-dt*9));
   for (let i=S.anims.length-1;i>=0;i--){ const a = S.anims[i]; a.t += dt; const q = Math.min(1, a.t/a.dur); try { a.fn(q); } catch(e){} if (q >= 1){ S.anims.splice(i,1); a.done && a.done(); } }
   updateMusic(dt);
-  if (PR.visible){ try { render(dt, R); } catch(err){ console.error(err); } }
+  if (PR.visible){ try { render(dt, R); updateGuide(); } catch(err){ console.error(err); } }
   requestAnimationFrame(frame);
 }

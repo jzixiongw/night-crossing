@@ -45,7 +45,7 @@ export function resetView(){ CAM.tpanX = 0; CAM.tpanY = 0; CAM.tuser = 1; }
 /* Viewpoints belong to the 3D rooms (src/three/view.ts). Input only needs to
    ask whether the player has moved away from a room's main view and to send
    them back, so the 3D side fills these in and the painted rooms never do. */
-export const VIEW = { away: () => false, back: () => {} };
+export const VIEW = { away: () => false, back: () => {}, focus: (_act: string, _view?: string) => {} };
 export function viewMoved(){ return Math.abs(CAM.tpanX) > 2 || Math.abs(CAM.tpanY) > 2 || CAM.tuser > 1.02; }
 
 /* The pan is damped by depth rather than multiplied by it. True parallax would
