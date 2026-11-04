@@ -25,7 +25,7 @@ import { STEPS, orderState, orderWord, stepHint, stepNow, voyageLine } from './w
 export const INK = '#2a3550', PENCIL = '#7d7a72', MARK = '#b4553f', FADE = '#a79d8a';
 
 export interface SlipPart { name: string; done: boolean }
-export interface SlipRow { name: string; state: 'done' | 'now' | 'todo'; tag?: string; parts?: SlipPart[] }
+export interface SlipRow { name: string; state: 'done' | 'now' | 'todo'; tag?: string; tagBelow?: boolean; parts?: SlipPart[] }
 export interface Slip { w: number; title: string; head?: string; rows: SlipRow[]; foot?: string; seed?: number;
   /* a drawing the writer added under the lines, in the same pen */
   sketch?: { h: number; draw(c: CanvasRenderingContext2D, x: number, y: number, w: number): void } }
@@ -40,9 +40,10 @@ function layout(s: Slip){
   if (s.head){ y += ps*1.45; L.head = y; }
   y += rs*1.4;
   s.rows.forEach(r => {
-    const row = { y, parts:[] as number[] }; L.rows.push(row);
+    const row = { y, tagY:0, parts:[] as number[] }; L.rows.push(row);
     const has = !!(r.parts && r.parts.length);
     y += has ? rs*1.22 : rs*1.62;
+    if (r.tag && r.tagBelow){ row.tagY = y - rs*.2; y += ps*1.3; }
     if (has){ r.parts.forEach(() => { y += ps*1.45; row.parts.push(y); }); y += rs*1.45; }
   });
   if (s.sketch){ L.sketch = y + rs*.15; y = L.sketch + s.sketch.h; }
@@ -63,7 +64,7 @@ export function drawSlip(c, s: Slip){
   shadow(c, w*.52, h + 3, w*.46, 8, .34);
   vol(c, cc => rr(cc, 0, 0, w, h, 3), MAT.paper, { k:1.6, s:3.6, r:1.2 });
   vol(c, cc => ell(cc, w/2, 8, 5.4, 5.4), MAT.rose, { k:.8, s:2, tex:0 });
-  txt(c, s.title, L.pad, L.title, L.ts, INK, { align:'left' });
+  txt(c, s.title, L.pad, L.title, fit(c, s.title, L.ts, w - L.pad*2), INK, { align:'left' });
   penLine(c, L.pad, L.rule, w - L.pad, L.rule, L.rs*.13, PENCIL, sd + 11, .005);
   if (s.head) txt(c, s.head, L.pad, L.head, fit(c, s.head, L.ps, w - L.pad*2), PENCIL, { align:'left' });
 
@@ -73,9 +74,10 @@ export function drawSlip(c, s: Slip){
     /* a hand never sets two lines at the same height, or quite level */
     const dy = ((sd + i*7) % 5 - 2)*.5, rot = ((sd + i*13) % 7 - 3)*.0022;
     let tagW = 0, tagS = 0;
-    if (r.tag){ tagS = fit(c, r.tag, L.ps*.98, w*.42); tagW = txtW(c, r.tag, tagS); }
+    if (r.tag){ tagS = fit(c, r.tag, L.ps*.98, r.tagBelow ? w - x - L.pad : w*.42); tagW = r.tagBelow ? 0 : txtW(c, r.tag, tagS); }
     /* a ring runs wider than the words it goes round, so leave it the room */
-    const ns = fit(c, r.name, L.rs*(now ? 1.06 : 1), w - x - L.pad - (tagW ? tagW + L.rs*(done ? .95 : .35) : 0));
+    const nameW = w - x - L.pad - (tagW ? tagW + L.rs*(done ? .95 : .35) : 0);
+    const ns = fit(c, r.name, L.rs*(now ? 1.06 : 1), done ? (nameW - L.rs*.46)/1.06 : nameW);
     const tw = txtW(c, r.name, ns);
     c.save(); c.translate(x, y + dy); c.rotate(rot);
     txt(c, r.name, 0, 0, ns, col, { align:'left' });
@@ -85,7 +87,7 @@ export function drawSlip(c, s: Slip){
       penLine(c, 0, L.rs*.3, tw, L.rs*.3, L.rs*.12, MARK, sd + i*5, .014);
     }
     c.restore();
-    if (r.tag) txt(c, r.tag, w - L.pad, y + dy, tagS, done ? PENCIL : FADE, { align:'right' });
+    if (r.tag) txt(c, r.tag, r.tagBelow ? x : w - L.pad, (r.tagBelow ? L.rows[i].tagY : y) + dy, tagS, done ? PENCIL : FADE, { align:r.tagBelow ? 'left' : 'right' });
     r.parts && r.parts.forEach((p, k) => {
       const py = L.rows[i].parts[k], bx = x + L.rs*.55, bs = L.ps*.78;
       c.save(); c.translate(bx, py); c.rotate(((sd + i*5 + k*11) % 7 - 3)*.0026);
@@ -113,7 +115,8 @@ export function workSlip(w: number, foot = true): Slip {
     rows: STEPS.map((s, i) => ({
       name: s.name,
       state: (s.done() ? 'done' : i === nowI ? 'now' : 'todo') as SlipRow['state'],
-      tag: G.journey?.prepared && (s.id === 'take' || s.id === 'grow') && s.done() ? tr('已经备好') : i === nowI ? s.at : undefined,
+      tag: i === nowI ? s.at : undefined,
+      tagBelow: true,
       parts: i === nowI ? s.parts.map(p => ({ name:p.name, done:p.done() })) : undefined
     }))
   };
@@ -136,14 +139,14 @@ function roundSketch(c, x, y, w){
 /* The round: one line per place that has asked, and what the ship owes it. */
 export function voyageSlip(w: number): Slip {
   return {
-    w, title:tr('航程'), seed:19,
+    w, title:tr('目的地'), seed:19,
     head: tr('第 {0} 夜', Math.max(1, G.nights.length)),
     rows: PORT_ORDER.map(id => {
       const st = orderState(id);
-      return { name: tr(PORTS[id].name), state: (st === 'done' ? 'done' : st === 'now' ? 'now' : 'todo') as SlipRow['state'], tag: orderWord(id) };
+      return { name: tr(PORTS[id].name), state: (st === 'done' ? 'done' : st === 'now' ? 'now' : 'todo') as SlipRow['state'], tag: orderWord(id), tagBelow: true };
     }),
     sketch: { h: w*.2, draw: roundSketch },
-    foot: G.calls.length ? tr('送出 {0} 盏灯', G.calls.length) : tr('还没有送出一盏灯')
+    foot: G.calls.length ? tr('送出 {0} 盏灯', G.calls.length) : undefined
   };
 }
 
