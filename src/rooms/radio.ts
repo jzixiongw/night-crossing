@@ -16,6 +16,7 @@ import { PORTS } from '../data/ports';
 import { openRequest } from '../ui/worksheet';
 import { S } from '../state/runtime';
 import { markDirty } from '../state/save';
+import { beginJourney } from '../state/journey';
 import { G } from '../state/store';
 import { inHours, localHour } from '../state/time';
 import { addLog, once, onceS, say } from '../ui/captions';
@@ -67,10 +68,12 @@ ACT['r:slip'] = { tap(){
       : open ? tr('打印口还是空的。') : tr('打印口空着。手上的单子先送完吧。'));
     return;
   }
-  const P = PORTS[G.printed]; G.slips.push(G.printed); G.printed = null; markDirty();
+  const P = PORTS[G.printed];
+  if (!G.journey || G.journey.delivered) beginJourney(G, G.printed, Date.now() + (G.skew || 0));
+  G.slips.push(G.printed); G.printed = null; markDirty();
   AU.ratchet();
   say(tr('你撕下单子。{0}那边要一盏灯。', P.name));
-  if (once('slipFirst')) say(tr('单子带到驾驶舱，放上航向板，船就往那边开。'), null, 2800);
+  if (once('slipFirst')) say(tr('单子带到驾驶舱，选择目的地，船就往那边开。'), null, 2800);
   addLog(tr('接下{0}这一趟', P.name));
 }};
 ACT['r:table'] = { tap(){

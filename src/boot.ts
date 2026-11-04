@@ -16,6 +16,7 @@ import { ROOMS, ROOM_KEY, setAmbience, updateHud } from './rooms/registry';
 import { advance } from './state/progress';
 import { S } from './state/runtime';
 import { SV, cloudInit, lastSlot, migrateLegacyLocal, persist, readLocal, setSlot, withTimeout } from './state/save';
+import { syncJourney } from './state/journey';
 import { G, setG, migrate, freshSave } from './state/store';
 import { renderSlots, setCloudSlots, setOnPicked, slotSave } from './ui/slots';
 import { now } from './state/time';
@@ -27,6 +28,7 @@ import { CAM, resetView, setPanRange } from './core/camera';
 /* ================= BOOT ================= */
 export function applyLoaded(){
   document.body.classList.toggle('reduced', !!G.reduced);
+  syncJourney(G, now());
   restoreCabin(); updateMailbox();
   S.phi = G.ang || 0; S.kp = { ...KPOS[G.kettle.pos === 'pour' ? 'stove' : G.kettle.pos] };
   S.vis = [.1,.55,1][G.lamp]; S.lieK = G.lie ? 1 : 0; S.lampK = G.growLamp ? 1 : 0; S.dLamp = G.domeLight ? 1 : 0;
@@ -40,9 +42,9 @@ export function applyLoaded(){
     $('#board').textContent = tr('回到船上');
     $('#introFine').textContent = tr('夜航 No.{0} · 第 {1} 夜。', G.no, Math.max(1,G.nights.length));
   } else {
-    $('#introLead').textContent = tr('末班船刚离港。这艘船归你开。');
-    $('#introBody').textContent = tr('温室里种出来的东西，一路送给沿途要光的人。沿着环廊走一圈，会走回原处。');
-    $('#board').textContent = tr('开船');
+    $('#introLead').textContent = tr('登上一艘夜航船，为沿途的人送去一盏灯。');
+    $('#introBody').textContent = tr('选一个目的地，把开花植物装成灯。第一张委托和一盆月铃已经备好。');
+    $('#board').textContent = tr('登船');
     $('#introFine').textContent = tr('航程存在这艘船上。下次打开，船还在原处。');
   }
   renderSlots();
@@ -96,8 +98,7 @@ export function board(withSound){
   if (room === 'corridor'){ S.phi = G.ang || 0; S.phiTarget = nearestStation().ang; }
   RR.enter('intro');
   if (first){
-    say(tr('末班船离港了。下一站很远，船会自己开。'), null, 900);
-    say(tr('电台室收到一张单子。左上角那排点子是这一趟要做的事。'), null, 4200);
+    say(tr('第一张委托来自旧码头。点窗间的航向板，选择目的地。'), null, 1100);
   } else if (docked()){ const P = callPort(); if (P) say(tr('船还靠在{0}。舷门那边有人在等。', P.name), null, 1400); }
   updateHud(); setAmbience(); updateMailbox();
   if (!first && gap > 10*MIN) setTimeout(() => showAway(gap, ev), 700);

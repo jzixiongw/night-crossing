@@ -92,7 +92,7 @@ export function go(room){
        rather than with another sentence, and only the first time per step. */
     try {
       const i = stepNow();
-      if (i >= 0 && STEPS[i].where === room && S.hintedStep !== STEPS[i].id){
+      if (G.guide?.enabled === false && i >= 0 && STEPS[i].where === room && S.hintedStep !== STEPS[i].id){
         S.hintedStep = STEPS[i].id;
         setTimeout(() => { if (S.room === room) showHints(); }, 900);
       }

@@ -243,7 +243,7 @@ places to lean in:
 | Room | Views (first is where you arrive) |
 |---|---|
 | bridge | desk · window (breathe and draw on the glass) · chart table |
-| radio room | room · radio · music box |
+| radio room | room · radio · printer · music box |
 | greenhouse | garden · nursery · work bench (opens here when building is the step) |
 | gangway | bay · doorway (the handover) |
 | galley | galley · sink and stove · board |
@@ -270,7 +270,8 @@ and voyage slips, the log, the ship's notices and the clock -- is a pickable
 with `inspect: true`. The first tap brings the camera square on to it
 (`inspect()` in [three/view.ts](src/three/view.ts) works the framing out from
 the thing's own size and facing), a tap on it while you are there does what it
-always did, and the back button, Escape or a double-click put the camera back
+always did. The course board opens its destination choices on arrival, so
+setting a course needs no second tap on the sign. The back button, Escape or a double-click put the camera back
 exactly where it was, head turn included. While reading, the ring's drag and
 arrow keys turn the head instead of walking; the map and the nav buttons walk,
 and put the notice down.
@@ -320,7 +321,22 @@ you are on and how far into it, so every slip on the ship and the hints cannot
 disagree. Nothing enforces the order: a step is done when the world says it is,
 so setting course early and growing on the way simply lights two steps.
 
-The job is never shown as an interface element. [ui/sheet.ts](src/ui/sheet.ts)
+A collapsible voyage guide in [ui/guide.ts](src/ui/guide.ts) shows the current
+action and a shortcut to its room. A projected marker identifies the object
+itself. The guide can be dismissed with Explore freely and restored with
+Next step, or toggled in Settings. It shares durable per-request milestones
+from [state/journey.ts](src/state/journey.ts) with the paper slips. Completed
+steps remain complete when a plant is moved or the lamp is handed over.
+
+The first delivery starts with a prepared request and a flowering moonbell.
+Players set a course, move the plant to the workbench, fit the cover and cap,
+and hand it over at the gangway. Tapping a flowering plant opens explicit
+build/cut choices; a first-night cutting leaves the delivery flower available.
+The four crossings take 2, 4, 5 and 6 minutes respectively. A new plant
+flowers in about six minutes aboard with the grow lamp on; the guide
+distinguishes dry soil, a switched-off lamp, and normal growth.
+
+The same job remains present in the world on paper. [ui/sheet.ts](src/ui/sheet.ts)
 paints it as paper, in the room, at the room's scale and under the room's lamps:
 five lines down a slip, the finished ones ringed, an arrow at the one you are on
 and a box ticked under it for each thing that step is made of. `hangSlip()` puts
@@ -398,3 +414,17 @@ look survives a move to WebGL.
   artifact host. Everywhere else it is absent, every call site is guarded, and
   the game falls back to `localStorage` silently. See
   [state/save.ts](src/state/save.ts).
+
+## First-voyage checks
+
+`node --test tools/journey.test.mjs` (Node 24+) checks durable milestones,
+old-save inference and starting the next request.
+
+`node tools/onboarding-check.mjs` starts Vite and uses Playwright to complete
+the first crossing at normal speed through visible controls, including
+clipping, building, leaving the room, delivery, save/reload and the next
+radio request. It also checks English/Chinese portrait layouts, keyboard
+controls and reduced motion, plus seeded recovery fixtures for dry soil,
+growth, the nursery shelf and all requests completed. `SECTIONS=flow`,
+`portrait` or `recovery` selects a subset. Install Playwright separately when running it;
+see the script header for executable/module overrides and screenshot output.

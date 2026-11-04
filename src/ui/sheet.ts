@@ -113,7 +113,7 @@ export function workSlip(w: number, foot = true): Slip {
     rows: STEPS.map((s, i) => ({
       name: s.name,
       state: (s.done() ? 'done' : i === nowI ? 'now' : 'todo') as SlipRow['state'],
-      tag: i === nowI ? s.at : undefined,
+      tag: G.journey?.prepared && (s.id === 'take' || s.id === 'grow') && s.done() ? tr('已经备好') : i === nowI ? s.at : undefined,
       parts: i === nowI ? s.parts.map(p => ({ name:p.name, done:p.done() })) : undefined
     }))
   };

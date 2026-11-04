@@ -15,6 +15,8 @@ export function freshSave(): Save {
        delivered. `eta` of 0 means the first call has not been timed yet; board()
        sets it, so a save made and left unopened does not arrive in the dark. */
     call:null, calls:[], rig:null, slips:['dock'],
+    journey:{ to:'dock', taken:true, course:false, grown:true, built:false, delivered:false, prepared:true },
+    guide:{ enabled:true, collapsed:false },
     radioOn:false, freq:.82, printed:null, found:[], strip:new Array(16).fill(0), ghost:false, wind:0, phones:false,
     lines:[], names:{}, landed:[], domeLight:true, lie:false, lineSeq:0,
     mail:{ box:['welcome'], read:[], arrived:{}, nextAt:0, idx:1, out:[] },
@@ -26,6 +28,10 @@ export let G: Save = freshSave();
 export function setG(next: Save){ G = next; }
 export function migrate(o){
   const f = freshSave();
+  // Older saves infer their current request; never give a returning ship the
+  // new game's prepared request or reset completed work.
+  if (!o.journey) o.journey = null;
+  if (!o.guide) o.guide = { enabled:true, collapsed:!!o.calls?.length };
   for (const k in f) if (o[k] === undefined) o[k] = f[k];
   for (const k of ['tea','kettle','dough','mail','call']) for (const kk in f[k]) if (o[k][kk] === undefined) o[k][kk] = f[k][kk];
   if (!Array.isArray(o.strip) || o.strip.length !== 16) o.strip = f.strip;
@@ -33,5 +39,7 @@ export function migrate(o){
      were. Pad rather than replace: an older save keeps everything it grew. */
   if (!Array.isArray(o.pots)) o.pots = f.pots;
   else { o.pots.length = Math.min(o.pots.length, f.pots.length); while (o.pots.length < f.pots.length) o.pots.push(null); }
+  // Recover first-night saves affected by the old accidental clipping delay.
+  if (!o.calls.length && !o.rig) for (const p of o.pots) if (p && p.g >= 1) p.bloomAt = 0;
   return o;
 }

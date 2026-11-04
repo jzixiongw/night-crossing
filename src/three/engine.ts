@@ -86,6 +86,7 @@ export function designMap(unit: number, x0: number, y0: number, z: number): Desi
    whole room; the first solid thing it meets decides, so a lamp in front of
    the window takes the tap and a wall behind the desk blocks one. */
 export interface Pick {
+  activateOnInspect?: boolean;                 // actionable boards open once approached
   act: string; label?: string | null | (() => string | null); key?: string; cur?: string | (() => string);
   on?: () => boolean;                         // false: present but not touchable right now
   /* where a point on this thing is, in its action's units */

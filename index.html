@@ -36,7 +36,7 @@
 
 <div id="routePanel" class="panel" hidden>
   <h2>航向板</h2>
-  <p class="sub" id="routeSub">放一张上去，船就在下一个弯转过去。</p>
+  <p class="sub" id="routeSub">选择目的地后，船会自行航行。</p>
   <div class="list" id="routeList"></div>
   <button class="later" id="routeLater" type="button">先不挑</button>
 </div>
@@ -46,6 +46,14 @@
   <p class="sub" id="seedSub">选一种种子。它们长得慢。</p>
   <div class="list" id="seedList"></div>
   <button class="later" id="seedLater" type="button">先空着</button>
+</div>
+
+<div id="plantPanel" class="panel" role="dialog" aria-modal="true" aria-labelledby="plantTitle" hidden>
+  <h2 id="plantTitle"></h2>
+  <p class="sub" id="plantSub"></p>
+  <button class="btn primary" id="plantBuild" type="button">移到装配台</button>
+  <button class="btn" id="plantClip" type="button">剪一枝插瓶</button>
+  <button class="later" id="plantClose" type="button">留在这里</button>
 </div>
 
 <div id="namePanel" class="panel" hidden>
@@ -64,6 +72,7 @@
     <small>调到 ×20，船上要等的东西都会走得快一些。正常玩请用 ×1。</small></div>
   <div class="setrow"><span>语言</span><button class="pill" id="sLang" type="button">中文</button>
     <small>换语言会重新载入这一页。航程已经存好，不会丢。</small></div>
+  <div class="setrow"><span>引导</span><button class="pill" id="sGuide" type="button">开启</button><small>显示当前步骤和场景中的操作提示。</small></div>
   <div class="setrow"><span>存档</span><span id="sSave" class="mono" style="color:var(--ui-dim);font-size:.9em">—</span></div>
   <div class="setrow"><span>换一位</span><button class="pill" id="sSwitch" type="button">回到门口</button>
     <small>回到三个存档位那一页。这一位的航程已经存好。</small></div>
@@ -138,12 +147,12 @@
     <h1 class="intro-title" aria-label="夜航"><span>夜</span><span>航</span></h1>
     <div class="intro-body">
       <div class="intro-en">NIGHT CROSSING · 长航</div>
-      <p id="introLead">末班船刚离港。这艘船归你开。</p>
-      <p id="introBody">温室里种出来的东西，一路送给沿途要光的人。沿着环廊走一圈，会走回原处。</p>
+      <p id="introLead">登上一艘夜航船，为沿途的人送去一盏灯。</p>
+      <p id="introBody">选一个目的地，把开花植物装成灯。第一张委托和一盆月铃已经备好。</p>
       <div id="slots"></div>
       <div class="intro-actions">
-        <button class="btn primary" id="board" type="button">开船</button>
-        <button class="btn" id="boardMute" type="button">静音开船</button>
+        <button class="btn primary" id="board" type="button">登船</button>
+        <button class="btn" id="boardMute" type="button">静音登船</button>
         <button class="btn" id="introLang" type="button">中文</button>
       </div>
       <p class="fine" id="introFine">航程存在这艘船上。下次打开，船还在原处。</p>

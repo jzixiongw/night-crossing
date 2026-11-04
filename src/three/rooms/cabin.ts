@@ -251,7 +251,7 @@ function build(): Built {
     add(mesh(rbox(U(124), U(104), .03, .03), M('paper', PAL.paper)), g);
     add(mesh(new THREE.PlaneGeometry(U(124), U(104)), M('paper', '#ffffff', { map: signTex.t }), [0, 0, .0155], { cast: false }), g);
     for (const [x, y] of [[-50, 40], [50, 40], [-50, -40], [50, -40]]) add(mesh(new THREE.SphereGeometry(.011, 8, 6), M('brass', PAL.brass), [U(x), U(y), .02]), g);
-    pickable(g, { act: 'cab:route', label: tr('航程单'), inspect: true });
+    pickable(g, { act: 'cab:route', label: tr('设定航向'), inspect: true, activateOnInspect: true });
   }
   /* pinned over the edge of the window frame, so it sits in front of it */
   const slip = slipOnWall(roomG, MAP, { ...L.slip, rot: .014, z: BACK + .115 });

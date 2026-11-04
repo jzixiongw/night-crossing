@@ -19,6 +19,7 @@ import { fx } from './radio';
 import { ACT, ROOMS, setCtx } from './registry';
 import { PR, S } from '../state/runtime';
 import { markDirty } from '../state/save';
+import { beginJourney, syncJourney } from '../state/journey';
 import { G } from '../state/store';
 import { hangSlip } from '../ui/sheet';
 import { now } from '../state/time';
@@ -216,7 +217,7 @@ export function renderRoutes(){
   const cur = G.call ? G.call.to : null;
   const ids = [...new Set<string>([...(cur ? [cur] : []), ...G.slips])];
   $('#routeSub').textContent = ids.length
-    ? tr('放一张上去，船就在下一个弯转过去。')
+    ? tr('选择目的地后，船会自行航行。')
     : tr('板子空着。单子从电台室的调度打印机出来。');
   ids.forEach(id => {
     const P = PORTS[id], R = ROUTES[P.lane], b = document.createElement('button'); b.type = 'button';
@@ -241,7 +242,9 @@ export function takeCall(id){
   /* The slip goes onto the board and off your hands. */
   if (G.call && !G.slips.includes(G.call.to)) G.slips.push(G.call.to);
   G.slips = G.slips.filter(x => x !== id);
+  beginJourney(G, id, now());
   G.call = { to:id, eta:now() + P.mins*MIN, docked:0 };
+  syncJourney(G, now());
   setRoute(P.lane);
   AU.paper();
   say(tr('单子卡上航向板。船转向{0}。', P.name), null, 700);
