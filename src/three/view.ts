@@ -199,7 +199,13 @@ export function inspect(obj: THREE.Object3D){
   if (!st.temp) st.ret = { x: CAM.tpanX, y: CAM.tpanY };   // where to put the head back
   st.temp = inspectView(obj); st.tempObj = obj; S.inspecting = true;
   AU.ready && AU.paper && AU.paper();
-  moveTo(poseOf(st.temp));
+  moveTo(poseOf(st.temp), { arrive: () => {
+    const pick = obj.userData.pick;
+    if (!pick?.activateOnInspect || st.tempObj !== obj) return;
+    const parts = pick.act.split(':');
+    const action = ACT[parts.slice(0, 2).join(':')];
+    action?.tap?.(parts.slice(2));
+  } });
 }
 export function uninspect(){
   if (!st.temp) return;
@@ -213,6 +219,12 @@ export function uninspect(){
 }
 export const inspectedObj = () => st.tempObj;
 VIEW.away = () => !!st.B && (!!st.temp || (st.i !== 0 && st.views.length > 1 && st.views[0].bar !== false));
+VIEW.focus = (act, view) => {
+  if (view) goView(view);
+  if (!act) return;
+  const o = [...INSPECTABLES.values()].find(o => o.userData.pick?.act === act);
+  if (o) inspect(o);
+};
 VIEW.back = () => { if (st.temp) uninspect(); else goMain(); };
 ACT['view'] = { tap(a){ goView(a[0]); }, key(a){ goView(a[0]); } };
 ACT['inspect'] = {
