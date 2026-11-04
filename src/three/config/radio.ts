@@ -30,6 +30,8 @@ export const RAD = {
              portrait: { eye: [0, 1.48, 2.9] as const } },
     radio: { eye: [-.5, 1.3, -.42] as const, look: [-.5, 1.1, -1.9] as const, fov: 46, yaw: 22, pitch: 10, dolly: .4,
              hot: [-.5, .786, -1.42] as const, portrait: { eye: [-.5, 1.32, -.1] as const } },
+    printer: { eye: [-1.88, 1.58, -.4] as const, look: [-1.88, 1.55, -2.1] as const, fov: 44, yaw: 14, pitch: 8, dolly: .35,
+               portrait: { eye: [-1.88, 1.62, .2] as const } },
     tape:  { eye: [.9, 1.5, -.25] as const, look: [.95, .86, -1.9] as const, fov: 46, yaw: 20, pitch: 10, dolly: .4,
              hot: [.98, .786, -1.42] as const, portrait: { eye: [.9, 1.6, .2] as const } }
   },
