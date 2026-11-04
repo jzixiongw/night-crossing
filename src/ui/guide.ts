@@ -1,8 +1,8 @@
 import { tr } from '../i18n';
 import { VIEW, cpt } from '../core/camera';
-import { HITS_PREV, focusables, hitAt, hitCanvasCenter } from '../core/hits';
+import { HITS_PREV, focusables, hitAt, hitCanvasCenter, shapeRadius } from '../core/hits';
 import { CW, CH, cv } from '../core/surface';
-import { $, stage } from '../core/util';
+import { $, escapeHtml, stage } from '../core/util';
 import { ACT, go } from '../rooms/registry';
 import { G } from '../state/store';
 import { S } from '../state/runtime';
@@ -12,6 +12,7 @@ import { flowering } from '../state/journey';
 import { PORTS } from '../data/ports';
 import { say } from './captions';
 import { anyOpen } from './panels';
+import { GESTURE_GLYPH } from './paper';
 
 interface Next {
   id: string; phase: number; room: string; act: string; view?: string;
@@ -78,7 +79,7 @@ export function nextStep(): Next {
 
 const guide = document.createElement('section');
 guide.id = 'voyageGuide'; guide.hidden = true; guide.setAttribute('aria-label', tr('当前步骤'));
-guide.innerHTML = `<button type="button" class="guide-heading" aria-expanded="true"><span class="guide-sigil" aria-hidden="true">✦</span><span class="guide-kicker"></span><span class="guide-fold" aria-hidden="true">−</span></button><div class="guide-body"><ol class="guide-track"></ol><h2></h2><p class="guide-detail"></p><div class="guide-supplies"></div><div class="guide-travel"><span></span><progress max="1"></progress></div><button class="guide-go" type="button"></button><div class="guide-controls"><button type="button" class="guide-replay"></button><button type="button" class="guide-skip"></button></div></div>`;
+guide.innerHTML = `<button type="button" class="guide-heading" aria-expanded="true"><span class="guide-sigil" aria-hidden="true">✦</span><span class="guide-kicker"></span><span class="guide-now"></span><span class="guide-fold" aria-hidden="true">−</span></button><div class="guide-body"><ol class="guide-track"></ol><h2></h2><p class="guide-detail"></p><div class="guide-supplies"></div><div class="guide-travel"><span></span><progress max="1"></progress></div><button class="guide-go" type="button"></button><div class="guide-controls"><button type="button" class="guide-replay"></button><button type="button" class="guide-skip"></button></div></div>`;
 stage.appendChild(guide);
 const q = <T extends HTMLElement>(s: string) => guide.querySelector<T>(s)!;
 const heading = q<HTMLButtonElement>('.guide-heading');
@@ -86,7 +87,7 @@ const target = document.createElement('button');
 target.type = 'button'; target.id = 'guideTarget'; target.hidden = true;
 target.innerHTML = '<span class="target-ring" aria-hidden="true"></span><span class="target-label"></span>';
 stage.appendChild(target);
-let targetPinned = false, targetId = '';
+let targetPinned = false, targetId = '', tuckedFor = '';
 target.addEventListener('pointerenter', () => { targetPinned = true; });
 target.addEventListener('pointerleave', () => { targetPinned = false; });
 target.addEventListener('focus', () => { targetPinned = true; });
@@ -163,22 +164,32 @@ const ACTIONS: Record<string, [string, string]> = {
   'gal:dough': ['揉面团', '左右拖动'], 'gal:kettle': ['移动水壶，热水烧好后按住倒水', '点按 · 按住'],
   'hat:door': ['打开舷门', '点按'], 'hat:give': ['把灯递过去', '点按']
 };
+/* [what it does, translated; the gesture's source string, for its glyph] */
 function actionFor(h: any): [string, string] {
-  if (h.act.startsWith('view:')) return [h.label, tr('走近')];
-  if (h.act.startsWith('inspect:')) return [h.label, tr('走近查看')];
+  if (h.act.startsWith('view:')) return [h.label, '走近'];
+  if (h.act.startsWith('inspect:')) return [h.label, '走近查看'];
   let id = h.act;
   while (id) {
-    if (ACTIONS[id]) return ACTIONS[id].map(x => tr(x)) as [string, string];
+    if (ACTIONS[id]) return [tr(ACTIONS[id][0]), ACTIONS[id][1]];
     id = id.split(':').slice(0, -1).join(':');
   }
-  return [h.label || '', tr('点按')];
+  return [h.label || '', '点按'];
+}
+/* The hover label keeps clear of the other paper on screen: below the pointer
+   if it can, above it if that would land on the guide or the target's label. */
+function avoid(el: HTMLElement){
+  el.classList.remove('above');
+  const hit = (r: DOMRect) => ['#voyageGuide', '#guideTarget .target-label', '#caption.on', '#views', '#hud', '#nav'].some(s => {
+    const o = stage.querySelector(s) as HTMLElement | null; if (!o || o.offsetParent === null) return false;
+    const b = o.getBoundingClientRect(); return r.left < b.right && r.right > b.left && r.top < b.bottom && r.bottom > b.top; });
+  if (hit(el.getBoundingClientRect())) el.classList.add('above');
 }
 function position(el: HTMLElement, X: number, Y: number){
   el.style.left = Math.min(90, Math.max(10, X/CW*100)) + '%';
   el.style.top = Math.min(77, Math.max(25, Y/CH*100)) + '%';
 }
 
-let last = '', lastSpeech = '';
+let last = '', lastSpeech = '', lastHover = '', hoverHtml = '';
 const spoken = document.createElement('div'); spoken.className = 'sr-only'; spoken.setAttribute('role', 'status'); spoken.setAttribute('aria-live', 'polite'); guide.appendChild(spoken);
 export function updateGuide(){
   if (!S.started) { guide.hidden = target.hidden = help.hidden = hover.hidden = true; return; }
@@ -196,8 +207,8 @@ export function updateGuide(){
   if (signature !== last) {
     last = signature;
     q('.guide-kicker').textContent = G.calls.length ? tr('航程指引') : tr('第一趟 · {0}', destination);
-    q('h2').textContent = n.title; q('.guide-detail').textContent = n.detail;
-    q('.guide-go').textContent = n.button + ' ›';
+    q('h2').textContent = n.title; q('.guide-detail').textContent = n.detail; q('.guide-now').textContent = n.title;
+    q('.guide-go').textContent = n.button;
     q('.guide-track').innerHTML = ['航向', '装灯', '交付'].map((s, i) => `<li class="${i < n.phase ? 'done' : i === n.phase ? 'current' : ''}"><span>${i < n.phase ? '✓' : i + 1}</span>${tr(s)}</li>`).join('');
     q('.guide-supplies').textContent = supplies ? tr('委托已备好 · 月铃已开花') : '';
     guide.classList.toggle('complete', !!n.complete);
@@ -210,26 +221,44 @@ export function updateGuide(){
     (travel.querySelector('progress') as HTMLProgressElement).value = G.call.docked ? 1 : Math.min(1, Math.max(0, 1 - left/(P.mins*60)));
   }
   target.hidden = true;
+  let ringed = false;
   if (enabled && !blocked && !n.complete && n.room === S.room && n.act) {
     const match = focusables().find(({ h }) => h.act === n.act || h.key === n.act);
     if (match) {
       target.hidden = false; target.disabled = n.act === 'r:tune';
       target.style.pointerEvents = n.act === 'r:tune' ? 'none' : '';
       if (!targetPinned || targetId !== n.id) position(target, Math.round(match.X/2)*2, Math.round(match.Y/2)*2);
+      /* the ring goes round the thing, not a fixed size; the button stays a fingertip */
+      const ring = Math.round(Math.min(170, Math.max(58, shapeRadius(match.h)*2*stage.clientWidth/CW + 18))/4)*4 + 'px';
+      if (target.style.getPropertyValue('--ring') !== ring) target.style.setProperty('--ring', ring);
       targetId = n.id;
       target.querySelector('.target-label')!.textContent = n.action;
       target.setAttribute('aria-label', n.action);
+      ringed = true;
+      /* A guide that lands on the thing it points at folds its secondary lines
+         away (the step title stays) until the step changes; measured only while
+         untucked, so it cannot flicker between the two. */
+      if (tuckedFor !== n.id && !G.guide.collapsed) {
+        const a = guide.getBoundingClientRect(), r = target.querySelector('.target-ring')!.getBoundingClientRect();
+        if (r.width && r.left < a.right && r.right > a.left && r.top < a.bottom && r.bottom > a.top) tuckedFor = n.id;
+      }
     }
   }
+  if (!ringed) tuckedFor = '';
+  guide.classList.toggle('tuck', ringed && tuckedFor === n.id);
   hover.hidden = true;
   if (!blocked && !S.drag) {
     const found = S.focusKey ? HITS_PREV.find(h => h.key === S.focusKey) : pointer ? hitAt(pointer.X, pointer.Y)?.h : null;
     if (found?.label) {
       const [label, gesture] = actionFor(found);
       if (label) {
-        const [X, Y] = hitCanvasCenter(found);
-        hover.hidden = false; hover.textContent = gesture + ' · ' + label;
-        position(hover, pointer && !S.focusKey ? pointer.X : X, pointer && !S.focusKey ? pointer.Y : Y);
+        const [X, Y] = hitCanvasCenter(found), at = pointer && !S.focusKey ? pointer : { X, Y };
+        const html = `<b>${escapeHtml(label)}</b><span class="g"><i style="--gl:var(--gl-${GESTURE_GLYPH[gesture] || 'tap'})" aria-hidden="true"></i>${escapeHtml(tr(gesture))}</span>`;
+        hover.hidden = false;
+        if (hoverHtml !== html) { hoverHtml = html; hover.innerHTML = html; }
+        position(hover, at.X, at.Y);
+        const sig = html + (at.X|0) + ',' + (at.Y|0);
+        if (sig !== lastHover) { lastHover = sig; avoid(hover); }
       }
     }
   }

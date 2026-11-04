@@ -1,5 +1,6 @@
 import { curM, inv, lpM, tp } from './camera';
 import { txt } from './paint';
+import { penRing } from './pen';
 import { CH, CW, RS } from './surface';
 import { clamp } from './util';
 import { S } from '../state/runtime';
@@ -46,7 +47,12 @@ export function focusables(){ const seen = new Set(), out = []; HITS_PREV.forEac
 export function drawFocus(c){
   if (!S.focusKey) return; const h = HITS_PREV.find(x => x.key === S.focusKey); if (!h) return;
   const [X,Y] = hitCanvasCenter(h), r = clamp(shapeRadius(h), 18*RS, 90*RS) + 6*RS;
-  c.setTransform(1,0,0,1,0,0); c.globalAlpha = .9; c.strokeStyle = '#ffd9a3'; c.lineWidth = 2.5*RS; c.setLineDash([6*RS, 6*RS]);
-  c.beginPath(); c.arc(X, Y, r, 0, Math.PI*2); c.stroke(); c.setLineDash([]); c.globalAlpha = 1;
+  /* the same pen ring the HTML overlays use (ui/paper.ts), warm on a dark underlay
+     so it holds on a pale wall; seeded by the key, so it never boils */
+  c.setTransform(1,0,0,1,0,0);
+  const seed = [...S.focusKey].reduce((a, ch) => a + ch.charCodeAt(0), 0);
+  penRing(c, X, Y, r, r*.96, '#0b1222', seed, 6*RS, .4);
+  penRing(c, X, Y, r, r*.96, '#f3c977', seed, 2.8*RS, .95);
+  c.globalAlpha = 1;
   if (h.label){ txt(c, h.label, X, Y + r + 20*RS, 15*RS, '#ffe7c4', { sans:true }); }
 }

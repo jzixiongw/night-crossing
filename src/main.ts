@@ -4,6 +4,9 @@ import './styles/game.css';
    static markup; it must stay above the modules that write their own labels. */
 import './i18n';
 
+/* The paper fibre and the pen marks every overlay is drawn with; see ui/paper.ts. */
+import './ui/paper';
+
 /* Side-effect modules: these install DOM handlers and must be in place before boot
    starts the loop. Everything else is pulled in through the dependency graph. */
 import './ui/settings';

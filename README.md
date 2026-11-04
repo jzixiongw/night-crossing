@@ -97,6 +97,8 @@ src/
   ui/                captions, panels, mail, log, ticket, settings, away
     worksheet.ts     which step of the job you are on, and how far into it
     sheet.ts         that, painted as a slip of paper on the wall
+    paper.ts         the HTML overlays' paper fibre and pen marks, made once
+                     from core/pen.ts and handed to game.css as --fiber/--mk-*
     slots.ts         the three saves on the door screen
   i18n/              tr(), the language choice, and the English table
   audio/             Web Audio graph + the music director
@@ -327,6 +329,16 @@ itself. The guide can be dismissed with Explore freely and restored with
 Next step, or toggled in Settings. It shares durable per-request milestones
 from [state/journey.ts](src/state/journey.ts) with the paper slips. Completed
 steps remain complete when a plant is moved or the lamp is handed over.
+
+Everything HTML lays over the picture -- the guide, the hover labels, the
+menus, the tabs, the ticket and letters -- is cut from three papers and marked
+with the slips' own pens, so it reads as this ship's stationery rather than as
+a layer of glass. [ui/paper.ts](src/ui/paper.ts) records `core/pen.ts` into
+SVG once at boot and draws one fibre tile; the top of
+[styles/game.css](src/styles/game.css) says which paper is for what, what each
+ink means, and how hover, focus, pressed, selected, disabled and done look.
+Screenshots of every overlay, landscape and 390px portrait, both languages,
+are in [docs/ui/](docs/ui/).
 
 The first delivery starts with a prepared request and a flowering moonbell.
 Players set a course, move the plant to the workbench, fit the cover and cap,
