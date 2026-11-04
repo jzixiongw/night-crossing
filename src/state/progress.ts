@@ -38,7 +38,7 @@ export function advance(ms, mode){
   // pears refill
   if (G.pears < 3){ if (!G.pearAt) G.pearAt = tnow; let added = 0; while (G.pears < 3 && tnow - G.pearAt >= 45*MIN){ G.pears++; added++; G.pearAt += 45*MIN; } if (G.pears >= 3) G.pearAt = 0; if (added) ev.push({ room:'galley', text:tr('邻船又送来几个星梨，果盘满了一些。') }); }
   // plants
-  const rate = ({ here:1/(35*MIN), companion:1/(25*MIN), hidden:1/(120*MIN), away:1/(120*MIN) })[mode] * (G.growLamp ? 1.35 : 1);
+  const rate = ({ here:1/(8*MIN), companion:1/(6*MIN), hidden:1/(30*MIN), away:1/(30*MIN) })[mode] * (G.growLamp ? 1.35 : 1);
   G.pots.forEach((p,i) => {
     if (!p) return;
     const before = p.g, wasWet = p.water > 0, wasBloom = bloomReady(p);
