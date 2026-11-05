@@ -1,73 +1,28 @@
-# Submission Checklist
+# Night Crossing — current submission checklist
 
-Tick only what has been **verified**, not what has been produced. `[!]` marks something only the owner can do.
+Source: main `41d8e91e607775152d59d7cf0a8ab0e4a6c105bf`. A checked preparation task is not proof that the entry has been submitted.
 
-## Registration
-- [!] Registration completed and **paid** in the my iF portal. A saved draft is not a submission.
-- [!] Submitted before **2026-11-04 23:59 PST**. Do not trust the local clock — confirm the portal's own stated deadline and time zone.
-- [x] Entry ID 830003 confirmed against the current application.
-- [!] **Entry Name decided** and made identical in the portal and the live build. Currently the build says *Night Crossing* and the brief says *A Little Voyage*.
-- [x] Discipline / category: UX / 8.03 Entertainment / Gaming UX.
-- [!] Entry type, degree of realization and launch date set to **functional prototype, not launched**.
+## Prepared in this refresh
 
-## Credits
-- [!] Reply received from iF about an individual in both mandatory company fields.
-- [!] Designing Company and Client / Manufacturer filled only once that reply exists.
-- [ ] **No invented studio, employer or university anywhere in the entry.**
+- [x] Current 3D game inspected; obsolete 2D claims removed from the current portal fields.
+- [x] Six English descriptions written and counted; each is within 650 characters.
+- [x] Entry name Night Crossing is within 50 characters and matches the current game.
+- [x] Credits guidance resolved: Zixiong Wei in both mandatory company fields.
+- [x] Candidate captures use the actual game renderers; staging recipes are recorded.
+- [x] Candidate image checks: RGB, JPEG, at most 5 MB and 15 MP per file, portraits included.
+- [x] Numbered contact sheets supplied separately from upload originals.
 
-## Images — 4 to 7
-- [ ] Between 4 and 7 uploaded.
-- [ ] JPG or PNG, **RGB** (not CMYK, not greyscale-tagged).
-- [ ] Each ≤5 MB.
-- [ ] Each ≤15,000,000 pixels.
-- [ ] **At least one portrait.**
-- [ ] **No caption, callout, arrow, logo or explanatory text added onto any image.** The game's own on-screen UI is fine; editorial overlay is not.
-- [ ] Image 1 works as a gallery thumbnail at small size.
-- [ ] Every image is a real game state. Nothing depicts an interaction that cannot occur.
-- [ ] `images/manifest.md` records filename, dimensions, bytes, source scene and how each was produced.
+## Owner review and portal actions
 
-## Project PDF — optional, ≤8 pages
-- [ ] Actual page count ≤8 (open it and count).
-- [ ] English throughout.
-- [ ] Opens in a plain PDF viewer, nothing overflowing or stretched.
-- [ ] Adds material the images and video cannot carry.
-- [ ] Editable source kept beside the export.
+- [ ] Confirm development period, launch month/year, pricing and actual public URL.
+- [ ] Confirm that the public English URL remains reachable during judging.
+- [ ] Select 4–7 images, with at least one portrait; review their full-size quality.
+- [ ] Keep captioned contact sheets and review thumbnails out of the portal image slots.
+- [ ] Paste the six reviewed values from entry-fields.md and verify the portal's counts.
+- [ ] Keep formal credits spelled Zixiong Wei; update the portal name if it still says A Little Voyage.
+- [ ] Review live registration/payment status and the applicable deadline in the portal.
+- [ ] Verify any video is genuinely hosted, under two minutes and accessible in Germany.
+- [ ] Verify any optional PDF is an actual English PDF of at most eight pages.
+- [ ] Do not add unverified study results, launch status, impact metrics or certifications.
 
-## Video — optional, ≤2 min
-- [ ] Duration ≤120 s (check the exported file, not the timeline).
-- [ ] English subtitles present and legible.
-- [ ] Authentic gameplay only.
-- [ ] **No `?debug` UI visible in any frame** (the ×20 time control must not appear).
-- [ ] Audio present, not clipping.
-- [!] Hosted somewhere reachable from Germany (e.g. YouTube). Not a file-download link.
-- [!] URL opened from a clean browser session to confirm it is public.
-- [ ] Edit source, clips and the exact build identifier archived.
-
-## Project URL — optional but valuable here
-- [!] Deployed and public.
-- [!] No auth wall, no password, no staging banner.
-- [!] Opens and plays in a fresh browser with no extensions.
-- [!] Reachable from Germany.
-- [!] Will stay up for the whole judging period.
-- [ ] Defaults to **English**.
-- [ ] `?debug` is not the default and the time-speed control is hidden.
-
-## Written fields
-- [ ] Six fields each ≤650 characters including spaces (counts in `entry-fields.md`).
-- [ ] Entry Name ≤50.
-- [ ] Each field does a different job; none repeats another.
-- [ ] **No claim of therapeutic, clinical or wellbeing effect.**
-- [ ] **No user research, testing, interviews, downloads, ratings or awards.**
-- [ ] **No sustainability metric.** Eco-labels left blank.
-- [ ] Launch status truthful.
-
-## The work itself
-- [x] `npm run build` clean (`tsc --noEmit` + vite).
-- [x] All six rooms reachable and interactive; console error list empty.
-- [x] B1–B10 re-checked after the English and portrait work.
-- [x] English default verified with an automated no-CJK assertion across the walkthrough.
-- [x] Chinese still correct at `?lang=zh`.
-- [x] Portrait layout real; landscape regression confirmed at exactly 1.778.
-- [x] Sound can be declined before boarding; reduced motion honoured.
-- [x] Save survives reload; reset works.
-- [x] **Baseline commit made** so the submitted claims are pinned to a build — `3417c3a`.
+The final image sequence and actual portal submission remain owner decisions.
