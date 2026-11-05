@@ -1,6 +1,6 @@
 {
   "entry_id": "830003",
-  "source_commit": "41d8e91e607775152d59d7cf0a8ab0e4a6c105bf",
+  "source_commit": "c16078258d1a67e17654b5d0708fc7262b4fd233",
   "entry_name": "Night Crossing",
   "entry_type_recommendation": "Atmospheric Exploration UX",
   "discipline": "User Experience (UX)",
@@ -10,34 +10,35 @@
   "designer": "Zixiong Wei",
   "fields": {
     "Design Statement": {
-      "text": "Night Crossing is a browser game for people who want a quiet break through play. Aboard a ring-shaped night ship, you make living lamps from flowering plants and deliver them to isolated places. While the ship travels, you can make tea, draw on a misted window or explore the observation dome. Small actions produce physical responses, and each delivery leaves a light in the world outside. The experience is designed to make everyday acts of care feel worth attending to. You can follow the next request, stay in a room or leave and return to your saved voyage.",
-      "characters": 562,
+      "text": "Night Crossing is a self-paced browser game for a quiet break through exploration and small acts of care. Aboard a ring-shaped night ship, players grow flowering plants, assemble them into living lamps and deliver them to isolated places. A crossing leaves time to make tea, draw on a misted window or connect stars beneath the observation dome. Simple gestures create small changes in light, sound and movement, and each delivery leaves a light in the world outside. A guided first request gives players a clear beginning; the rooms invite them to linger at their own pace. The voyage connects curiosity and care to a lasting change beyond the ship.",
+      "characters": 650,
       "limit": 650
     },
     "Idea": {
-      "text": "A short break can become another task to complete or another feed to keep scrolling. Night Crossing gives the player a small, understandable reason to begin: someone along the route has asked for a lamp. Preparing it offers a manageable act of care, while the crossing leaves time for curiosity. Familiar activities become interesting again in an unfamiliar setting. A first request and a flowering plant are ready when the player arrives, so the experience starts with something they can do. Its aim is a brief change of pace and a renewed willingness to engage with small things.",
-      "characters": 581,
+      "text": "For adults seeking a quiet interval in a busy day, Night Crossing makes it easy to begin with one manageable act: someone along the route has asked for a lamp. The request gives exploration a purpose, while the time between destinations leaves room for curiosity. Caring for a plant, preparing a warm drink or waiting for faint stars turns familiar actions into opportunities to notice and respond. The slightly fantastical setting creates distance from daily pressures, and players choose how deeply to engage, how long to stay and when to leave. Through a journey that welcomes both making and lingering, everyday care becomes a source of pleasure.",
+      "characters": 650,
       "limit": 650
     },
     "Form": {
-      "text": "The ship combines painterly surfaces with a three-dimensional space that the player can look around. Warm pools of lamplight make working areas readable against the cool hull and night sky. Menus and instructions use paper, ink marks and handwritten sheets, carrying the material character of the rooms into the interface. A few composed viewpoints keep each activity close and legible. Moving the head or leaning in reveals depth without requiring free navigation. Synthesised ambience and small object sounds make the ship feel occupied, even between tasks.",
-      "characters": 559,
+      "text": "Painterly surfaces generated at runtime and three-dimensional rooms give the night ship the intimacy of an illustrated world with the depth of a place to explore. Warm lamplight makes working areas legible against cool blue metal and a dark sky. Paper charts, handwritten sheets and pencil marks carry the rooms' material character into menus and instructions. Composed viewpoints keep objects close, while looking around and leaning in reveal spatial depth. Synthesized ambience, glass sounds, leaf movements and the pace of a closing door give small actions their physical weight. Image, sound and timing sustain the same unhurried atmosphere.",
+      "characters": 645,
       "limit": 650
     },
     "Function": {
-      "text": "The first delivery introduces the route, workbench and handover through a guide tied to the next usable object. The player chooses a destination on a sea chart; the ship then travels there while other rooms remain available. Making a lamp requires visible assembly, and delivery has separate moments for offering it and letting go. Pointer and touch controls are supported, with keyboard access to interactive objects. Sound can be switched off before boarding, and motion can be reduced. Progress saves automatically so the voyage can be continued later.",
-      "characters": 555,
+      "text": "A first-delivery guide leads players from a request to the sea chart, workbench and handover, with each step tied to the next usable object. Choosing a destination starts the crossing while other rooms remain available. At the bench, a flowering plant becomes a lamp through visible assembly; at the gangway, offering it and letting go are separate actions. Mouse and touch input, contextual actions and composed views keep interaction close to its result. Landscape and portrait views adapt to different screens. Sound and motion settings support different sensory preferences, and automatic saving lets players leave and return to the same voyage.",
+      "characters": 649,
       "limit": 650
     },
     "Differentiation": {
-      "text": "The delivery connects quiet activities to a lasting change beyond the room. A plant becomes a lamp, a visitor takes it at their own pace, and its light remains visible as the ship leaves. Within that journey, small rules reward attention: dimming the cabin reveals the view outside; plants respond to a slowly moving hand; faint stars appear as the eyes adapt to darkness. The player can draw a line into empty sky and leave it waiting for a star to appear. These relationships give the world something to discover through touch and time, alongside the delivery itself.",
-      "characters": 569,
+      "text": "Small actions in Night Crossing connect the room, the journey and the world beyond it. A plant becomes a lamp, a visitor takes it, and its light remains at the destination after the ship leaves. Within that larger arc, the world responds to attention: a fast hand closes leaves, a slower one lets them reopen; dimming a cabin reveals the view outside; darkness gradually brings faint stars into sight. Mist gathers where glass is held, then parts along a drawn line to reveal the night outside. These linked relationships turn pace and perception into ways of exploring, giving quiet activities consequences the player can discover and return to.",
+      "characters": 646,
       "limit": 650
     },
     "Sustainability": {
-      "text": "The social aim is to make a short period of digital leisure easy to enter and easy to end. The standalone build stores progress in the browser, allowing a return without a personal account. A dry plant pauses its growth and can be watered again; stopping does not erase the voyage. Writing a postcard or naming a constellation is optional. Sound and motion controls let players adjust the sensory experience. English and Chinese interfaces broaden access to the same world. A full visit can be enjoyed without sharing personal experiences, and the game provides a clear way to finish.",
-      "characters": 584,
+      "text": "Night Crossing treats digital leisure as time the player can shape and set aside. Automatic saving supports short visits and a continuing voyage; a dry plant waits for water and resumes growing when cared for. English and Chinese interfaces, landscape and portrait layouts, and sound and motion controls make the same world available across different preferences and situations. Players choose whether to write postcards or name constellations, keeping personal expression voluntary and open-ended. The experience makes patient attention, everyday care and consideration for others part of ordinary play, with a natural place to pause and return.",
+      "characters": 646,
       "limit": 650
     }
-  }
+  },
+  "updated_at": "2026-11-04"
 }
