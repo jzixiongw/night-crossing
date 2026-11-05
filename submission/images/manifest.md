@@ -1,60 +1,57 @@
-# Image Manifest
+# Current image candidates — Night Crossing
 
-**7 images, 1 portrait. All iF constraints verified programmatically** (`4 <= count <= 7`, JPG/PNG, RGB, <=5 MB each, <=15,000,000 px each, >=1 portrait).
+Source main `41d8e91e607775152d59d7cf0a8ab0e4a6c105bf`. This replaces the old seven-image upload recommendation. The old root-level JPEGs are historical 2D captures; use the 18 files in `candidates/` for this review.
+
+Open [review.html](review.html) for an interactive, self-contained preview gallery, or inspect the two contact sheets. Those review aids have labels outside their thumbnails and are **not** portal upload images. Gallery previews are resized; full-size originals are separate JPEGs.
 
 ## Provenance
 
-**Every image is an unretouched screen capture of the built game running in a browser.** Nothing is composed, mocked up, re-rendered, upscaled or painted over. No interaction shown is one the player cannot perform.
+Captured from the actual current three.js rooms in English. No generated scenery, device mockup, colour grading, retouching, scene-geometry change or editorial caption was added to an original. Capture is cropped to the actual game stage using the browser's screenshot operation. Native game UI remains visible. The guide is dismissed through Explore the ship. Transient narration is cleared through the caption module before taking each still; this is a presentation choice, not a different gameplay state.
 
-How they were made, exactly:
-1. `npm run build`, served as a static bundle, opened at **2272x1290** (landscape) and **1632x2200** (portrait) so the canvas renders at its native 2240 px cap with no upscaling.
-2. The game was **played** through a scripted session driving real pointer and keyboard events over the DevTools protocol — the same events a hand produces. Objects were located by the labels the game prints in its own "What's touchable" overlay, and the dome's stars by finding bright points in a capture, which is how a player finds them too.
-3. The plants in image 5 were grown using the project's **own `?debug` time control at x20**, which is the walkthrough aid already in the codebase. No save file was hand-edited. The `?debug` UI is not visible in any image.
-4. Captures were cropped to the game stage (dropping the browser page gutter) and written as **RGB JPEG, quality 92, 4:4:4 chroma**. No colour grading, no sharpening, no retouching.
+Mature plants, radio settings, star lines and docked ships are staged using valid save-state fixtures. The window fog and drawing, assembly and offering/letting go use the actual game actions. A post-handover timestamp is advanced to show the lamp after placement. This is a candidate-image shoot, not evidence that one player reached every frame in one continuous playthrough. Per-frame state and recipes are recorded in `candidates/capture-data.json` and `candidates/manifest.json`.
 
-**No caption, callout, arrow, label or logo has been added to any image.** All text visible is the game's own interface, rendered live.
+The capture machine uses software WebGL; the game's normal adaptive resolution may lower the rendered scene resolution. The screenshots include that actual output; no detail has been invented or sharpened afterwards. These are initial candidates for owner review.
 
-## Files
+## Validation
 
-| # | File | Dimensions | Pixels | Size | Orientation | Mode |
-|---|---|---|---|---|---|---|
-| 1 | `01_world_establishing.jpg` | 2242x1262 | 2.83 MP | 0.57 MB | landscape | RGB |
-| 2 | `02_interaction_before.jpg` | 2242x1262 | 2.83 MP | 0.57 MB | landscape | RGB |
-| 3 | `03_interaction_response.jpg` | 2242x1262 | 2.83 MP | 0.58 MB | landscape | RGB |
-| 4 | `04_discovery_or_choice.jpg` | 2242x1262 | 2.83 MP | 0.51 MB | landscape | RGB |
-| 5 | `05_world_after_change.jpg` | 2242x1262 | 2.83 MP | 0.56 MB | landscape | RGB |
-| 6 | `06_portrait.jpg` | 1602x2174 | 3.48 MP | 0.70 MB | portrait | RGB |
-| 7 | `07_ticket.jpg` | 2242x1262 | 2.83 MP | 0.16 MB | landscape | RGB |
+18 RGB JPEGs; 15 landscape and 3 portrait. Each is below 5 MB and 15 megapixels. The final portal selection must be 4–7 images and include at least one portrait. No final sequence has been chosen.
 
-## Sequence and what each one is for
+## Candidate inventory
 
-**1. `01_world_establishing.jpg` — Cabin**  
-Lamp cord pulled once to the middle notch, so the room stays warm while the stars outside come up. The lantern on the table is lit; the route card reads Near-Harbour Lane. Chosen as image 1 because it carries the world, the light trade and the lamp pool at thumbnail size.
+| ID | Scene / purpose | Dimensions | Bytes | Staging / action |
+|---|---|---:|---:|---|
+| [01-bridge](candidates/01-bridge.jpg) | Bridge: a room aboard the night ship | 1888 × 1062 | 500,210 | Fresh voyage; choose Explore the ship; pull the lamp cord once. |
+| [02-window-condensation](candidates/02-window-condensation.jpg) | Window: breath on the glass | 1888 × 1062 | 424,752 | Window viewpoint; press and hold on the left glass. |
+| [03-window-drawing](candidates/03-window-drawing.jpg) | Window: drawing through condensation | 1888 × 1062 | 377,860 | The same glass; draw a curved stroke with pointer movement. |
+| [04-sea-chart](candidates/04-sea-chart.jpg) | Sea chart: choosing a destination | 1888 × 1062 | 437,781 | Open the normal destination panel from the bridge. |
+| [05-greenhouse](candidates/05-greenhouse.jpg) | Greenhouse: six species in bloom | 1888 × 1062 | 464,285 | Valid fully grown plant fixtures populate eight ordinary pots. |
+| [06-greenhouse-night](candidates/06-greenhouse-night.jpg) | Greenhouse: grow light switched off | 1888 × 1062 | 428,257 | The same garden; switch off the grow light with its normal action. |
+| [07-lamp-workbench](candidates/07-lamp-workbench.jpg) | Workbench: a flowering plant ready to assemble | 1888 × 1062 | 426,459 | Select the moonbell and move it using the normal plant panel. |
+| [08-lamp-assembled](candidates/08-lamp-assembled.jpg) | Gangway: a finished plant lamp | 1888 × 1062 | 385,295 | Fit glass and attach the light using normal workbench actions, then visit the lamp on the gangway stand. |
+| [09-radio-room](candidates/09-radio-room.jpg) | Radio room: the dispatch station | 1888 × 1062 | 418,362 | Valid radio frequency, punched strip and winding fixture; ordinary room view. |
+| [10-music-box](candidates/10-music-box.jpg) | Music box: a punched paper tune | 1888 × 1062 | 394,311 | The same radio save; use the tape viewpoint. |
+| [11-galley](candidates/11-galley.jpg) | Galley: hot water and dough rising | 1888 × 1062 | 436,967 | Valid kettle, tea and risen-dough save values; no geometry edits. |
+| [12-observation-dome](candidates/12-observation-dome.jpg) | Observation dome: connected stars | 1888 × 1062 | 444,637 | Switch off the lamp; save fixture connects real stars visible in the normal seated view. |
+| [13-dome-sky](candidates/13-dome-sky.jpg) | Observation dome: lying under the stars | 1888 × 1062 | 444,104 | Use the existing lying viewpoint. |
+| [14-lamp-handover](candidates/14-lamp-handover.jpg) | Old Wharf: holding out a living lamp | 1888 × 1062 | 383,976 | Valid docked fixture; open the real door and offer the lamp with the normal action. |
+| [15-light-at-old-wharf](candidates/15-light-at-old-wharf.jpg) | Old Wharf: the delivered lamp stays behind | 1888 × 1062 | 379,331 | After normal handover, advance its timestamp to the completed placement; porthole viewpoint. |
+| [16-portrait-bridge](candidates/16-portrait-bridge.jpg) | Portrait: the bridge | 1068 × 1468 | 338,059 | Actual portrait viewport and existing responsive camera. |
+| [17-portrait-greenhouse](candidates/17-portrait-greenhouse.jpg) | Portrait: the greenhouse | 1068 × 1468 | 349,606 | The same saved plants; actual portrait viewport and camera. |
+| [18-portrait-evening-bell](candidates/18-portrait-evening-bell.jpg) | Portrait: arriving at Evening Bell | 1068 × 1468 | 328,838 | Valid docked bell fixture; normal open door and portrait handover viewpoint. |
 
-**2. `02_interaction_before.jpg` — Cabin, left porthole**  
-Pressed and held on the glass for ~2.5 s. The fog disc has grown but nothing has been drawn in it yet. This is the "before" half of the signature interaction.
+## First-pass selection guidance
 
-**3. `03_interaction_response.jpg` — Cabin, left porthole**  
-A single slow drag through the fog. The stars outside show through the stroke where the condensation has been cleared. This is the "after" half, and the single most important image in the set.
+01 and 05 are the strongest starting points for the first gallery image. 07 → 08 → 14 → 15 tells the delivery story; a final selection can omit 08 if that leaves too many images. 02 and 03 are a before/after pair and should stay together if that interaction is the focus. 09, 10 and 11 provide alternate room activities. 12 shows a visible constellation; 13 is a quieter sky composition. Choose at least one of 16–18 for the portrait slot. These are editorial suggestions for review, not a final upload order.
 
-**4. `04_discovery_or_choice.jpg` — Observation dome**  
-Small lamp off, pointer held still until the eye adapted and the fainter stars resolved, then five stars joined. Two lines are left hanging into empty sky and render dashed — the game is waiting to see whether a variable star brightens there. An is at the chart table on the right.
+## Reproduction
 
-**5. `05_world_after_change.jpg` — Greenhouse**  
-All five pots planted, watered and grown to full over a single session: two Starvines in flower (five-pointed, self-lit), two Moonbells hung with bells, one Mistfern fully unrolled. The grow lamp is off and the watering can is back on the floor.
+From the repository root, install project dependencies. Install Playwright separately as a capture-only tool and supply its module path in `PLAYWRIGHT_MODULE` when it is not locally resolvable. Supply a compatible Chromium executable in `CHROME`.
 
-**6. `06_portrait.jpg` — Cabin, portrait layout**  
-The same voyage in the portrait layout. The renderer crops the 1600x900 design space toward the room focal point rather than letterboxing it, so this is live gameplay at 3:4, not a composition. Satisfies the iF portrait requirement.
+```sh
+CHROME=/path/to/chromium PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs node submission/capture/capture-candidates.mjs
+python3 submission/capture/build-review.py
+```
 
-**7. `07_ticket.jpg` — Ticket overlay**  
-The takeaway artefact, opened on the voyage shown in images 1-6. Every row is read from save state: lane, cups, loaves, letters, stations logged, star-lines, and thumbnails of the actual pots, punched tape and sky. Nothing on it is a score.
+The builder needs Pillow. It validates originals and regenerates the contact sheets, embedded preview gallery and machine-readable manifest. No capture dependency was added to the game package.
 
-## Upload order
-
-Upload in the numbered order. **Image 1 is the gallery thumbnail** and was chosen for that job: it reads at small size, shows the world and the lamp pool, and gives away none of the interactions the later images carry.
-
-If fewer than seven are wanted, drop 7 then 5 — the three cabin images and the dome must stay, because 2 and 3 are the signature interaction as a before/after pair and must never be separated, and 6 is the only portrait.
-
-## Re-shooting
-
-`submission/_audit/` holds the wider capture set the audit was based on. The capture scripts live in the session scratchpad and are not part of the repository; the method above is written out in full so it can be reproduced from the description alone.
+Requirements: official [2027 Registration Guide](https://assets.ctfassets.net/9el74s703hin/3LisaU32dIdDzCjhL4V8r2/9c007f552f1cbbfa1dc9ecaea88b84a5/iF_DESIGN_AWARD_2027_-_Registration_Guide_-_English.pdf), checked 4 November 2026.
