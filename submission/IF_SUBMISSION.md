@@ -1,5 +1,7 @@
 # A Little Voyage — iF DESIGN AWARD 2027 Submission Agent Brief
 
+> **Current-build update — 4 November 2026:** The project is now **Night Crossing**, with a three.js ship and a living-lamp delivery loop. Use `entry-fields.md` / `entry-fields.json` for current portal copy, `STATUS.md` for current facts, and `images/manifest.md` for the new 18-image candidate set. Both company credit fields may use **Zixiong Wei**, as confirmed by the organizer. The older baseline assumptions, pending-credit wording and filenames below are historical planning guidance; they do not override these current files. Public launch date, price and project URL remain owner inputs.
+
 **Document status:** Actionable project-specific operating brief  
 **Last checked:** 2026-11-01  
 **Entry ID:** 830003 (from the current my iF application; re-check in portal)  
