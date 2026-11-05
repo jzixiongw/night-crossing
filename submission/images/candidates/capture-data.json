@@ -1,0 +1,294 @@
+{
+  "source": "41d8e91e607775152d59d7cf0a8ab0e4a6c105bf",
+  "frames": [
+    {
+      "id": "01-bridge",
+      "file": "01-bridge.jpg",
+      "title": "Bridge: a room aboard the night ship",
+      "recipe": "Fresh voyage; choose Explore the ship; pull the lamp cord once.",
+      "room": "cabin",
+      "view": "desk",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null
+    },
+    {
+      "id": "02-window-condensation",
+      "file": "02-window-condensation.jpg",
+      "title": "Window: breath on the glass",
+      "recipe": "Window viewpoint; press and hold on the left glass.",
+      "room": "cabin",
+      "view": "window",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null
+    },
+    {
+      "id": "03-window-drawing",
+      "file": "03-window-drawing.jpg",
+      "title": "Window: drawing through condensation",
+      "recipe": "The same glass; draw a curved stroke with pointer movement.",
+      "room": "cabin",
+      "view": "window",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null
+    },
+    {
+      "id": "04-sea-chart",
+      "file": "04-sea-chart.jpg",
+      "title": "Sea chart: choosing a destination",
+      "recipe": "Open the normal destination panel from the bridge.",
+      "room": "cabin",
+      "view": "desk",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null
+    },
+    {
+      "id": "05-greenhouse",
+      "file": "05-greenhouse.jpg",
+      "title": "Greenhouse: six species in bloom",
+      "recipe": "Valid fully grown plant fixtures populate eight ordinary pots.",
+      "room": "green",
+      "view": "garden",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null
+    },
+    {
+      "id": "06-greenhouse-night",
+      "file": "06-greenhouse-night.jpg",
+      "title": "Greenhouse: grow light switched off",
+      "recipe": "The same garden; switch off the grow light with its normal action.",
+      "room": "green",
+      "view": "garden",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null
+    },
+    {
+      "id": "07-lamp-workbench",
+      "file": "07-lamp-workbench.jpg",
+      "title": "Workbench: a flowering plant ready to assemble",
+      "recipe": "Select the moonbell and move it using the normal plant panel.",
+      "room": "green",
+      "view": "bench",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": false,
+        "lit": false
+      }
+    },
+    {
+      "id": "08-lamp-assembled",
+      "file": "08-lamp-assembled.jpg",
+      "title": "Gangway: a finished plant lamp",
+      "recipe": "Fit glass and attach the light using normal workbench actions, then visit the lamp on the gangway stand.",
+      "room": "hatch",
+      "view": "bay",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      }
+    },
+    {
+      "id": "09-radio-room",
+      "file": "09-radio-room.jpg",
+      "title": "Radio room: the dispatch station",
+      "recipe": "Valid radio frequency, punched strip and winding fixture; ordinary room view.",
+      "room": "radio",
+      "view": "room",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      }
+    },
+    {
+      "id": "10-music-box",
+      "file": "10-music-box.jpg",
+      "title": "Music box: a punched paper tune",
+      "recipe": "The same radio save; use the tape viewpoint.",
+      "room": "radio",
+      "view": "tape",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      }
+    },
+    {
+      "id": "11-galley",
+      "file": "11-galley.jpg",
+      "title": "Galley: hot water and dough rising",
+      "recipe": "Valid kettle, tea and risen-dough save values; no geometry edits.",
+      "room": "galley",
+      "view": "room",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      }
+    },
+    {
+      "id": "12-observation-dome",
+      "file": "12-observation-dome.jpg",
+      "title": "Observation dome: connected stars",
+      "recipe": "Switch off the lamp; save fixture connects real stars visible in the normal seated view.",
+      "room": "dome",
+      "view": "sit",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null
+    },
+    {
+      "id": "13-dome-sky",
+      "file": "13-dome-sky.jpg",
+      "title": "Observation dome: lying under the stars",
+      "recipe": "Use the existing lying viewpoint.",
+      "room": "dome",
+      "view": "lie",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null
+    },
+    {
+      "id": "14-lamp-handover",
+      "file": "14-lamp-handover.jpg",
+      "title": "Old Wharf: holding out a living lamp",
+      "recipe": "Valid docked fixture; open the real door and offer the lamp with the normal action.",
+      "room": "hatch",
+      "view": "handover",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      }
+    },
+    {
+      "id": "15-light-at-old-wharf",
+      "file": "15-light-at-old-wharf.jpg",
+      "title": "Old Wharf: the delivered lamp stays behind",
+      "recipe": "After normal handover, advance its timestamp to the completed placement; porthole viewpoint.",
+      "room": "hatch",
+      "view": "porthole",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [
+        "dock"
+      ],
+      "rig": null
+    },
+    {
+      "id": "16-portrait-bridge",
+      "file": "16-portrait-bridge.jpg",
+      "title": "Portrait: the bridge",
+      "recipe": "Actual portrait viewport and existing responsive camera.",
+      "room": "cabin",
+      "view": "desk",
+      "viewport": [
+        1100,
+        1500
+      ],
+      "calls": [
+        "dock"
+      ],
+      "rig": null
+    },
+    {
+      "id": "17-portrait-greenhouse",
+      "file": "17-portrait-greenhouse.jpg",
+      "title": "Portrait: the greenhouse",
+      "recipe": "The same saved plants; actual portrait viewport and camera.",
+      "room": "green",
+      "view": "garden",
+      "viewport": [
+        1100,
+        1500
+      ],
+      "calls": [
+        "dock"
+      ],
+      "rig": null
+    },
+    {
+      "id": "18-portrait-evening-bell",
+      "file": "18-portrait-evening-bell.jpg",
+      "title": "Portrait: arriving at Evening Bell",
+      "recipe": "Valid docked bell fixture; normal open door and portrait handover viewpoint.",
+      "room": "hatch",
+      "view": "handover",
+      "viewport": [
+        1100,
+        1500
+      ],
+      "calls": [
+        "dock"
+      ],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      }
+    }
+  ],
+  "errors": []
+}
