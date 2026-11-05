@@ -1,0 +1,43 @@
+{
+  "entry_id": "830003",
+  "source_commit": "41d8e91e607775152d59d7cf0a8ab0e4a6c105bf",
+  "entry_name": "Night Crossing",
+  "entry_type_recommendation": "Atmospheric Exploration UX",
+  "discipline": "User Experience (UX)",
+  "category": "8.03 Entertainment / Gaming UX",
+  "designing_company": "Zixiong Wei",
+  "client_manufacturer": "Zixiong Wei",
+  "designer": "Zixiong Wei",
+  "fields": {
+    "Design Statement": {
+      "text": "Night Crossing is a browser game for people who want a quiet break through play. Aboard a ring-shaped night ship, you make living lamps from flowering plants and deliver them to isolated places. While the ship travels, you can make tea, draw on a misted window or explore the observation dome. Small actions produce physical responses, and each delivery leaves a light in the world outside. The experience is designed to make everyday acts of care feel worth attending to. You can follow the next request, stay in a room or leave and return to your saved voyage.",
+      "characters": 562,
+      "limit": 650
+    },
+    "Idea": {
+      "text": "A short break can become another task to complete or another feed to keep scrolling. Night Crossing gives the player a small, understandable reason to begin: someone along the route has asked for a lamp. Preparing it offers a manageable act of care, while the crossing leaves time for curiosity. Familiar activities become interesting again in an unfamiliar setting. A first request and a flowering plant are ready when the player arrives, so the experience starts with something they can do. Its aim is a brief change of pace and a renewed willingness to engage with small things.",
+      "characters": 581,
+      "limit": 650
+    },
+    "Form": {
+      "text": "The ship combines painterly surfaces with a three-dimensional space that the player can look around. Warm pools of lamplight make working areas readable against the cool hull and night sky. Menus and instructions use paper, ink marks and handwritten sheets, carrying the material character of the rooms into the interface. A few composed viewpoints keep each activity close and legible. Moving the head or leaning in reveals depth without requiring free navigation. Synthesised ambience and small object sounds make the ship feel occupied, even between tasks.",
+      "characters": 559,
+      "limit": 650
+    },
+    "Function": {
+      "text": "The first delivery introduces the route, workbench and handover through a guide tied to the next usable object. The player chooses a destination on a sea chart; the ship then travels there while other rooms remain available. Making a lamp requires visible assembly, and delivery has separate moments for offering it and letting go. Pointer and touch controls are supported, with keyboard access to interactive objects. Sound can be switched off before boarding, and motion can be reduced. Progress saves automatically so the voyage can be continued later.",
+      "characters": 555,
+      "limit": 650
+    },
+    "Differentiation": {
+      "text": "The delivery connects quiet activities to a lasting change beyond the room. A plant becomes a lamp, a visitor takes it at their own pace, and its light remains visible as the ship leaves. Within that journey, small rules reward attention: dimming the cabin reveals the view outside; plants respond to a slowly moving hand; faint stars appear as the eyes adapt to darkness. The player can draw a line into empty sky and leave it waiting for a star to appear. These relationships give the world something to discover through touch and time, alongside the delivery itself.",
+      "characters": 569,
+      "limit": 650
+    },
+    "Sustainability": {
+      "text": "The social aim is to make a short period of digital leisure easy to enter and easy to end. The standalone build stores progress in the browser, allowing a return without a personal account. A dry plant pauses its growth and can be watered again; stopping does not erase the voyage. Writing a postcard or naming a constellation is optional. Sound and motion controls let players adjust the sensory experience. English and Chinese interfaces broaden access to the same world. A full visit can be enjoyed without sharing personal experiences, and the game provides a clear way to finish.",
+      "characters": 584,
+      "limit": 650
+    }
+  }
+}
