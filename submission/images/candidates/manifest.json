@@ -1,0 +1,391 @@
+{
+  "source": "41d8e91e607775152d59d7cf0a8ab0e4a6c105bf",
+  "images": [
+    {
+      "id": "01-bridge",
+      "file": "01-bridge.jpg",
+      "title": "Bridge: a room aboard the night ship",
+      "recipe": "Fresh voyage; choose Explore the ship; pull the lamp cord once.",
+      "room": "cabin",
+      "view": "desk",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null,
+      "width": 1888,
+      "height": 1062,
+      "bytes": 500210,
+      "mode": "RGB",
+      "sha256": "5cfb2e9c3e4f2284df989ed4a5adf8e400712a17309a7de5403f5253e1db9ef8"
+    },
+    {
+      "id": "02-window-condensation",
+      "file": "02-window-condensation.jpg",
+      "title": "Window: breath on the glass",
+      "recipe": "Window viewpoint; press and hold on the left glass.",
+      "room": "cabin",
+      "view": "window",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null,
+      "width": 1888,
+      "height": 1062,
+      "bytes": 424752,
+      "mode": "RGB",
+      "sha256": "e010ba0a704615ea5597a257424bed42461af68b979a878c3fe58d98ca450f5a"
+    },
+    {
+      "id": "03-window-drawing",
+      "file": "03-window-drawing.jpg",
+      "title": "Window: drawing through condensation",
+      "recipe": "The same glass; draw a curved stroke with pointer movement.",
+      "room": "cabin",
+      "view": "window",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null,
+      "width": 1888,
+      "height": 1062,
+      "bytes": 377860,
+      "mode": "RGB",
+      "sha256": "6b5a1a2cb82a81390fb0043a66a6fcdf499e5c5e96ba859e3ad15c72650526a6"
+    },
+    {
+      "id": "04-sea-chart",
+      "file": "04-sea-chart.jpg",
+      "title": "Sea chart: choosing a destination",
+      "recipe": "Open the normal destination panel from the bridge.",
+      "room": "cabin",
+      "view": "desk",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null,
+      "width": 1888,
+      "height": 1062,
+      "bytes": 437781,
+      "mode": "RGB",
+      "sha256": "91f844ff6b1ddda641865e5347e653072b3054a09e226ec506816f4c61ab1378"
+    },
+    {
+      "id": "05-greenhouse",
+      "file": "05-greenhouse.jpg",
+      "title": "Greenhouse: six species in bloom",
+      "recipe": "Valid fully grown plant fixtures populate eight ordinary pots.",
+      "room": "green",
+      "view": "garden",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null,
+      "width": 1888,
+      "height": 1062,
+      "bytes": 464285,
+      "mode": "RGB",
+      "sha256": "473cfa2ca2e5abcd57d31e59ae8dc788745759c1acb7486de793bd6d0faf8e3d"
+    },
+    {
+      "id": "06-greenhouse-night",
+      "file": "06-greenhouse-night.jpg",
+      "title": "Greenhouse: grow light switched off",
+      "recipe": "The same garden; switch off the grow light with its normal action.",
+      "room": "green",
+      "view": "garden",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null,
+      "width": 1888,
+      "height": 1062,
+      "bytes": 428257,
+      "mode": "RGB",
+      "sha256": "b8811fcdc0b16e88f81a057992f67928e71a70bdf2f9bad3395f6ff1bba0d6a2"
+    },
+    {
+      "id": "07-lamp-workbench",
+      "file": "07-lamp-workbench.jpg",
+      "title": "Workbench: a flowering plant ready to assemble",
+      "recipe": "Select the moonbell and move it using the normal plant panel.",
+      "room": "green",
+      "view": "bench",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": false,
+        "lit": false
+      },
+      "width": 1888,
+      "height": 1062,
+      "bytes": 426459,
+      "mode": "RGB",
+      "sha256": "d0f95e9e558fc631bd6c54a675884b7efdb3a4887a866eeec6d80ea3c1ed976c"
+    },
+    {
+      "id": "08-lamp-assembled",
+      "file": "08-lamp-assembled.jpg",
+      "title": "Gangway: a finished plant lamp",
+      "recipe": "Fit glass and attach the light using normal workbench actions, then visit the lamp on the gangway stand.",
+      "room": "hatch",
+      "view": "bay",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      },
+      "width": 1888,
+      "height": 1062,
+      "bytes": 385295,
+      "mode": "RGB",
+      "sha256": "cbc608d2cc10d6e3eb2433504723f9662e18cc1736caadca2bf5e4564c77df82"
+    },
+    {
+      "id": "09-radio-room",
+      "file": "09-radio-room.jpg",
+      "title": "Radio room: the dispatch station",
+      "recipe": "Valid radio frequency, punched strip and winding fixture; ordinary room view.",
+      "room": "radio",
+      "view": "room",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      },
+      "width": 1888,
+      "height": 1062,
+      "bytes": 418362,
+      "mode": "RGB",
+      "sha256": "a394bf05da522378de58fc6079945edf1bd68051d4976d5f70fc71fb9ae40d30"
+    },
+    {
+      "id": "10-music-box",
+      "file": "10-music-box.jpg",
+      "title": "Music box: a punched paper tune",
+      "recipe": "The same radio save; use the tape viewpoint.",
+      "room": "radio",
+      "view": "tape",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      },
+      "width": 1888,
+      "height": 1062,
+      "bytes": 394311,
+      "mode": "RGB",
+      "sha256": "16535071928422723cf25aab40b85d67585989e44d77f6e00b1e9d27d04b078e"
+    },
+    {
+      "id": "11-galley",
+      "file": "11-galley.jpg",
+      "title": "Galley: hot water and dough rising",
+      "recipe": "Valid kettle, tea and risen-dough save values; no geometry edits.",
+      "room": "galley",
+      "view": "room",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      },
+      "width": 1888,
+      "height": 1062,
+      "bytes": 436967,
+      "mode": "RGB",
+      "sha256": "2538ce18966ffd49cde03ba98dbdadadb48ec00c5545e6a982e623e4a873538b"
+    },
+    {
+      "id": "12-observation-dome",
+      "file": "12-observation-dome.jpg",
+      "title": "Observation dome: connected stars",
+      "recipe": "Switch off the lamp; save fixture connects real stars visible in the normal seated view.",
+      "room": "dome",
+      "view": "sit",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null,
+      "width": 1888,
+      "height": 1062,
+      "bytes": 444637,
+      "mode": "RGB",
+      "sha256": "57da4db10f9d2bd8a3510c4abe208b09ae2bce34ec0359666c3e561c8b4ca02f"
+    },
+    {
+      "id": "13-dome-sky",
+      "file": "13-dome-sky.jpg",
+      "title": "Observation dome: lying under the stars",
+      "recipe": "Use the existing lying viewpoint.",
+      "room": "dome",
+      "view": "lie",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": null,
+      "width": 1888,
+      "height": 1062,
+      "bytes": 444104,
+      "mode": "RGB",
+      "sha256": "34c1efae40e19d8dcd253e856119e4bce5dbc0d2ec136979e853148a15e7e3bb"
+    },
+    {
+      "id": "14-lamp-handover",
+      "file": "14-lamp-handover.jpg",
+      "title": "Old Wharf: holding out a living lamp",
+      "recipe": "Valid docked fixture; open the real door and offer the lamp with the normal action.",
+      "room": "hatch",
+      "view": "handover",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      },
+      "width": 1888,
+      "height": 1062,
+      "bytes": 383976,
+      "mode": "RGB",
+      "sha256": "aa69f8b85326568a5f82cb28b025e902f941e5adb0e9935249c02646b851cded"
+    },
+    {
+      "id": "15-light-at-old-wharf",
+      "file": "15-light-at-old-wharf.jpg",
+      "title": "Old Wharf: the delivered lamp stays behind",
+      "recipe": "After normal handover, advance its timestamp to the completed placement; porthole viewpoint.",
+      "room": "hatch",
+      "view": "porthole",
+      "viewport": [
+        1920,
+        1200
+      ],
+      "calls": [
+        "dock"
+      ],
+      "rig": null,
+      "width": 1888,
+      "height": 1062,
+      "bytes": 379331,
+      "mode": "RGB",
+      "sha256": "3829bead4bcf7540334916a251a11b9c1eff0867394cf7753f8ade2ec1e3b9d1"
+    },
+    {
+      "id": "16-portrait-bridge",
+      "file": "16-portrait-bridge.jpg",
+      "title": "Portrait: the bridge",
+      "recipe": "Actual portrait viewport and existing responsive camera.",
+      "room": "cabin",
+      "view": "desk",
+      "viewport": [
+        1100,
+        1500
+      ],
+      "calls": [
+        "dock"
+      ],
+      "rig": null,
+      "width": 1068,
+      "height": 1468,
+      "bytes": 338059,
+      "mode": "RGB",
+      "sha256": "1384205015df756ac103bc028b3146745407f0a4d3339473f8a169deee0eaebf"
+    },
+    {
+      "id": "17-portrait-greenhouse",
+      "file": "17-portrait-greenhouse.jpg",
+      "title": "Portrait: the greenhouse",
+      "recipe": "The same saved plants; actual portrait viewport and camera.",
+      "room": "green",
+      "view": "garden",
+      "viewport": [
+        1100,
+        1500
+      ],
+      "calls": [
+        "dock"
+      ],
+      "rig": null,
+      "width": 1068,
+      "height": 1468,
+      "bytes": 349606,
+      "mode": "RGB",
+      "sha256": "62e80270e349a545aec862648c8e30cb91598bc027aeea689872716b5a2527e5"
+    },
+    {
+      "id": "18-portrait-evening-bell",
+      "file": "18-portrait-evening-bell.jpg",
+      "title": "Portrait: arriving at Evening Bell",
+      "recipe": "Valid docked bell fixture; normal open door and portrait handover viewpoint.",
+      "room": "hatch",
+      "view": "handover",
+      "viewport": [
+        1100,
+        1500
+      ],
+      "calls": [
+        "dock"
+      ],
+      "rig": {
+        "sp": "bell",
+        "glass": true,
+        "lit": true
+      },
+      "width": 1068,
+      "height": 1468,
+      "bytes": 328838,
+      "mode": "RGB",
+      "sha256": "42394f2cf4215948d5f488bf9e6fe26cc7f69e010fdda54adba2bb753ea229dc"
+    }
+  ],
+  "validation": {
+    "count": 18,
+    "portrait": 3,
+    "all_rgb": true,
+    "max_bytes": 500210,
+    "max_pixels": 2005056,
+    "page_errors": []
+  }
+}
